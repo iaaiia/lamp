@@ -183,10 +183,12 @@ footer.site .inner {
 }
 header.site .inner {
   display: flex;
-  gap: 1rem;
+  gap: .75rem;
   align-items: center;
   flex-wrap: wrap;
+  padding: .7rem 1rem;
 }
+@media (min-width: 40rem) { header.site .inner { padding: 1.1rem 1.25rem; gap: 1rem; } }
 .brandmark {
   display: inline-flex;
   align-items: center;
@@ -204,20 +206,21 @@ nav.site { margin-left: auto; }
 nav.site ul {
   list-style: none;
   display: flex;
-  gap: .35rem;
+  gap: .15rem;
   margin: 0;
   padding: 0;
   align-items: center;
   flex-wrap: wrap;
 }
-nav.site a {
+nav.site a, nav.site button {
   text-decoration: none;
   color: var(--ink-muted);
   font-weight: 620;
-  font-size: .92rem;
-  padding: .4rem .7rem;
+  font-size: .82rem;
+  padding: .3rem .5rem;
   border-radius: 999px;
 }
+@media (min-width: 40rem) { nav.site a, nav.site button { font-size: .92rem; padding: .4rem .7rem; } }
 nav.site a:hover { background: var(--blue-tint); color: var(--blue-deep); }
 
 main { padding-bottom: 4rem; }
@@ -235,14 +238,115 @@ main { padding-bottom: 4rem; }
 .card.flat, article.post { box-shadow: none; }
 
 /* ------------------------------------------------------------------ Cluster */
-/* Übersicht über Räume, nicht ein Fluss aus Beiträgen. */
+/* Ein Raster aus Räumen, kein Fluss aus Beiträgen. Mobile zuerst: zwei Spalten
+   ab dem kleinsten Gerät, damit die Übersicht auch in der Hand eine Übersicht
+   bleibt und nicht zur Liste zerfällt. */
 
 .cluster {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .75rem;
+  margin-bottom: 1.75rem;
 }
+@media (min-width: 40rem) { .cluster { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .9rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  text-decoration: none;
+  color: var(--ink);
+  min-height: 9.5rem;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.tile:hover { border-color: var(--blue); }
+.tile:active { transform: scale(.985); }
+.tile:focus-visible { box-shadow: var(--focus); border-color: var(--blue); }
+
+.tile .sigil { display: block; margin: -.1rem 0 .2rem -.2rem; }
+.tile-text { display: flex; flex-direction: column; gap: .25rem; }
+.tile .label { font-family: var(--display); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; }
+.tile .sub { font-size: .78rem; color: var(--ink-muted); }
+.tile .foot-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-top: auto;
+  padding-top: .5rem;
+  flex-wrap: wrap;
+}
+.tile .kind {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+  font-family: var(--mono);
+  font-size: .6rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Die Hero-Kachel: der Kreis, in dem gerade etwas passiert. Zwei Spalten breit,
+   damit die Übersicht eine Blickrichtung hat statt gleichförmig zu flimmern. */
+.tile.hero {
+  grid-column: span 2;
+  min-height: 10rem;
+  padding: 1.1rem;
+  background:
+    radial-gradient(115% 85% at 88% 6%, var(--blue-tint) 0%, transparent 60%),
+    var(--surface);
+}
+.tile.hero .sigil { position: absolute; top: .9rem; right: .9rem; margin: 0; opacity: .95; }
+.tile.hero .tile-text { max-width: 62%; margin-top: .2rem; }
+@media (min-width: 40rem) { .tile.hero .tile-text { max-width: 78%; } }
+.tile.hero .label { font-size: 1.35rem; }
+.tile.hero .why { font-size: .88rem; color: var(--ink-muted); line-height: 1.45; }
+/* Beitragsvorschau statt Leerraum: Die Hero-Kachel zeigt, was dort gerade
+   gesagt wurde — Beiträge mit Inhaltshinweis nie, die öffnet man bewusst. */
+.tile.hero .preview {
+  font-size: .9rem;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-top: .5rem;
+  padding-left: .7rem;
+  border-left: 2px solid var(--line);
+}
+.tile.hero .preview strong { font-weight: 650; }
+@media (min-width: 40rem) { .tile.hero { grid-column: span 2; grid-row: span 2; min-height: 14rem; } }
+
+/* Frisches wird markiert, nicht gezählt: ein Punkt, kein Dauerbadge. */
+.tile .fresh {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: var(--mono);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--ember-deep);
+}
+.tile .fresh::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ember);
+}
+
+.faces .more {
+  background: var(--surface);
+  color: var(--ink-muted);
+  border-color: var(--line);
+  font-size: .6rem;
+}
+
+/* Kreis-Kopfzeile auf der Raumseite */
 .room {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -258,12 +362,103 @@ main { padding-bottom: 4rem; }
 .room h3 a:hover { color: var(--blue); }
 .room .why { font-size: .88rem; color: var(--ink-muted); margin: 0; }
 .room .foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-top: auto; flex-wrap: wrap; }
-.faces .more {
+
+/* ------------------------------------------------------------ Kreis-Kopfzeile */
+
+.circle-head {
+  display: flex;
+  gap: .9rem;
+  align-items: flex-start;
   background: var(--surface);
-  color: var(--ink-muted);
-  border-color: var(--line);
-  font-size: .6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 1.1rem;
+  margin-bottom: 1rem;
 }
+.circle-head .sigil { flex: none; margin-top: -.15rem; }
+.circle-head-text { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+.circle-head h1 { font-size: 1.4rem; }
+.circle-head p { margin: 0; }
+.circle-actions { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-top: .5rem; }
+
+/* Eingeklapptes Schreibfeld — nativ, ohne Skript. */
+.compose-slot { margin-bottom: 1rem; }
+.compose-slot > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .8rem 1.1rem;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-l);
+  font-weight: 640;
+  color: var(--ink-muted);
+}
+.compose-slot > summary::-webkit-details-marker { display: none; }
+.compose-slot > summary::before {
+  content: "+";
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--blue);
+  font-weight: 700;
+}
+.compose-slot > summary:hover { border-color: var(--blue); color: var(--ink); }
+.compose-slot > summary:focus-visible { box-shadow: var(--focus); }
+.compose-slot[open] > summary { margin-bottom: .6rem; border-style: solid; }
+
+/* ------------------------------------------------------- Aktionsleiste unten */
+/* In Daumenreichweite. Drei Ziele, mehr nicht — eine Leiste, die alles anbietet,
+   hilft bei nichts. */
+
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .4rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 6px 28px -8px rgba(20, 23, 29, .28);
+}
+@media (prefers-color-scheme: dark) { .dock { box-shadow: 0 8px 30px -8px rgba(0, 0, 0, .8); } }
+
+.dock a, .dock button {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .55rem .9rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-weight: 640;
+  font-size: .86rem;
+  text-decoration: none;
+}
+.dock a:hover { background: var(--blue-tint); color: var(--blue-deep); }
+.dock a[aria-current="page"] { color: var(--ink); }
+.dock .compose {
+  background: var(--blue);
+  color: var(--blue-ink);
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.dock .compose:hover { background: var(--blue-deep); color: var(--blue-ink); }
+.dock a:focus-visible { box-shadow: var(--focus); }
+
+/* Platz, damit die Leiste nie den letzten Beitrag verdeckt. */
+body.has-dock main { padding-bottom: 6.5rem; }
 
 /* -------------------------------------------------------------------- Chips */
 

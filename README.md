@@ -17,7 +17,9 @@ Eigenschaften darunter:
 | Eigenschaft | Was das im Produkt heißt |
 | --- | --- |
 | **Kreise statt globaler Timeline** | Private Kreise, Themen- und lokale Kreise sind echte Räume mit Mitgliedschaft. Die Art des Kreises bestimmt die Sichtbarkeit — wer in einem privaten Kreis schreibt, kann das nicht versehentlich öffentlich tun. Private Kreise verlassen diesen Server nie und existieren für Nichtmitglieder nicht einmal als Seite. |
-| **Cluster statt Strom** | Die Startseite ist eine Übersicht über Kreise, kein Fluss aus Beiträgen. Gezählt wird nur, was seit dem letzten Öffnen dazukam — eigene Beiträge nie. |
+| **Cluster statt Strom** | Die Startseite ist ein Kachelraster aus Kreisen, kein Fluss aus Beiträgen. Die große Kachel gehört dem Kreis, in dem gerade etwas passiert — nicht dem größten. Gezählt wird nur, was seit dem letzten Öffnen dazukam, eigene Beiträge nie. |
+| **Zeichen, die etwas aussagen** | Jeder Kreis trägt ein aus seiner Adresse erzeugtes Presence-Ring-Zeichen: Punkte wachsen mit der Mitgliederzahl, private Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, wie groß und wie offen ein Kreis ist, bevor man liest. |
+| **„Wo willst du das sagen?"** | Das „+" führt nicht zu einem Textfeld, sondern zur Frage nach dem Kreis. Wer schreibt, weiß, wer mitliest, bevor die ersten Worte da sind. |
 | **Support statt Like** | Die Kernreaktion sagt „ich stehe dahinter“, nicht „finde ich gut“ — und wird als Menschen angezeigt: „Mira, Jonas und 2 weitere stehen dahinter“. Eine nackte Zahl gibt es nirgends, eine Rangliste erst recht nicht. |
 | **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
 | **Support führt weiter** | Wer einen Beitrag mit Inhaltshinweis unterstützt, bekommt danach angeboten zu antworten. Rückhalt soll in Zuwendung münden, nicht im Klick enden. |
@@ -41,7 +43,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 75 Tests
+npm test        # 88 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -58,8 +60,8 @@ src/
   lib/                   HTTP Signatures, Passwort-Hashing, Routing
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
-  web/                   servergerendertes HTML + lamb-Designsystem
-tests/                   75 Tests: Kreise, Wellbeing, Sicherheit, Föderation, HTTP-Ende-zu-Ende
+  web/                   servergerendertes HTML, Designsystem, Kreiszeichen
+tests/                   88 Tests: Kreise, Oberfläche, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 proposal/                der Antrag, zu dem der Prototyp gehört
@@ -72,6 +74,8 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 | `/` | Deine Kreise — die Cluster-Übersicht (oder Anmeldung, wenn abgemeldet) |
 | `/stream` | Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben |
 | `/c/:slug` | ein Kreis; `/circles/new` legt einen an |
+| `/compose` | „Wo willst du das sagen?" — Kreiswahl vor dem Schreiben |
+| `/discover` | Kreise suchen und finden (private nie) |
 | `/@name` | Profil als HTML — oder das Actor-Dokument bei `Accept: application/activity+json` |
 | `/@name/inbox`, `/inbox` | signierte ActivityPub-Zustellung |
 | `/@name/outbox`, `/followers`, `/following` | AS2-Collections |

@@ -197,6 +197,55 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D15 — Kachelraster statt Liste, und ein Zeichen, das etwas aussagt
+
+**Chosen:** die Startseite ist ein Bento-Raster aus Kreiskacheln, ab dem kleinsten Gerät
+zweispaltig. Die große Kachel gehört dem Kreis, in dem gerade etwas passiert — erst
+Frisches, dann zuletzt Geschriebenes — und zeigt eine Vorschau des letzten Beitrags
+(nie eines mit Inhaltshinweis, den öffnet man bewusst). Jeder Kreis trägt ein
+deterministisch aus seinem Slug erzeugtes Zeichen.
+
+**Why:** die Vorlage für dieses Raster arbeitet mit glänzenden 3D-Kugeln als
+Kachelidentität. Für lamb wäre das falsch: Airbrush-Orbs sind Dekoration, die nichts über
+den Raum aussagt, und sie ziehen die Marke ins Verspielte. Stattdessen ist das Zeichen eine
+Variante des Presence Rings und **lesbar**: Punkte auf dem Ring wachsen mit der
+Mitgliederzahl (gedeckelt, weil ab einer Größe mehr Punkte nichts mehr sagen), private
+Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, ob ein Kreis groß
+und ob er zu ist, bevor man den Text liest.
+
+**Reichweite bestimmt hier nichts:** der größte Kreis bekommt keinen Platzvorteil, nur der
+aktivste. Und Frisches wird markiert, nicht dauerhaft gezählt — eine Null erscheint nie.
+
+**Enforced by:** `src/web/sigil.js`, `circleTile()`/`clusterPage()`; `tests/ui.test.js`
+prüft Determinismus, die Deckelung, die private Schale und dass Ember im Zeichen nie
+vorkommt.
+
+## D16 — Aktionsleiste mit genau drei Zielen
+
+**Chosen:** eine schwebende Leiste in Daumenreichweite: Kreise · + · Finden. Das „+" führt
+nicht zu einem Textfeld, sondern zu der Frage **„Wo willst du das sagen?"** mit den eigenen
+Kreisen als Kacheln.
+
+**Why:** bei lamb schreibt man immer in einen bestimmten Kreis. Wenn die Frage nach dem
+Publikum erst nach dem Text kommt, hat man den Text schon für ein imaginäres Publikum
+geschrieben. Sie gehört davor. Und die Leiste bleibt bei drei Zielen — eine, die alles
+anbietet, hilft bei nichts.
+
+**Enforced by:** `layout()`, `composePage()`; `tests/ui.test.js` prüft die Zahl der Ziele
+und dass auf der Compose-Seite noch kein Textfeld steht.
+
+## D17 — Das Schreibfeld im Kreis ist eingeklappt
+
+**Chosen:** ein Kreis öffnet mit dem, was andere gesagt haben; das Schreibfeld liegt
+darüber als zusammengeklapptes `<details>` und geht bei einem Fehler von selbst auf.
+
+**Why:** ein leeres Feld ganz oben ist eine Aufforderung zu senden, bevor man gelesen hat.
+Nativ eingeklappt heißt außerdem: kein JavaScript — die Oberfläche kann weiterhin nichts
+einblenden, nachladen oder sich merken.
+
+**Enforced by:** `circlePage()`; `tests/ui.test.js` prüft die Reihenfolge und dass keine
+Seite ein Skript ausliefert.
+
 ## Open questions for co-creation
 
 These are deliberately unresolved in code — they belong to WP2, not to the

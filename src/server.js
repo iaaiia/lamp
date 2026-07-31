@@ -58,6 +58,7 @@ import {
   leave,
   markRead,
   memberCount,
+  searchCircles,
   members,
   pendingRequests,
 } from './domain/circles.js';
@@ -91,6 +92,8 @@ import { STYLESHEET } from './web/style.js';
 import {
   circlePage,
   clusterPage,
+  composePage,
+  discoverPage,
   errorPage,
   formPage,
   newCirclePage,
@@ -439,6 +442,33 @@ router.post('/@:username/unfollow', (ctx, res) => {
 });
 
 /* ------------------------------------------------------------------- Kreise */
+
+router.get('/discover', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const query = ctx.url.searchParams.get('q') ?? '';
+  const results = query.trim()
+    ? searchCircles(query)
+    : discoverable(ctx.viewer.id, 12);
+  sendHtml(res, 200, discoverPage({
+    viewer: ctx.viewer,
+    prefs: preferencesOf(ctx.viewer),
+    query,
+    results,
+  }));
+});
+
+/**
+ * "Wo willst du das sagen?" steht bewusst vor dem Textfeld: Wer schreibt, soll
+ * wissen, wer mitliest, bevor die ersten Worte da sind.
+ */
+router.get('/compose', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  sendHtml(res, 200, composePage({
+    viewer: ctx.viewer,
+    prefs: preferencesOf(ctx.viewer),
+    circles: circlesFor(ctx.viewer.id),
+  }));
+});
 
 router.get('/circles/new', (ctx, res) => {
   if (!requireViewer(ctx, res)) return;

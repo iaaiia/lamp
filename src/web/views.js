@@ -10,6 +10,7 @@
 import config from '../config.js';
 import { preferencesOf } from '../domain/accounts.js';
 import { KIND_LABELS } from '../domain/circles.js';
+import { circleSigil } from './sigil.js';
 
 export const escapeHtml = (value) =>
   String(value ?? '')
@@ -53,7 +54,7 @@ function timeTag(iso) {
   return `<time datetime="${escapeHtml(iso)}">${escapeHtml(label)}</time>`;
 }
 
-export function layout({ title, viewer, body, prefs }) {
+export function layout({ title, viewer, body, prefs, current = null }) {
   const p = prefs ?? preferencesOf(viewer);
   const classes = [
     p.reducedMotion ? 'reduced-motion' : '',
@@ -62,13 +63,21 @@ export function layout({ title, viewer, body, prefs }) {
   ].filter(Boolean).join(' ');
 
   const nav = viewer
-    ? `<li><a href="/">Kreise</a></li>
-       <li><a href="/stream">Strom</a></li>
-       <li><a href="/@${escapeHtml(viewer.username)}">Dein Profil</a></li>
+    ? `<li><a href="/stream">Strom</a></li>
        <li><a href="/settings">Einstellungen</a></li>
        <li><a href="/moderation">Moderation</a></li>
        <li><form method="post" action="/logout"><button class="quiet" type="submit">Abmelden</button></form></li>`
     : `<li><a href="/login">Anmelden</a></li><li><a href="/register">Konto anlegen</a></li>`;
+
+  // Drei Ziele in Daumenreichweite. Die Leiste ist reines HTML — sie kann
+  // nichts einblenden, nachladen oder sich merken.
+  const dock = viewer
+    ? `<nav class="dock" aria-label="Schnellzugriff">
+         <a href="/"${current === 'circles' ? ' aria-current="page"' : ''}>Kreise</a>
+         <a class="compose" href="/compose" aria-label="Neuer Beitrag">+</a>
+         <a href="/discover"${current === 'discover' ? ' aria-current="page"' : ''}>Finden</a>
+       </nav>`
+    : '';
 
   return `<!doctype html>
 <html lang="de">
@@ -79,7 +88,7 @@ export function layout({ title, viewer, body, prefs }) {
 <link rel="stylesheet" href="/style.css">
 <link rel="alternate" type="application/activity+json" href="${config.origin}">
 </head>
-<body class="${classes}">
+<body class="${classes}${viewer ? ' has-dock' : ''}">
 <a class="skip-link" href="#main">Zum Inhalt springen</a>
 <header class="site">
   <div class="inner">
@@ -90,6 +99,7 @@ export function layout({ title, viewer, body, prefs }) {
 <main id="main" tabindex="-1">
 ${body}
 </main>
+${dock}
 <footer class="site">
   <div class="inner">
     <p>${escapeHtml(config.instanceName)} läuft auf ActivityPub. Dein Konto, deine Beiträge und
@@ -136,11 +146,13 @@ export function postArticle(post, { viewer, showMetrics, supportSentence, suppor
        </div>`
     : '';
 
-  const replyControl = viewer
-    ? canReply
-      ? `<a href="/posts/${post.id}#reply">Mitreden</a>`
-      : `<span class="meta small">${escapeHtml(replyReason ?? 'Antworten sind hier eingeschränkt.')}</span>`
-    : '';
+  // Eine Aktion, nicht zwei, die am selben Ort landen: Der Antwort-Link trägt
+  // die Zahl, und wo nicht geantwortet werden darf, steht der Grund.
+  const replyControl = !viewer || canReply
+    ? `<a href="/posts/${post.id}" class="small">${
+        replyCount === 0 ? 'Mitreden' : `${replyCount} ${replyCount === 1 ? 'Antwort' : 'Antworten'}`
+      }</a>`
+    : `<span class="meta small">${escapeHtml(replyReason ?? 'Antworten sind hier eingeschränkt.')}</span>`;
 
   return `<article class="post">
   <div class="who">
@@ -153,7 +165,6 @@ export function postArticle(post, { viewer, showMetrics, supportSentence, suppor
   <div class="actions">
     ${supportButton}
     ${support}
-    <a href="/posts/${post.id}" class="small">${replyCount} ${replyCount === 1 ? 'Antwort' : 'Antworten'}</a>
     ${replyControl}
   </div>
   ${followUp}
@@ -208,11 +219,13 @@ export function timelinePage({ viewer, prefs, feed, feeds, posts, nextCursor, er
     : `<p class="pager end">Das war alles. Es lädt nichts von allein nach.</p>`;
 
   return layout({
-    title: 'Start',
+    title: 'Strom',
     viewer,
     prefs,
     body: `
-<h1>Dein Kreis</h1>
+<h1>Strom</h1>
+<p class="muted">Was Menschen, denen du folgst, öffentlich unter eigenem Namen schreiben.
+Beiträge aus Kreisen stehen in ihrem Kreis.</p>
 <div class="feed-explainer">
   <p><strong>${escapeHtml(feed.name)}.</strong> ${escapeHtml(feed.explanation)}</p>
   <form method="get" action="/">
@@ -467,49 +480,138 @@ function faces(people, total) {
   }</span>`;
 }
 
-export function circleCard(circle, { people = [], href }) {
-  // Kein Dauer-Badge: gezaehlt wird nur, was seit dem letzten Oeffnen dazukam.
+/**
+ * Eine Kachel. Statt eines Dauerbadges nur ein Punkt, wenn seit dem letzten
+ * Öffnen etwas dazukam — und sonst schlicht, wann zuletzt geschrieben wurde.
+ */
+export function circleTile(circle, { hero = false, index = 0 } = {}) {
   const fresh = Number(circle.fresh_count ?? 0);
-  const activity = fresh > 0
-    ? `<span class="chip ember"><span class="dot"></span>${fresh} neu</span>`
-    : circle.last_post_at
-      ? `<span class="meta small">zuletzt ${timeTag(circle.last_post_at)}</span>`
-      : '<span class="meta small">noch still</span>';
+  const members = Number(circle.member_count ?? 0);
 
-  return `<article class="room">
-  <div class="top">
-    <h3><a href="${href}">${escapeHtml(circle.name)}</a></h3>
-    ${kindChip(circle)}
-  </div>
-  ${circle.purpose ? `<p class="why">${escapeHtml(circle.purpose)}</p>` : ''}
-  <div class="foot">
-    ${faces(people, Number(circle.member_count ?? people.length))}
-    ${activity}
-  </div>
-</article>`;
+  // Eine Fußzeile, nicht zwei halbe: Größe und Zustand gehören zusammen.
+  const status = fresh > 0
+    ? `<span class="fresh">${fresh} neu</span>`
+    : circle.last_post_at
+      ? `<span class="sub">${timeTag(circle.last_post_at)}</span>`
+      : `<span class="sub">noch still</span>`;
+
+  return `<a class="tile${hero ? ' hero' : ''}" href="/c/${encodeURIComponent(circle.slug)}">
+  <span class="kind">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}</span>
+  ${circleSigil(circle, { size: hero ? 96 : 52, id: `s${index}` })}
+  <span class="tile-text">
+    <span class="label">${escapeHtml(circle.name)}</span>
+    ${hero && circle.purpose ? `<span class="why">${escapeHtml(circle.purpose)}</span>` : ''}
+    ${hero && circle.last_post_content
+      ? `<span class="preview"><strong>${escapeHtml(circle.last_post_author)}:</strong> ${escapeHtml(
+          circle.last_post_content.length > 120
+            ? `${circle.last_post_content.slice(0, 120).trimEnd()}…`
+            : circle.last_post_content,
+        )}</span>`
+      : ''}
+  </span>
+  <span class="foot-line">
+    <span class="sub">${members} ${members === 1 ? 'Mitglied' : 'Mitglieder'}</span>
+    ${status}
+  </span>
+</a>`;
 }
 
 export function clusterPage({ viewer, prefs, circles, suggestions }) {
+  // Die Hero-Kachel ist der Kreis, in dem gerade etwas passiert: erst Frisches,
+  // dann zuletzt Geschriebenes. Reichweite bestimmt hier nichts — der größte
+  // Kreis bekommt keinen Platzvorteil.
+  const ranked = [...circles].sort((a, b) => {
+    const fresh = Number(b.fresh_count ?? 0) - Number(a.fresh_count ?? 0);
+    if (fresh !== 0) return fresh;
+    return String(b.last_post_at ?? '').localeCompare(String(a.last_post_at ?? ''));
+  });
+  const [hero, ...rest] = ranked;
+
   const mine = circles.length
-    ? `<div class="cluster">${circles.map((c) => circleCard(c, { people: c.people, href: `/c/${encodeURIComponent(c.slug)}` })).join('')}</div>`
-    : `<p class="card">Du bist noch in keinem Kreis. Tritt unten einem bei, oder öffne deinen eigenen.</p>`;
+    ? `<div class="cluster">
+         ${hero ? circleTile(hero, { hero: true, index: 0 }) : ''}
+         ${rest.map((c, i) => circleTile(c, { index: i + 1 })).join('')}
+       </div>`
+    : `<p class="card">Du bist noch in keinem Kreis. Finde unten einen, oder öffne deinen eigenen.</p>`;
 
   const suggested = suggestions.length
     ? `<h2>Kreise zum Beitreten</h2>
-       <div class="cluster">${suggestions.map((c) => circleCard(c, { people: c.people, href: `/c/${encodeURIComponent(c.slug)}` })).join('')}</div>`
+       <div class="cluster">${suggestions.map((c, i) => circleTile(c, { index: 100 + i })).join('')}</div>`
     : '';
 
   return layout({
     title: 'Deine Kreise',
     viewer,
     prefs,
+    current: 'circles',
     body: `
 <h1>Deine Kreise</h1>
 <p class="muted">Hier ist kein Strom, sondern eine Übersicht. Du siehst, wo etwas los ist,
 entscheidest dich für einen Kreis und gehst hinein.</p>
-<p style="margin:1rem 0 1.5rem"><a class="button" href="/circles/new">Kreis öffnen</a></p>
 ${mine}
 ${suggested}`,
+  });
+}
+
+export function discoverPage({ viewer, prefs, query, results }) {
+  const list = results.length
+    ? `<div class="cluster">${results.map((c, i) => circleTile(c, { index: 200 + i })).join('')}</div>`
+    : query
+      ? `<p class="card">Nichts gefunden für „${escapeHtml(query)}“. Vielleicht ist es Zeit, diesen Kreis zu öffnen.</p>`
+      : `<p class="card">Noch keine offenen Kreise. Öffne den ersten.</p>`;
+
+  return layout({
+    title: 'Kreise finden',
+    viewer,
+    prefs,
+    current: 'discover',
+    body: `
+<h1>Kreise finden</h1>
+<form method="get" action="/discover" role="search" class="card">
+  <label for="q">Wonach suchst du?</label>
+  <input type="text" id="q" name="q" value="${escapeHtml(query ?? '')}" placeholder="Schule, Leipzig, Gaming …">
+  <p class="hint">Durchsucht Namen und Zweck offener Kreise. Private Kreise erscheinen hier nie.</p>
+  <p><button type="submit">Suchen</button></p>
+</form>
+${list}
+<h2>Eigenen Kreis öffnen</h2>
+<div class="card">
+  <p>Nichts Passendes dabei? Du kannst jederzeit selbst einen Kreis öffnen — du moderierst
+  ihn dann.</p>
+  <p><a class="button secondary" href="/circles/new">Kreis öffnen</a></p>
+</div>`,
+  });
+}
+
+export function composePage({ viewer, prefs, circles }) {
+  const targets = circles.length
+    ? circles
+        .map(
+          (c, i) => `<a class="tile" href="/c/${encodeURIComponent(c.slug)}#reply">
+  <span class="kind">${escapeHtml(KIND_LABELS[c.kind] ?? c.kind)}</span>
+  ${circleSigil(c, { size: 48, id: `t${i}` })}
+  <span class="label">${escapeHtml(c.name)}</span>
+  <span class="sub">${Number(c.member_count ?? 0) === 1 ? '1 Mitglied liest mit' : `${Number(c.member_count ?? 0)} Mitglieder lesen mit`}</span>
+</a>`,
+        )
+        .join('')
+    : '';
+
+  return layout({
+    title: 'Neuer Beitrag',
+    viewer,
+    prefs,
+    body: `
+<h1>Wo willst du das sagen?</h1>
+<p class="muted">Bei lamb schreibt man immer in einen bestimmten Kreis. Deshalb steht diese
+Frage vor dem Textfeld und nicht danach — du weißt, wer mitliest, bevor du anfängst.</p>
+${targets ? `<div class="cluster">${targets}</div>` : ''}
+<h2>Oder öffentlich unter deinem Namen</h2>
+<div class="card">
+  <p>Ein Beitrag auf deinem Profil ist für alle sichtbar, die dir folgen — auch auf anderen
+  Servern.</p>
+  <p><a class="button secondary" href="/stream">Auf dem Profil schreiben</a></p>
+</div>`,
   });
 }
 
@@ -524,7 +626,7 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
 
   const leaveControl = isMember
     ? `<form method="post" action="/c/${escapeHtml(circle.slug)}/leave">
-         <button class="secondary" type="submit">Kreis verlassen</button>
+         <button class="quiet" type="submit">Verlassen</button>
        </form>`
     : '';
 
@@ -556,27 +658,39 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
     panel: 'Youth Panel. Moderierte Debatte mit festem Ablauf; das Ergebnis wird veröffentlicht.',
   }[circle.kind];
 
+  // Das Schreibfeld ist eingeklappt, damit der Kreis mit dem beginnt, was
+  // andere gesagt haben — nicht mit einem leeren Feld, das zum Senden auffordert.
+  // <details> kann das nativ; es braucht dafür kein JavaScript.
+  const composeBlock = isMember
+    ? `<details class="compose-slot"${error ? ' open' : ''}>
+         <summary>Etwas in diesen Kreis schreiben</summary>
+         ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}
+       </details>`
+    : '';
+
   return layout({
     title: circle.name,
     viewer,
     prefs,
     body: `
-<div class="card">
-  <div class="top" style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start">
-    <h1 style="margin:0">${escapeHtml(circle.name)}</h1>
-    ${kindChip(circle)}
-  </div>
-  ${circle.purpose ? `<p>${escapeHtml(circle.purpose)}</p>` : ''}
-  <p class="meta small">${escapeHtml(privacyLine)}</p>
-  <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-top:.6rem">
-    ${faces(people, memberCount)}
-    <span class="meta small mono">${memberCount} ${memberCount === 1 ? 'Mitglied' : 'Mitglieder'}</span>
-    ${joinControl}
-    ${leaveControl}
+<div class="circle-head">
+  ${circleSigil(circle, { size: 60, id: 'head' })}
+  <div class="circle-head-text">
+    <h1>${escapeHtml(circle.name)}</h1>
+    <p class="meta small mono">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}${
+      circle.place ? ` · ${escapeHtml(circle.place)}` : ''
+    } · ${memberCount} ${memberCount === 1 ? 'Mitglied' : 'Mitglieder'}</p>
+    ${circle.purpose ? `<p>${escapeHtml(circle.purpose)}</p>` : ''}
+    <p class="meta small">${escapeHtml(privacyLine)}</p>
+    <div class="circle-actions">
+      ${faces(people, memberCount)}
+      ${joinControl}
+      ${leaveControl}
+    </div>
   </div>
 </div>
 ${requests}
-${isMember ? composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` }) : ''}
+${composeBlock}
 <h2>Beiträge</h2>
 ${list}
 ${pager}`,

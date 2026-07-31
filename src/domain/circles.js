@@ -190,7 +190,16 @@ export function circlesFor(accountId) {
                  AND p.account_id != ?) AS fresh_count,
             (SELECT p.created_at FROM posts p
                WHERE p.circle_id = c.id AND p.deleted_at IS NULL
-               ORDER BY p.created_at DESC LIMIT 1) AS last_post_at
+               ORDER BY p.created_at DESC LIMIT 1) AS last_post_at,
+            -- Vorschau für die Hero-Kachel: "wo etwas los ist" heisst zu zeigen,
+            -- was dort gesagt wurde. Nur eigene Kreise, also kein Leck.
+            (SELECT p.content FROM posts p
+               WHERE p.circle_id = c.id AND p.deleted_at IS NULL AND p.content_warning IS NULL
+               ORDER BY p.created_at DESC LIMIT 1) AS last_post_content,
+            (SELECT COALESCE(NULLIF(a.display_name, ''), a.username) FROM posts p
+               JOIN accounts a ON a.id = p.account_id
+               WHERE p.circle_id = c.id AND p.deleted_at IS NULL AND p.content_warning IS NULL
+               ORDER BY p.created_at DESC LIMIT 1) AS last_post_author
      FROM memberships m JOIN circles c ON c.id = m.circle_id
      WHERE m.account_id = ? AND m.state = 'member'
      ORDER BY COALESCE(last_post_at, c.created_at) DESC`,
@@ -210,6 +219,29 @@ export function discoverable(accountId, limit = 12) {
      ORDER BY member_count DESC, c.created_at DESC
      LIMIT ?`,
     accountId,
+    limit,
+  );
+}
+
+/**
+ * Kreise suchen. Nur offene — private Kreise tauchen in keiner Suche auf, sonst
+ * liesse sich ihre Existenz erraten.
+ */
+export function searchCircles(query, limit = 24) {
+  const term = `%${String(query ?? '').trim().toLowerCase()}%`;
+  return all(
+    `SELECT c.*,
+            (SELECT COUNT(*) FROM memberships x WHERE x.circle_id = c.id AND x.state = 'member') AS member_count,
+            (SELECT p.created_at FROM posts p WHERE p.circle_id = c.id AND p.deleted_at IS NULL
+               ORDER BY p.created_at DESC LIMIT 1) AS last_post_at
+     FROM circles c
+     WHERE c.kind != 'private'
+       AND (LOWER(c.name) LIKE ? OR LOWER(c.purpose) LIKE ? OR LOWER(COALESCE(c.place, '')) LIKE ?)
+     ORDER BY member_count DESC, c.created_at DESC
+     LIMIT ?`,
+    term,
+    term,
+    term,
     limit,
   );
 }

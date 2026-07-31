@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { freshDatabase, makeAccount } from './helpers.js';
 import config from '../src/config.js';
 import { DomainError, exportAccount, pauseAccount, preferencesOf, resumeAccount, updatePreferences } from '../src/domain/accounts.js';
-import { createPost, metricsVisible, react, countReactions } from '../src/domain/posts.js';
+import { createPost, metricsVisible, react, countReactions, supportSentence } from '../src/domain/posts.js';
 import { requestFollow } from '../src/domain/safety.js';
 import { timeline } from '../src/domain/feeds.js';
 import { nodeInfo } from '../src/federation/activitypub.js';
@@ -35,6 +35,26 @@ describe('defaults', () => {
 
     updatePreferences(author.id, { showMetrics: true });
     assert.equal(metricsVisible(post, viewer), true);
+  });
+
+  it('phrases support as people rather than a score', () => {
+    const author = makeAccount('backed');
+    const post = createPost(author, { content: 'hello' });
+    assert.equal(supportSentence(post.id), null, 'no support, no sentence');
+
+    react(makeAccount('mira', { displayName: 'Mira' }).id, post.id);
+    assert.equal(supportSentence(post.id), 'Mira steht dahinter');
+
+    react(makeAccount('jonas', { displayName: 'Jonas' }).id, post.id);
+    assert.equal(supportSentence(post.id), 'Mira und Jonas stehen dahinter');
+
+    react(makeAccount('amina', { displayName: 'Amina' }).id, post.id);
+    assert.equal(supportSentence(post.id), 'Mira, Jonas und Amina stehen dahinter');
+
+    // Ab der vierten Person bleibt es bei Namen plus Rest — nie eine nackte Zahl.
+    react(makeAccount('tomas', { displayName: 'Tomas' }).id, post.id);
+    react(makeAccount('lena', { displayName: 'Lena' }).id, post.id);
+    assert.equal(supportSentence(post.id), 'Mira, Jonas, Amina und 2 weitere stehen dahinter');
   });
 
   it('advertises its well-being posture in nodeinfo so instance pickers can filter', () => {

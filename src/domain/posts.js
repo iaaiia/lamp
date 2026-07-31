@@ -115,6 +115,44 @@ export function isVisibleTo(post, viewer) {
   }
 }
 
+/* -------------------------------------------------------------------- Support */
+
+/**
+ * Support ist kein Like. Es sagt "ich stehe dahinter", nicht "ich finde das gut" —
+ * und es wird deshalb als Menschen angezeigt, nicht als Zahl.
+ *
+ * @returns {{names: string[], total: number}} bis zu `limit` Namen plus Gesamtzahl.
+ */
+export function supporters(postId, limit = 3) {
+  const rows = all(
+    `SELECT a.display_name, a.username
+     FROM reactions r JOIN accounts a ON a.id = r.account_id
+     WHERE r.post_id = ? AND r.kind = 'like'
+     ORDER BY r.created_at ASC`,
+    postId,
+  );
+  return {
+    names: rows.slice(0, limit).map((row) => row.display_name || row.username),
+    total: rows.length,
+  };
+}
+
+/**
+ * Der Satz, der im Raum steht. Nie eine nackte Zahl: entweder Namen, oder —
+ * sobald es mehr werden, als sich sinnvoll aufzählen lässt — Namen plus Rest.
+ */
+export function supportSentence(postId) {
+  const { names, total } = supporters(postId);
+  if (total === 0) return null;
+  const rest = total - names.length;
+  const list =
+    names.length === 1
+      ? names[0]
+      : `${names.slice(0, -1).join(', ')} und ${names.at(-1)}`;
+  if (rest > 0) return `${names.join(', ')} und ${rest} weitere stehen dahinter`;
+  return total === 1 ? `${list} steht dahinter` : `${list} stehen dahinter`;
+}
+
 /* ------------------------------------------------------------------ reactions */
 
 export function react(accountId, postId, kind = 'like') {

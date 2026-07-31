@@ -1,79 +1,89 @@
-# LAMP — Youth-Led Alternative Media Platform
+# Huddle — der Kreis, der um dich herum steht
 
-A working ActivityPub social network built around the requirements of the EU call
-**PPPA-2026-YOUTH-SOCIAL-MEDIA-DESIGN — Youth-Driven Social Media Design: Safe, Inclusive,
-and Publicly-Owned Social Media** (DG CONNECT, Unit I.4).
+Ein lauffähiges, föderierendes soziales Netz für 15- bis 24-Jährige in Europa, gebaut entlang
+der EU-Ausschreibung **PPPA-2026-YOUTH-SOCIAL-MEDIA-DESIGN — Youth-Driven Social Media Design:
+Safe, Inclusive, and Publicly-Owned Social Media** (DG CONNECT, Unit I.4).
 
-This repository holds two things: the **prototype** (`src/`, `tests/`) and the **proposal**
-it belongs to (`proposal/`).
+Das Repository enthält drei Dinge: den **Prototypen** (`src/`, `tests/`), das **Design- und
+Markensystem** (`design/`, `docs/huddle/`) und den **Antrag**, zu dem beides gehört (`proposal/`).
 
-## What it does
+## Was es tut
 
-It federates. It runs a real ActivityPub server — WebFinger, actor documents, signed
-inbox/outbox, follows, posts, likes, deletes — so an account here can be followed from
-Mastodon and vice versa. What makes it a *youth-centred* service is the set of properties
-that hold underneath that:
+Es föderiert. Ein echter ActivityPub-Server — WebFinger, Actor-Dokumente, signierte
+Inbox/Outbox, Folgen, Beiträge, Support, Löschen — ein Konto hier ist von Mastodon aus
+folgbar und umgekehrt. Was es zu einem *jugendzentrierten* Dienst macht, sind die
+Eigenschaften darunter:
 
-| Property | What it means in the product |
+| Eigenschaft | Was das im Produkt heißt |
 | --- | --- |
-| **Chronological by default** | The default feed is strictly time-ordered. Other feeds are plugins, must be chosen, and must explain themselves on screen. No feed uses engagement data. |
-| **No infinite scroll** | Paging is a link you click. The end of the timeline is stated in words. The product ships zero client-side JavaScript, and the CSP forbids it. |
-| **Counts are private** | Like and follower counts are visible to the author only, unless the author opts in — over the protocol too, not just in the UI. |
-| **Replies are consent-first** | The author decides who may reply, the rule is enforced at write time for local *and* federated replies, and a 30-second cool-down blunts pile-ons. |
-| **Alt text is mandatory** | A post with an undescribed image is rejected. Undescribed remote images are dropped rather than shown. |
-| **Pause, don't delete** | One click hides your profile and stops federation. Nothing is deleted, followers stay, one click brings it all back. |
-| **Minors are protected by a floor** | Accounts registered as under 18 keep limited replies, DMs off, no discovery listing and private counts — settings cannot switch these off. |
-| **AI routes, humans decide** | Automated triage ranks the moderation queue and reports its own per-language weakness. There is no code path from a classifier to content removal. |
-| **You can leave** | Full export of profile, posts and both sides of the social graph, as JSON, at any time. |
-| **No surveillance data model** | Reading behaviour is never recorded. There is no impressions table, no dwell time, no interest inference. |
+| **Support statt Like** | Die Kernreaktion sagt „ich stehe dahinter“, nicht „finde ich gut“ — und wird als Menschen angezeigt: „Mira, Jonas und 2 weitere stehen dahinter“. Eine nackte Zahl gibt es nirgends, eine Rangliste erst recht nicht. |
+| **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
+| **Support führt weiter** | Wer einen Beitrag mit Inhaltshinweis unterstützt, bekommt danach angeboten zu antworten. Rückhalt soll in Zuwendung münden, nicht im Klick enden. |
+| **Neueste zuerst** | Der Standard ist streng chronologisch. Andere Sortierungen sind Plugins, müssen gewählt werden und sich auf dem Bildschirm erklären. Keine nutzt Reaktionsdaten. |
+| **Kein Nachladen beim Scrollen** | Blättern ist ein Link. Das Ende steht in Worten da. Das Produkt liefert null Client-JavaScript aus, und die CSP verbietet es. |
+| **Antworten nur mit Einverständnis** | Die Autor:in entscheidet, wer antworten darf; die Regel greift beim Schreiben — lokal wie föderiert. 30 Sekunden Abkühlung bremsen Nachtreten. |
+| **Bildbeschreibung ist Pflicht** | Ein Beitrag mit unbeschriebenem Bild wird abgelehnt. Unbeschriebene Bilder von anderen Servern werden verworfen statt angezeigt. |
+| **Pause statt Löschen** | Ein Klick blendet Profil und Beiträge aus und stoppt die Föderation. Nichts wird gelöscht, der Kreis bleibt, ein Klick holt alles zurück. |
+| **Schutzboden für Minderjährige** | Konten unter 18 behalten eingeschränkte Antworten, DMs aus, keine Vorschläge, privaten Rückhalt — Einstellungen können das nicht abschalten. |
+| **KI sortiert, Menschen entscheiden** | Automatische Erkennung ordnet die Meldeliste und meldet ihre eigene Schwäche je Sprache. Es gibt keinen Codepfad von einem Klassifikator zur Löschung. |
+| **Du kannst gehen** | Vollständiger Export von Profil, Beiträgen und beiden Seiten des Kreises als JSON, jederzeit. |
+| **Kein Überwachungs-Datenmodell** | Leseverhalten wird nie erfasst. Keine Impressions, keine Verweildauer, keine abgeleiteten Interessen. |
 
-Every row above is covered by a test. See `docs/design-decisions.md` for why each was
-chosen, and `docs/call-traceability.md` for what maps to which call objective — including
-an honest list of what is still missing.
+Jede Zeile ist durch Tests abgedeckt. Warum jede Entscheidung so fiel und wo sie erzwungen
+wird, steht in `docs/design-decisions.md`; was auf welches Ausschreibungsziel einzahlt —
+inklusive ehrlicher Lückenliste — in `docs/call-traceability.md`.
 
-## Run it
+## Starten
 
-Requires Node.js ≥ 22.5 (uses the built-in SQLite). **No dependencies, no build step.**
+Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten, kein Build.**
 
 ```bash
-npm run dev     # seeds two demo accounts, serves http://localhost:3000
-npm test        # 55 tests
+npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
+npm test        # 57 Tests
 ```
 
-Demo accounts after `npm run dev`: `mira` and `jonas` (a minor account), password
-`lamp-demo-password`.
+Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamp-demo-password`.
 
-Configuration is environment-driven — `LAMP_ORIGIN`, `LAMP_PORT`, `LAMP_DB`, `LAMP_NAME`,
-`LAMP_SEED`, `LAMP_FEDERATION` — see `src/config.js`.
+Konfiguration über Umgebungsvariablen — `LAMP_ORIGIN`, `LAMP_PORT`, `LAMP_DB`, `LAMP_NAME`,
+`LAMP_SEED`, `LAMP_FEDERATION`, siehe `src/config.js`.
 
-## Layout
+## Aufbau
 
 ```
 src/
-  config.js              well-being defaults live here, in one place
-  db.js                  schema (note what it deliberately cannot store)
-  lib/                   HTTP Signatures, password hashing, routing
-  domain/                accounts, posts, safety, feeds, moderation
-  federation/            AS2 documents, inbox handling, signed delivery
-  web/                   server-rendered accessible HTML + stylesheet
-tests/                   55 tests: wellbeing, safety, federation, end-to-end HTTP
-docs/                    design decisions, call traceability
-proposal/                the grant application this prototype belongs to
+  config.js              die Wellbeing-Voreinstellungen, an einer Stelle
+  db.js                  Schema — beachte, was es bewusst nicht speichern kann
+  lib/                   HTTP Signatures, Passwort-Hashing, Routing
+  domain/                Konten, Beiträge, Sicherheit, Sortierungen, Moderation
+  federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
+  web/                   servergerendertes HTML + Huddle-Designsystem
+tests/                   57 Tests: Wellbeing, Sicherheit, Föderation, HTTP-Ende-zu-Ende
+design/                  huddle.html (gerendertes System), huddle-tokens.css
+docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/huddle/
+proposal/                der Antrag, zu dem der Prototyp gehört
 ```
 
-## Endpoints
+## Endpunkte
 
-| Path | Purpose |
+| Pfad | Zweck |
 | --- | --- |
-| `/` | Timeline (or sign-in when signed out) |
-| `/@user` | Profile as HTML, or the actor document under `Accept: application/activity+json` |
-| `/@user/inbox`, `/inbox` | Signed ActivityPub delivery |
-| `/@user/outbox`, `/followers`, `/following` | AS2 collections |
-| `/.well-known/webfinger`, `/nodeinfo/2.1` | Discovery; NodeInfo publishes the well-being posture |
-| `/settings`, `/settings/export` | Preferences, pause/resume, data export |
-| `/moderation` | Human moderation queue with per-language triage agreement |
+| `/` | Start (oder Anmeldung, wenn abgemeldet) |
+| `/@name` | Profil als HTML — oder das Actor-Dokument bei `Accept: application/activity+json` |
+| `/@name/inbox`, `/inbox` | signierte ActivityPub-Zustellung |
+| `/@name/outbox`, `/followers`, `/following` | AS2-Collections |
+| `/.well-known/webfinger`, `/nodeinfo/2.1` | Discovery; NodeInfo veröffentlicht die Wellbeing-Haltung |
+| `/posts/:id/support` | Support geben oder zurücknehmen |
+| `/settings`, `/settings/export` | Einstellungen, Pause, Datenexport |
+| `/moderation` | Menschliche Moderationsliste mit Trefferquote je Sprache |
 
-## Licence
+## Was noch fehlt
 
-EUPL-1.2. The call asks for results to be open-sourced under the most appropriate licence;
-EUPL is the Commission's own, and is compatible with AGPL-3.0 for upstream contributions.
+Räume als eigenes Konzept (private Kreise, Themen-Huddles, lokale Huddles), die Cluster-
+Startseite, Youth Panels mit Phasenlogik und Protokoll, Medien-Upload, Direktnachrichten,
+AT-Protocol-Brücke, Mehrsprachigkeit. Die Reihenfolge und der Aufwand stehen in
+`docs/huddle/produkt.md`, Abschnitt 8.
+
+## Lizenz
+
+EUPL-1.2. Die Ausschreibung verlangt Open Source unter der am besten geeigneten Lizenz; die
+EUPL ist die der Kommission selbst und ist mit AGPL-3.0 für Upstream-Beiträge kompatibel.

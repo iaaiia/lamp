@@ -13,7 +13,7 @@ export const config = {
   origin: (env.LAMP_ORIGIN ?? 'http://localhost:3000').replace(/\/$/, ''),
   port: Number(env.LAMP_PORT ?? 3000),
   databaseFile: env.LAMP_DB ?? 'lamp.db',
-  instanceName: env.LAMP_NAME ?? 'LAMP',
+  instanceName: env.LAMP_NAME ?? 'Huddle',
 
   /** Seed a demo account + posts on boot (development only). */
   seed: env.LAMP_SEED === '1',

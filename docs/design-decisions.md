@@ -42,9 +42,27 @@ work on old devices and under assistive technology.
 **Enforced by:** `tests/http.test.js` asserts no `<script>` tag is served and
 that the CSP sets `script-src 'none'`.
 
+## D4a — Support statt Like: Menschen statt Zahl
+
+**Chosen:** die Kernreaktion heisst Support ("ich stehe dahinter", nicht "ich finde das
+gut") und wird als Satz aus Namen angezeigt — "Mira, Jonas und 2 weitere stehen dahinter".
+Eine nackte Gesamtzahl existiert nirgends im Produkt. Wer einen Beitrag mit Inhaltshinweis
+unterstuetzt, bekommt danach angeboten, tatsaechlich zu antworten.
+
+**Why:** ein umbenannter Like waere Kosmetik. Rueckhalt ist konkret oder er ist nichts —
+und er soll in Zuwendung muenden, nicht im Klick enden.
+
+**Enforced by:** `supportSentence()` (`src/domain/posts.js`), das Folgeangebot in
+`postArticle()`; getestet in `tests/wellbeing.test.js` und `tests/http.test.js`.
+
+Ueber ActivityPub wird Support als `Like` uebertragen, damit fremde Server es verstehen.
+Die Semantik und die Anzeigeregeln liegen bei Huddle; was andere Server daraus machen,
+laesst sich nicht kontrollieren — deshalb ist die Nicht-Vergleichbarkeit im eigenen Produkt
+verankert, nicht im Protokoll.
+
 ## D4 — Public metrics off by default
 
-**Chosen:** like counts are visible to the author only. The author — not the
+**Chosen:** who supported a post is visible to the author only. The author — not the
 viewer — opts in to making them public. Follower collections stay empty over
 ActivityPub while counts are private.
 

@@ -80,8 +80,8 @@ function candidates(viewer, { limit, before }) {
  */
 registerFeed({
   id: 'chronological',
-  name: 'Newest first',
-  explanation: 'Everything from the people you follow, newest first. Nothing is ranked, hidden or boosted.',
+  name: 'Neueste zuerst',
+  explanation: 'Alles aus deinem Kreis, neueste zuerst. Nichts wird gewichtet, versteckt oder hochgespült.',
   ranked: false,
   build: (viewer, options) => candidates(viewer, options),
 });
@@ -93,9 +93,9 @@ registerFeed({
  */
 registerFeed({
   id: 'quiet-voices',
-  name: 'Quiet voices first',
+  name: 'Leise Stimmen zuerst',
   explanation:
-    'The same posts as "Newest first", but accounts that post rarely appear higher, so frequent posters do not crowd them out. No engagement data is used.',
+    'Dieselben Beiträge wie bei „Neueste zuerst“, aber wer selten postet, steht weiter oben — damit Vielposter niemanden verdrängen. Es werden keine Reaktionsdaten benutzt.',
   ranked: true,
   build: (viewer, options) => {
     const rows = candidates(viewer, { ...options, limit: options.limit * 3 });

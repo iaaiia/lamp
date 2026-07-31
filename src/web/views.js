@@ -1,10 +1,10 @@
 /**
- * Server-rendered, script-free HTML.
+ * Huddle — servergerendertes HTML, ohne Client-JavaScript.
  *
- * The whole product works without JavaScript. That is a deliberate
- * accessibility and safety property: nothing can autoplay, re-order under the
- * reader, or load more content than the user asked for, because there is no
- * client-side code to do it.
+ * Das ganze Produkt funktioniert ohne JavaScript. Das ist eine bewusste
+ * Zugänglichkeits- und Sicherheitseigenschaft: nichts kann automatisch
+ * abspielen, sich unter der lesenden Person umsortieren oder mehr nachladen,
+ * als angefordert wurde — weil es keinen Client-Code gibt, der das täte.
  */
 
 import config from '../config.js';
@@ -20,14 +20,35 @@ export const escapeHtml = (value) =>
 
 const handleOf = (row) => (row.domain ? `@${row.username}@${row.domain}` : `@${row.username}`);
 
-/** Relative time with an exact machine-readable value for screen readers. */
+/** Initialen für den Presence-Ring. */
+const initials = (row) =>
+  (row.display_name || row.username || '?')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+/** Das Logo: die Gruppe außen, die Person innen. */
+const logo = `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+  <circle cx="12" cy="12" r="10" fill="none" stroke="var(--blue)" stroke-width="2"></circle>
+  <circle cx="12" cy="12" r="3.6" fill="var(--ember)"></circle>
+</svg>`;
+
+/** Der Support-Bogen: ein Kreis, der sich über eine Person legt. */
+const supportArc = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M3.5 15a9 9 0 0 1 17 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+  <circle cx="12" cy="19" r="2.4" fill="currentColor"></circle>
+</svg>`;
+
+/** Relative Zeit mit maschinenlesbarem Wert für Screenreader. */
 function timeTag(iso) {
   const delta = (Date.now() - Date.parse(iso)) / 1000;
   const label =
-    delta < 60 ? 'just now'
-    : delta < 3600 ? `${Math.floor(delta / 60)} min ago`
-    : delta < 86400 ? `${Math.floor(delta / 3600)} h ago`
-    : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    delta < 60 ? 'gerade eben'
+    : delta < 3600 ? `vor ${Math.floor(delta / 60)} Min`
+    : delta < 86400 ? `vor ${Math.floor(delta / 3600)} Std`
+    : new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' });
   return `<time datetime="${escapeHtml(iso)}">${escapeHtml(label)}</time>`;
 }
 
@@ -40,15 +61,15 @@ export function layout({ title, viewer, body, prefs }) {
   ].filter(Boolean).join(' ');
 
   const nav = viewer
-    ? `<li><a href="/">Home</a></li>
-       <li><a href="/@${escapeHtml(viewer.username)}">Your profile</a></li>
-       <li><a href="/settings">Settings</a></li>
+    ? `<li><a href="/">Start</a></li>
+       <li><a href="/@${escapeHtml(viewer.username)}">Dein Profil</a></li>
+       <li><a href="/settings">Einstellungen</a></li>
        <li><a href="/moderation">Moderation</a></li>
-       <li><form method="post" action="/logout"><button class="secondary" type="submit">Sign out</button></form></li>`
-    : `<li><a href="/login">Sign in</a></li><li><a href="/register">Create account</a></li>`;
+       <li><form method="post" action="/logout"><button class="quiet" type="submit">Abmelden</button></form></li>`
+    : `<li><a href="/login">Anmelden</a></li><li><a href="/register">Konto anlegen</a></li>`;
 
   return `<!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -57,11 +78,11 @@ export function layout({ title, viewer, body, prefs }) {
 <link rel="alternate" type="application/activity+json" href="${config.origin}">
 </head>
 <body class="${classes}">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
 <header class="site">
   <div class="inner">
-    <a class="brand" href="/">${escapeHtml(config.instanceName)}</a>
-    <nav class="site" aria-label="Main"><ul>${nav}</ul></nav>
+    <a class="brandmark" href="/">${logo}${escapeHtml(config.instanceName)}</a>
+    <nav class="site" aria-label="Hauptnavigation"><ul>${nav}</ul></nav>
   </div>
 </header>
 <main id="main" tabindex="-1">
@@ -69,79 +90,102 @@ ${body}
 </main>
 <footer class="site">
   <div class="inner">
-    <p>${escapeHtml(config.instanceName)} runs on ActivityPub. Your account, posts and follows can be
-    <a href="/settings/export">exported</a> at any time and taken to another server.</p>
-    <p>No behavioural advertising. No engagement ranking by default. No infinite scroll.</p>
+    <p>${escapeHtml(config.instanceName)} läuft auf ActivityPub. Dein Konto, deine Beiträge und
+    deine Kontakte kannst du jederzeit <a href="/settings/export">mitnehmen</a> — auf einen
+    anderen Server, ohne deinen Kreis zu verlieren.</p>
+    <p>Keine Werbeprofile. Keine Rangliste. Kein Nachladen beim Scrollen.</p>
   </div>
 </footer>
 </body>
 </html>`;
 }
 
-export function postArticle(post, { viewer, showMetrics, likeCount, replyCount, canReply, replyReason }) {
+export function postArticle(post, { viewer, showMetrics, supportSentence, supported, replyCount, canReply, replyReason }) {
   const media = JSON.parse(post.media || '[]')
-    .map((item) => `<figure><img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt)}"><figcaption class="muted">${escapeHtml(item.alt)}</figcaption></figure>`)
+    .map((item) => `<figure><img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt)}"><figcaption>${escapeHtml(item.alt)}</figcaption></figure>`)
     .join('');
 
   const body = post.content_warning
-    ? `<details><summary>${escapeHtml(post.content_warning)}</summary><div class="body">${escapeHtml(post.content)}</div>${media}</details>`
+    ? `<details><summary>Inhaltshinweis: ${escapeHtml(post.content_warning)}</summary><div class="body">${escapeHtml(post.content)}</div>${media}</details>`
     : `<div class="body">${escapeHtml(post.content)}</div>${media}`;
 
-  const metrics = showMetrics
-    ? `<span class="meta">${likeCount} like${likeCount === 1 ? '' : 's'}</span>`
-    : `<span class="meta">Counts are private</span>`;
+  // Nie eine nackte Zahl: entweder Menschen, oder der Hinweis, dass der
+  // Rückhalt im Kreis bleibt.
+  const support = showMetrics
+    ? supportSentence
+      ? `<span class="support-note">${escapeHtml(supportSentence)}</span>`
+      : ''
+    : `<span class="support-note">Rückhalt bleibt im Kreis</span>`;
+
+  const supportButton = viewer
+    ? `<form method="post" action="/posts/${post.id}/support">
+         <button class="support" type="submit" aria-pressed="${supported ? 'true' : 'false'}">
+           ${supportArc}${supported ? 'Du stehst dahinter' : 'Support geben'}
+         </button>
+       </form>`
+    : '';
+
+  // Rückhalt soll in Zuwendung münden, nicht im Klick enden: Wer einen schweren
+  // Beitrag unterstützt, bekommt den nächsten Schritt angeboten.
+  const followUp = supported && post.content_warning && canReply
+    ? `<div class="notice ember small">
+         <strong>Du stehst hinter ${escapeHtml(post.display_name || post.username)}.</strong>
+         Willst du auch etwas schreiben? <a href="/posts/${post.id}#reply">Antworten</a>
+       </div>`
+    : '';
 
   const replyControl = viewer
     ? canReply
-      ? `<a href="/posts/${post.id}#reply">Reply</a>`
-      : `<span class="meta">${escapeHtml(replyReason ?? 'Replies are limited.')}</span>`
-    : '';
-
-  const likeControl = viewer
-    ? `<form method="post" action="/posts/${post.id}/like"><button class="secondary" type="submit">Like</button></form>`
+      ? `<a href="/posts/${post.id}#reply">Mitreden</a>`
+      : `<span class="meta small">${escapeHtml(replyReason ?? 'Antworten sind hier eingeschränkt.')}</span>`
     : '';
 
   return `<article class="post">
-  <header>
-    <strong>${escapeHtml(post.display_name || post.username)}</strong>
+  <div class="who">
+    <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(post))}</span></span>
+    <span class="name">${escapeHtml(post.display_name || post.username)}</span>
     <span class="handle">${escapeHtml(handleOf(post))}</span>
-    <span class="handle">${timeTag(post.created_at)}</span>
-  </header>
+    ${timeTag(post.created_at)}
+  </div>
   ${body}
-  <footer>
-    <a href="/posts/${post.id}">${replyCount} repl${replyCount === 1 ? 'y' : 'ies'}</a>
+  <div class="actions">
+    ${supportButton}
+    ${support}
+    <a href="/posts/${post.id}" class="small">${replyCount} ${replyCount === 1 ? 'Antwort' : 'Antworten'}</a>
     ${replyControl}
-    ${likeControl}
-    ${metrics}
-  </footer>
+  </div>
+  ${followUp}
 </article>`;
 }
 
 export function composer({ prefs, replyTo = null, error = null }) {
-  const policies = ['everyone', 'followers', 'mentioned', 'nobody'];
-  const options = policies
-    .map((value) => `<option value="${value}"${value === prefs.replyPolicy ? ' selected' : ''}>${
-      { everyone: 'Anyone can reply', followers: 'Only people I follow back can reply', mentioned: 'Only people I mention can reply', nobody: 'No replies' }[value]
-    }</option>`)
+  const labels = {
+    everyone: 'Alle können antworten',
+    followers: 'Nur Leute, denen ich folge',
+    mentioned: 'Nur Leute, die ich nenne',
+    nobody: 'Keine Antworten',
+  };
+  const options = Object.entries(labels)
+    .map(([value, label]) => `<option value="${value}"${value === prefs.replyPolicy ? ' selected' : ''}>${label}</option>`)
     .join('');
 
   return `<form class="card" method="post" action="${replyTo ? `/posts/${replyTo}/reply` : '/posts'}" id="reply">
-  <h2>${replyTo ? 'Write a reply' : 'Write a post'}</h2>
+  <h2 style="margin-top:0">${replyTo ? 'Antwort schreiben' : 'Was willst du sagen?'}</h2>
   ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
-  <label for="content">What do you want to say?</label>
+  <label for="content">Dein Beitrag</label>
   <textarea id="content" name="content" maxlength="${config.limits.postLength}" required></textarea>
-  <label for="content_warning">Content note (optional)</label>
+  <label for="content_warning">Inhaltshinweis (optional)</label>
   <input type="text" id="content_warning" name="content_warning" maxlength="140">
-  <p class="hint">A content note hides the post behind a heading until someone chooses to open it.</p>
+  <p class="hint">Ein Inhaltshinweis blendet den Beitrag hinter einer Überschrift aus, bis jemand ihn öffnet.</p>
   ${replyTo ? '' : `
-  <label for="reply_policy">Who can reply?</label>
+  <label for="reply_policy">Wer darf antworten?</label>
   <select id="reply_policy" name="reply_policy">${options}</select>
-  <label for="visibility">Who can see this?</label>
+  <label for="visibility">Wer sieht das?</label>
   <select id="visibility" name="visibility">
-    <option value="public">Anyone</option>
-    <option value="followers">Followers only</option>
+    <option value="public">Alle</option>
+    <option value="followers">Nur mein Kreis</option>
   </select>`}
-  <p><button type="submit">${replyTo ? 'Post reply' : 'Post'}</button></p>
+  <p><button type="submit">${replyTo ? 'Antwort abschicken' : 'Beitrag veröffentlichen'}</button></p>
 </form>`;
 }
 
@@ -152,29 +196,29 @@ export function timelinePage({ viewer, prefs, feed, feeds, posts, nextCursor, er
 
   const list = posts.length
     ? posts.map((p) => postArticle(p, p.view)).join('')
-    : `<p class="card">Nothing here yet. Follow someone, or write the first post.</p>`;
+    : `<p class="card">Hier ist noch nichts. Folge jemandem, oder schreib den ersten Beitrag.</p>`;
 
-  // Paging is a link the user chooses to follow. No scroll handler exists.
+  // Weiterblättern ist ein Link, den man bewusst anklickt.
   const pager = nextCursor
-    ? `<p class="pager"><a class="button secondary" href="/?feed=${encodeURIComponent(feed.id)}&amp;before=${encodeURIComponent(nextCursor)}">Show older posts</a></p>`
-    : `<p class="pager end">That is everything for now. Nothing more will load on its own.</p>`;
+    ? `<p class="pager"><a class="button secondary" href="/?feed=${encodeURIComponent(feed.id)}&amp;before=${encodeURIComponent(nextCursor)}">Ältere Beiträge zeigen</a></p>`
+    : `<p class="pager end">Das war alles. Es lädt nichts von allein nach.</p>`;
 
   return layout({
-    title: 'Home',
+    title: 'Start',
     viewer,
     prefs,
     body: `
-<h1>Home</h1>
+<h1>Dein Kreis</h1>
 <div class="feed-explainer">
   <p><strong>${escapeHtml(feed.name)}.</strong> ${escapeHtml(feed.explanation)}</p>
   <form method="get" action="/">
-    <label for="feed">Choose how this feed is built</label>
+    <label for="feed" class="small">Wie dieser Kreis sortiert wird</label>
     <select id="feed" name="feed">${picker}</select>
-    <p><button class="secondary" type="submit">Use this feed</button></p>
+    <p style="margin:.7rem 0 0"><button class="secondary" type="submit">Sortierung übernehmen</button></p>
   </form>
 </div>
 ${composer({ prefs, error })}
-<h2>Posts</h2>
+<h2>Beiträge</h2>
 ${list}
 ${pager}`,
   });
@@ -182,20 +226,20 @@ ${pager}`,
 
 export function threadPage({ viewer, prefs, post, replies, replyState, error }) {
   return layout({
-    title: 'Post',
+    title: 'Beitrag',
     viewer,
     prefs,
     body: `
-<h1>Post</h1>
+<h1>Beitrag</h1>
 ${postArticle(post, post.view)}
-<h2>Replies</h2>
-${replies.length ? replies.map((r) => postArticle(r, r.view)).join('') : '<p class="card">No replies yet.</p>'}
+<h2>Antworten</h2>
+${replies.length ? replies.map((r) => postArticle(r, r.view)).join('') : '<p class="card">Noch keine Antworten.</p>'}
 ${
   viewer
     ? replyState.allowed
       ? composer({ prefs, replyTo: post.id, error })
       : `<p class="notice" id="reply">${escapeHtml(replyState.reason)}</p>`
-    : '<p class="notice"><a href="/login">Sign in</a> to reply.</p>'
+    : '<p class="notice"><a href="/login">Melde dich an</a>, um mitzureden.</p>'
 }`,
   });
 }
@@ -203,13 +247,13 @@ ${
 export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextCursor, counts, isSelf, following, paused }) {
   const followForm = viewer && !isSelf
     ? `<form method="post" action="/@${escapeHtml(account.username)}/${following ? 'unfollow' : 'follow'}">
-         <button type="submit" class="${following ? 'secondary' : ''}">${following ? 'Unfollow' : 'Follow'}</button>
+         <button type="submit" class="${following ? 'secondary' : ''}">${following ? 'Nicht mehr folgen' : 'In meinen Kreis holen'}</button>
        </form>`
     : '';
 
   const countsBlock = accountPrefs.showMetrics || isSelf
-    ? `<p class="meta">${counts.followers} followers · ${counts.following} following</p>`
-    : `<p class="meta">This account keeps its follower counts private.</p>`;
+    ? `<p class="meta small mono">${counts.followers} im Kreis · folgt ${counts.following}</p>`
+    : `<p class="meta small">Dieses Konto hält seinen Kreis privat.</p>`;
 
   if (paused) {
     return layout({
@@ -217,7 +261,8 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
       viewer,
       prefs,
       body: `<h1>@${escapeHtml(account.username)}</h1>
-      <p class="notice">This account is paused. The posts are not deleted — they are simply not shown while the account is on a break.</p>`,
+      <p class="notice">Dieses Konto lässt seinen Kreis gerade ruhen. Die Beiträge sind nicht
+      gelöscht — sie werden nur nicht gezeigt, solange die Pause läuft.</p>`,
     });
   }
 
@@ -227,17 +272,20 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
     prefs,
     body: `
 <div class="card">
-  <h1>${escapeHtml(account.display_name || account.username)}</h1>
-  <p class="handle meta">${escapeHtml(handleOf(account))}</p>
+  <div class="who" style="display:flex;gap:.6rem;align-items:center;margin-bottom:.6rem">
+    <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(account))}</span></span>
+    <h1 style="margin:0">${escapeHtml(account.display_name || account.username)}</h1>
+  </div>
+  <p class="meta mono small">${escapeHtml(handleOf(account))}</p>
   ${account.bio ? `<p>${escapeHtml(account.bio)}</p>` : ''}
   ${countsBlock}
   ${followForm}
 </div>
-<h2>Posts</h2>
-${posts.length ? posts.map((p) => postArticle(p, p.view)).join('') : '<p class="card">No posts yet.</p>'}
+<h2>Beiträge</h2>
+${posts.length ? posts.map((p) => postArticle(p, p.view)).join('') : '<p class="card">Noch keine Beiträge.</p>'}
 ${
   nextCursor
-    ? `<p class="pager"><a class="button secondary" href="/@${escapeHtml(account.username)}?before=${encodeURIComponent(nextCursor)}">Show older posts</a></p>`
+    ? `<p class="pager"><a class="button secondary" href="/@${escapeHtml(account.username)}?before=${encodeURIComponent(nextCursor)}">Ältere Beiträge zeigen</a></p>`
     : ''
 }`,
   });
@@ -253,61 +301,64 @@ export function settingsPage({ viewer, prefs, feeds, saved }) {
     .join('');
 
   return layout({
-    title: 'Settings',
+    title: 'Einstellungen',
     viewer,
     prefs,
     body: `
-<h1>Settings</h1>
-${saved ? '<p class="notice" role="status">Saved.</p>' : ''}
-${viewer.is_minor ? '<p class="notice">This account is registered as under 18. Some protections cannot be switched off: replies stay limited to people you follow back, direct messages are off, and the account is not listed in discovery.</p>' : ''}
+<h1>Einstellungen</h1>
+${saved ? '<p class="notice" role="status">Gespeichert.</p>' : ''}
+${viewer.is_minor ? `<p class="notice">Dieses Konto ist als unter 18 angemeldet. Ein paar Schutzeinstellungen
+lassen sich deshalb nicht abschalten: Antworten bleiben auf Leute beschränkt, denen du folgst,
+Direktnachrichten sind aus, und das Konto taucht nicht in Vorschlägen auf.</p>` : ''}
 <form method="post" action="/settings">
   <fieldset>
-    <legend>Your feed</legend>
-    <label for="feed">How your home feed is built</label>
+    <legend>Dein Kreis</legend>
+    <label for="feed">Wie dein Start sortiert wird</label>
     <select id="feed" name="feed">${feedOptions}</select>
-    <p class="hint">Feeds are interchangeable. Whichever you choose, it explains itself at the top of your home page, and no feed uses engagement data.</p>
+    <p class="hint">Sortierungen sind austauschbar. Welche du auch wählst — sie erklärt sich oben
+    auf deiner Startseite, und keine nutzt Verweildauer oder abgeleitete Interessen.</p>
   </fieldset>
   <fieldset>
-    <legend>Attention and privacy</legend>
-    ${checkbox('showMetrics', 'Show my like counts publicly', 'Off by default. When off, only you can see how many likes your posts got.')}
-    ${checkbox('discoverable', 'List my account in discovery', 'Off means people can still find you by your exact handle.')}
-    <label for="sessionLimitMinutes">Session reminder after (minutes, 0 = off)</label>
+    <legend>Aufmerksamkeit und Privatsphäre</legend>
+    ${checkbox('showMetrics', 'Zeigen, wer hinter meinen Beiträgen steht', 'Standardmäßig aus. Solange es aus ist, siehst nur du, wer dir Support gegeben hat.')}
+    ${checkbox('discoverable', 'Mein Konto in Vorschlägen zeigen', 'Aus heißt: Leute finden dich weiterhin über deinen genauen Namen.')}
+    <label for="sessionLimitMinutes">Erinnerung nach (Minuten, 0 = aus)</label>
     <input type="text" id="sessionLimitMinutes" name="sessionLimitMinutes" value="${escapeHtml(prefs.sessionLimitMinutes)}" inputmode="numeric">
-    <p class="hint">You decide the shape of your session. LAMP never nudges you to stay longer.</p>
+    <p class="hint">Du bestimmst, wie lange eine Sitzung dauert. Wir stupsen dich nie, länger zu bleiben.</p>
   </fieldset>
   <fieldset>
-    <legend>Reading comfort</legend>
-    ${checkbox('reducedMotion', 'Reduce motion', 'Turns off every transition and animation.')}
-    ${checkbox('lowStimulus', 'Low-stimulus colours', 'A muted palette with no colour accents competing for attention.')}
-    ${checkbox('plainLanguage', 'Plain language and more spacing', 'Wider line spacing and a shorter line length.')}
+    <legend>Lesekomfort</legend>
+    ${checkbox('reducedMotion', 'Bewegung reduzieren', 'Schaltet alle Übergänge und Animationen ab.')}
+    ${checkbox('lowStimulus', 'Reizarme Farben', 'Entsättigte Palette ohne Akzentfarben, die um Aufmerksamkeit konkurrieren.')}
+    ${checkbox('plainLanguage', 'Einfache Sprache und mehr Abstand', 'Größerer Zeilenabstand und kürzere Zeilen.')}
   </fieldset>
   <fieldset>
-    <legend>Replies and messages</legend>
-    <label for="replyPolicy">Default reply setting for new posts</label>
+    <legend>Antworten</legend>
+    <label for="replyPolicy">Voreinstellung für neue Beiträge</label>
     <select id="replyPolicy" name="replyPolicy">
-      <option value="everyone"${prefs.replyPolicy === 'everyone' ? ' selected' : ''}>Anyone can reply</option>
-      <option value="followers"${prefs.replyPolicy === 'followers' ? ' selected' : ''}>Only people I follow back</option>
-      <option value="mentioned"${prefs.replyPolicy === 'mentioned' ? ' selected' : ''}>Only people I mention</option>
-      <option value="nobody"${prefs.replyPolicy === 'nobody' ? ' selected' : ''}>No replies</option>
+      <option value="everyone"${prefs.replyPolicy === 'everyone' ? ' selected' : ''}>Alle können antworten</option>
+      <option value="followers"${prefs.replyPolicy === 'followers' ? ' selected' : ''}>Nur Leute, denen ich folge</option>
+      <option value="mentioned"${prefs.replyPolicy === 'mentioned' ? ' selected' : ''}>Nur Leute, die ich nenne</option>
+      <option value="nobody"${prefs.replyPolicy === 'nobody' ? ' selected' : ''}>Keine Antworten</option>
     </select>
   </fieldset>
-  <p><button type="submit">Save settings</button></p>
+  <p><button type="submit">Einstellungen speichern</button></p>
 </form>
 
-<h2>Take a break</h2>
+<h2>Kreis ruhen lassen</h2>
 <div class="card">
-  <p>Pausing hides your profile and posts and stops your account federating. Nothing is deleted, your
-  followers stay, and you can come back in one step.</p>
+  <p>Eine Pause blendet dein Profil und deine Beiträge aus und stoppt die Verbindung zu anderen
+  Servern. Nichts wird gelöscht, dein Kreis bleibt bestehen, und du kommst mit einem Klick zurück.</p>
   <form method="post" action="/settings/${viewer.paused_at ? 'resume' : 'pause'}">
-    <button class="secondary" type="submit">${viewer.paused_at ? 'Resume my account' : 'Pause my account'}</button>
+    <button class="secondary" type="submit">${viewer.paused_at ? 'Kreis wieder öffnen' : 'Kreis ruhen lassen'}</button>
   </form>
 </div>
 
-<h2>Take your account elsewhere</h2>
+<h2>Konto mitnehmen</h2>
 <div class="card">
-  <p>Download your profile, posts and social graph as JSON. Any ActivityPub server can take it —
-  leaving is a supported action, not a punishment.</p>
-  <p><a class="button secondary" href="/settings/export">Download my data</a></p>
+  <p>Lade Profil, Beiträge und deinen Kreis als JSON herunter. Jeder ActivityPub-Server kann das
+  einlesen — weggehen ist hier eine unterstützte Handlung, keine Strafe.</p>
+  <p><a class="button secondary" href="/settings/export">Meine Daten herunterladen</a></p>
 </div>`,
   });
 }
@@ -317,47 +368,53 @@ export function moderationPage({ viewer, prefs, reports, stats }) {
     ? reports
         .map(
           (r) => `<tr>
-  <td>${escapeHtml(r.severity)}<br><small>${escapeHtml(r.source)}</small></td>
-  <td>${escapeHtml(r.reason)}<br><small>${escapeHtml((r.content ?? '').slice(0, 160))}</small></td>
-  <td>${escapeHtml(r.language ?? '—')}</td>
+  <td><span class="chip">${escapeHtml(r.severity)}</span><br><small class="muted">${escapeHtml(r.source === 'user' ? 'gemeldet' : 'automatisch erkannt')}</small></td>
+  <td>${escapeHtml(r.reason)}<br><small class="muted">${escapeHtml((r.content ?? '').slice(0, 160))}</small></td>
+  <td class="mono">${escapeHtml(r.language ?? '—')}</td>
   <td>
     <form method="post" action="/moderation/${r.id}">
-      <label class="inline" for="note-${r.id}">Note</label>
+      <label for="note-${r.id}" class="small">Begründung</label>
       <input type="text" id="note-${r.id}" name="note" maxlength="500">
-      <button name="decision" value="actioned" type="submit">Remove post</button>
-      <button class="secondary" name="decision" value="dismissed" type="submit">Dismiss</button>
+      <p style="margin:.6rem 0 0">
+        <button name="decision" value="actioned" type="submit">Beitrag entfernen</button>
+        <button class="secondary" name="decision" value="dismissed" type="submit">Verwerfen</button>
+      </p>
     </form>
   </td>
 </tr>`,
         )
         .join('')
-    : '<tr><td colspan="4">The queue is empty.</td></tr>';
+    : '<tr><td colspan="4">Die Liste ist leer.</td></tr>';
 
   const statRows = Object.entries(stats)
-    .map(([language, s]) => `<tr><td>${escapeHtml(language)}</td><td>${s.decided}</td><td>${s.actioned}</td><td>${s.precision === null ? '—' : (s.precision * 100).toFixed(0) + '%'}</td></tr>`)
-    .join('') || '<tr><td colspan="4">No decided triage items yet.</td></tr>';
+    .map(([language, s]) => `<tr><td class="mono">${escapeHtml(language)}</td><td class="mono">${s.decided}</td><td class="mono">${s.actioned}</td><td class="mono">${s.precision === null ? '—' : (s.precision * 100).toFixed(0) + ' %'}</td></tr>`)
+    .join('') || '<tr><td colspan="4">Noch keine entschiedenen Fälle.</td></tr>';
 
   return layout({
     title: 'Moderation',
     viewer,
     prefs,
     body: `
-<h1>Moderation queue</h1>
-<p class="notice">Automated triage only sorts this queue. It cannot remove or hide anything —
-every decision below is made by a person, and is recorded with who made it.</p>
+<h1>Moderation</h1>
+<p class="notice">Die automatische Erkennung sortiert diese Liste nur. Sie kann nichts entfernen
+oder ausblenden — jede Entscheidung hier trifft ein Mensch, und sie wird mit Namen festgehalten.</p>
+<div class="table-scroll">
 <table>
-  <caption>Open reports, most severe first</caption>
-  <thead><tr><th scope="col">Severity</th><th scope="col">Reason</th><th scope="col">Language</th><th scope="col">Decision</th></tr></thead>
+  <caption>Offene Fälle, dringendste zuerst</caption>
+  <thead><tr><th scope="col">Einstufung</th><th scope="col">Grund</th><th scope="col">Sprache</th><th scope="col">Entscheidung</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
+</div>
 
-<h2>Triage agreement by language</h2>
-<p>How often a machine-flagged item was actually actioned by a human. A low or missing number for a
-language is a signal that the classifier should not be trusted there.</p>
+<h2>Trefferquote nach Sprache</h2>
+<p>Wie oft ein automatisch markierter Fall von einem Menschen tatsächlich bestätigt wurde. Ein
+niedriger oder fehlender Wert heißt: Der Erkennung ist in dieser Sprache nicht zu trauen.</p>
+<div class="table-scroll">
 <table>
-  <thead><tr><th scope="col">Language</th><th scope="col">Decided</th><th scope="col">Actioned</th><th scope="col">Agreement</th></tr></thead>
+  <thead><tr><th scope="col">Sprache</th><th scope="col">Entschieden</th><th scope="col">Bestätigt</th><th scope="col">Übereinstimmung</th></tr></thead>
   <tbody>${statRows}</tbody>
-</table>`,
+</table>
+</div>`,
   });
 }
 
@@ -368,7 +425,7 @@ export function formPage({ viewer, prefs, title, intro, action, fields, submitLa
     prefs,
     body: `
 <h1>${escapeHtml(title)}</h1>
-${intro ? `<p>${escapeHtml(intro)}</p>` : ''}
+${intro ? `<p class="muted">${escapeHtml(intro)}</p>` : ''}
 ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
 <form class="card" method="post" action="${action}">
   ${fields}
@@ -380,9 +437,9 @@ ${footer}`,
 
 export function errorPage({ viewer, prefs, status, message }) {
   return layout({
-    title: `Error ${status}`,
+    title: `Fehler ${status}`,
     viewer,
     prefs,
-    body: `<h1>${status}</h1><p class="notice">${escapeHtml(message)}</p><p><a href="/">Back to home</a></p>`,
+    body: `<h1>${status}</h1><p class="notice">${escapeHtml(message)}</p><p><a href="/">Zurück zum Start</a></p>`,
   });
 }

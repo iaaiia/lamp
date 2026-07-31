@@ -6,17 +6,18 @@ import { createServer } from 'node:http';
 
 import { freshDatabase, makeAccount } from './helpers.js';
 import { createApp } from '../src/server.js';
-import { createPost } from '../src/domain/posts.js';
+import { createPost, react } from '../src/domain/posts.js';
 import { createSession } from '../src/domain/accounts.js';
 
 let server;
 let base;
 let cookie;
+let postId;
 
 before(async () => {
   freshDatabase();
   const account = makeAccount('kim', { displayName: 'Kim' });
-  createPost(account, { content: 'A first public post.', visibility: 'public' });
+  postId = createPost(account, { content: 'A first public post.', visibility: 'public' }).id;
   cookie = `lamp_session=${createSession(account.id).id}`;
 
   server = createServer(createApp());
@@ -33,8 +34,8 @@ describe('web surface', () => {
     const response = await fetchPath('/');
     const html = await response.text();
     assert.equal(response.status, 200);
-    assert.match(html, /<html lang="en">/);
-    assert.match(html, /Skip to content/, 'a skip link is present for keyboard users');
+    assert.match(html, /<html lang="de">/);
+    assert.match(html, /Zum Inhalt springen/, 'a skip link is present for keyboard users');
   });
 
   it('ships no client-side JavaScript at all', async () => {
@@ -49,24 +50,30 @@ describe('web surface', () => {
 
   it('renders the timeline with a feed explanation and an explicit end marker', async () => {
     const html = await (await fetchPath('/', { headers: { cookie } })).text();
-    assert.match(html, /Newest first/);
-    assert.match(html, /Nothing is ranked, hidden or boosted/);
-    assert.match(html, /Nothing more will load on its own/);
+    assert.match(html, /Neueste zuerst/);
+    assert.match(html, /Nichts wird gewichtet/);
+    assert.match(html, /Es lädt nichts von allein nach/);
   });
 
-  it('hides like counts from everyone but the author', async () => {
-    const mine = await (await fetchPath('/@kim', { headers: { cookie } })).text();
-    assert.match(mine, /0 likes/, 'the author sees their own count');
+  it('shows support as people, never as a bare number', async () => {
+    const supporter = makeAccount('rae', { displayName: 'Rae' });
+    react(supporter.id, postId);
 
+    const mine = await (await fetchPath('/@kim', { headers: { cookie } })).text();
+    assert.match(mine, /Rae steht dahinter/, 'the author sees who is backing them');
+    assert.doesNotMatch(mine, /\b1 Support\b/, 'and never a bare count');
+  });
+
+  it('keeps support private from others until the author opts in', async () => {
     const theirs = await (await fetchPath('/@kim')).text();
-    assert.match(theirs, /Counts are private/);
-    assert.doesNotMatch(theirs, /0 likes/);
+    assert.match(theirs, /Rückhalt bleibt im Kreis/);
+    assert.doesNotMatch(theirs, /steht dahinter/);
   });
 
   it('keeps the settings page reachable and explains the pause option', async () => {
     const html = await (await fetchPath('/settings', { headers: { cookie } })).text();
-    assert.match(html, /Pause my account/);
-    assert.match(html, /Nothing is deleted/);
+    assert.match(html, /Kreis ruhen lassen/);
+    assert.match(html, /Nichts wird gelöscht/);
   });
 
   it('exports the account as a downloadable file', async () => {

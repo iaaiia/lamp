@@ -19,7 +19,6 @@ import {
   updatePreferences,
 } from './domain/accounts.js';
 import {
-  countReactions,
   createPost,
   findPostById,
   hasReacted,
@@ -27,6 +26,7 @@ import {
   metricsVisible,
   react,
   repliesTo,
+  supportSentence,
   unreact,
 } from './domain/posts.js';
 import { accountTimeline, listFeeds, timeline } from './domain/feeds.js';
@@ -90,11 +90,12 @@ function decorate(post, viewer) {
     view: {
       viewer,
       showMetrics: metricsVisible(post, viewer),
-      likeCount: countReactions(post.id),
+      // Nie eine nackte Zahl — Support wird als Menschen angezeigt.
+      supportSentence: supportSentence(post.id),
+      supported: viewer ? hasReacted(viewer.id, post.id) : false,
       replyCount: repliesTo(post.id).length,
       canReply: replyState.allowed,
       replyReason: replyState.reason,
-      liked: viewer ? hasReacted(viewer.id, post.id) : false,
     },
   };
 }
@@ -129,15 +130,15 @@ router.get('/', (ctx, res) => {
       prefs: preferencesOf(null),
       title: config.instanceName,
       intro:
-        'A social network built with young people, on open protocols. Newest-first by default, no engagement ranking, no infinite scroll, and your account can leave with you.',
+        'Der Kreis, der um dich herum steht. Ein soziales Netz auf offenen Protokollen: neueste Beiträge zuerst, keine Rangliste, kein Nachladen beim Scrollen — und dein Konto kannst du jederzeit mitnehmen.',
       action: '/login',
       fields: `
-        <label for="username">Username</label>
+        <label for="username">Name</label>
         <input type="text" id="username" name="username" autocomplete="username" required>
-        <label for="password">Password</label>
+        <label for="password">Passwort</label>
         <input type="password" id="password" name="password" autocomplete="current-password" required>`,
-      submitLabel: 'Sign in',
-      footer: '<p><a href="/register">Create an account</a></p>',
+      submitLabel: 'Anmelden',
+      footer: '<p><a href="/register">Konto anlegen</a></p>',
     }));
   }
 
@@ -163,21 +164,21 @@ router.get('/register', (ctx, res) =>
   sendHtml(res, 200, formPage({
     viewer: null,
     prefs: preferencesOf(null),
-    title: 'Create an account',
-    intro: 'Your settings start at the protective end. You can loosen them later — nothing loosens itself.',
+    title: 'Konto anlegen',
+    intro: 'Deine Einstellungen starten auf der geschützten Seite. Lockern kannst du sie später — von allein lockert sich nichts.',
     action: '/register',
     fields: `
-      <label for="username">Username</label>
+      <label for="username">Name</label>
       <input type="text" id="username" name="username" autocomplete="username" required>
-      <p class="hint">3–30 lowercase letters, numbers or underscores.</p>
-      <label for="display_name">Display name (optional)</label>
+      <p class="hint">3–30 Kleinbuchstaben, Ziffern oder Unterstriche.</p>
+      <label for="display_name">Anzeigename (optional)</label>
       <input type="text" id="display_name" name="display_name">
-      <label for="password">Password</label>
+      <label for="password">Passwort</label>
       <input type="password" id="password" name="password" autocomplete="new-password" required>
-      <p class="hint">At least 10 characters.</p>
+      <p class="hint">Mindestens 10 Zeichen.</p>
       <label class="inline"><input type="checkbox" name="is_minor" value="1">
-        <span>I am under 18<span class="hint">Turns on extra protections that cannot be switched off.</span></span></label>`,
-    submitLabel: 'Create account',
+        <span>Ich bin unter 18<span class="hint">Schaltet zusätzliche Schutzeinstellungen ein, die sich nicht abschalten lassen.</span></span></label>`,
+    submitLabel: 'Konto anlegen',
     error: ctx.error,
   })));
 
@@ -196,14 +197,14 @@ router.post('/register', (ctx, res) => {
     sendHtml(res, 400, formPage({
       viewer: null,
       prefs: preferencesOf(null),
-      title: 'Create an account',
+      title: 'Konto anlegen',
       action: '/register',
       fields: `
-        <label for="username">Username</label>
+        <label for="username">Name</label>
         <input type="text" id="username" name="username" value="${ctx.form.username ?? ''}" required>
-        <label for="password">Password</label>
+        <label for="password">Passwort</label>
         <input type="password" id="password" name="password" required>`,
-      submitLabel: 'Create account',
+      submitLabel: 'Konto anlegen',
       error: error.message,
     }));
   }
@@ -213,15 +214,15 @@ router.get('/login', (ctx, res) =>
   sendHtml(res, 200, formPage({
     viewer: null,
     prefs: preferencesOf(null),
-    title: 'Sign in',
+    title: 'Anmelden',
     action: '/login',
     fields: `
-      <label for="username">Username</label>
+      <label for="username">Name</label>
       <input type="text" id="username" name="username" autocomplete="username" required>
-      <label for="password">Password</label>
+      <label for="password">Passwort</label>
       <input type="password" id="password" name="password" autocomplete="current-password" required>`,
-    submitLabel: 'Sign in',
-    footer: '<p><a href="/register">Create an account</a></p>',
+    submitLabel: 'Anmelden',
+    footer: '<p><a href="/register">Konto anlegen</a></p>',
   })));
 
 router.post('/login', (ctx, res) => {
@@ -230,15 +231,15 @@ router.post('/login', (ctx, res) => {
     return sendHtml(res, 401, formPage({
       viewer: null,
       prefs: preferencesOf(null),
-      title: 'Sign in',
+      title: 'Anmelden',
       action: '/login',
       fields: `
-        <label for="username">Username</label>
+        <label for="username">Name</label>
         <input type="text" id="username" name="username" required>
-        <label for="password">Password</label>
+        <label for="password">Passwort</label>
         <input type="password" id="password" name="password" required>`,
-      submitLabel: 'Sign in',
-      error: 'That username and password do not match.',
+      submitLabel: 'Anmelden',
+      error: 'Name und Passwort passen nicht zusammen.',
     }));
   }
   const session = createSession(account.id);
@@ -300,7 +301,7 @@ router.post('/posts/:id/reply', (ctx, res) => {
   }
 });
 
-router.post('/posts/:id/like', (ctx, res) => {
+router.post('/posts/:id/support', (ctx, res) => {
   if (!requireViewer(ctx, res)) return;
   const post = findPostById(Number(ctx.params.id));
   if (!post || !isVisibleTo(post, ctx.viewer)) return notFound(ctx, res);
@@ -517,7 +518,7 @@ function notFound(ctx, res) {
     viewer: ctx.viewer,
     prefs: preferencesOf(ctx.viewer),
     status: 404,
-    message: 'That page does not exist.',
+    message: 'Diese Seite gibt es nicht.',
   }));
 }
 
@@ -564,7 +565,7 @@ export function createApp() {
           viewer,
           prefs: preferencesOf(viewer),
           status: 500,
-          message: 'Something went wrong on our side.',
+          message: 'Bei uns ist etwas schiefgelaufen.',
         }));
       }
     }
@@ -580,12 +581,12 @@ function seedDemoData() {
   requestFollow(jonas.id, mira.id);
   requestFollow(mira.id, jonas.id);
   createPost(mira, {
-    content: 'First post on our instance. Newest-first feed, counts private, replies limited to people I follow back.',
+    content: 'Erster Beitrag hier. Neueste zuerst, Rückhalt bleibt im Kreis, Antworten nur von Leuten, denen ich folge.',
     visibility: 'public',
     replyPolicy: 'followers',
   });
-  createPost(jonas, { content: 'Testing the reply cool-down and the pause button today.', visibility: 'followers' });
-  console.log('Seeded demo accounts: mira / jonas (password "lamp-demo-password")');
+  createPost(jonas, { content: 'Teste heute die Antwortsperre und den Pausenknopf.', visibility: 'followers' });
+  console.log('Demo-Konten angelegt: mira / jonas (Passwort "lamp-demo-password")');
 }
 
 const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop());

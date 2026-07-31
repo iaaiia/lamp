@@ -105,9 +105,9 @@ export function redirect(res, location, cookie) {
 }
 
 export const sessionCookie = (id) =>
-  `lamp_session=${id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+  `lamb_session=${id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
 
-export const clearSessionCookie = () => 'lamp_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0';
+export const clearSessionCookie = () => 'lamb_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0';
 
 /** Does the client want ActivityStreams rather than HTML? */
 export function wantsActivityJson(req) {

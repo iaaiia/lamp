@@ -62,6 +62,9 @@ function candidates(viewer, { limit, before }) {
        AND p.deleted_at IS NULL
        AND a.paused_at IS NULL
        AND p.in_reply_to IS NULL
+       -- Kreisbeiträge bleiben in ihrem Kreis. Der Folge-Strom zeigt nur, was
+       -- jemand öffentlich unter eigenem Namen schreibt.
+       AND p.circle_id IS NULL
        AND (? IS NULL OR p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC
      LIMIT ?`,
@@ -134,6 +137,7 @@ export function accountTimeline(accountId, { before = null, limit = config.limit
     `SELECT p.*, a.username, a.domain, a.display_name
      FROM posts p JOIN accounts a ON a.id = p.account_id
      WHERE p.account_id = ? AND p.deleted_at IS NULL AND p.in_reply_to IS NULL
+       AND p.circle_id IS NULL
        AND (? IS NULL OR p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC LIMIT ?`,
     accountId,

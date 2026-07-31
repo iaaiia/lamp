@@ -15,11 +15,11 @@ const CONTEXT = [
   'https://www.w3.org/ns/activitystreams',
   'https://w3id.org/security/v1',
   {
-    // Declared so other implementations can read LAMP's well-being posture
+    // Declared so other implementations can read lamb's well-being posture
     // instead of guessing it. Interop, not marketing.
-    lamp: 'https://lamp.example/ns#',
-    replyPolicy: 'lamp:replyPolicy',
-    metricsPublic: 'lamp:metricsPublic',
+    lamb: 'https://lamb.example/ns#',
+    replyPolicy: 'lamb:replyPolicy',
+    metricsPublic: 'lamb:metricsPublic',
   },
 ];
 
@@ -70,7 +70,7 @@ export function noteDocument(post, author) {
     attachment: JSON.parse(post.media || '[]').map((item) => ({
       type: 'Document',
       url: item.url,
-      // `name` is the alt text; LAMP refuses to publish an attachment without it.
+      // `name` is the alt text; lamb refuses to publish an attachment without it.
       name: item.alt,
     })),
     ...audience,
@@ -149,7 +149,7 @@ export function webfingerDocument(account) {
 export function nodeInfo() {
   return {
     version: '2.1',
-    software: { name: 'lamp', version: '0.1.0', repository: 'https://github.com/iaaiia/lamp' },
+    software: { name: 'lamb', version: '0.1.0', repository: 'https://github.com/iaaiia/lamb' },
     protocols: ['activitypub'],
     services: { inbound: [], outbound: [] },
     openRegistrations: true,

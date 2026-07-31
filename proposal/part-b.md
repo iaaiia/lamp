@@ -2,8 +2,8 @@
 
 **Call:** PPPA-2026 — PPPA-2026-YOUTH-SOCIAL-MEDIA
 **Topic:** PPPA-2026-YOUTH-SOCIAL-MEDIA-DESIGN
-**Acronym:** LAMP
-**Title:** LAMP — Youth-Led Alternative Media Platform: co-created, protocol-based social
+**Acronym:** lamb
+**Title:** lamb — Youth-Led Alternative Media Platform: co-created, protocol-based social
 media for young Europeans
 **Coordinator:** [[COORDINATOR LEGAL NAME, PIC, COUNTRY]]
 **Duration:** 24 months
@@ -28,7 +28,7 @@ information overload, opinion polarisation, echo chambers and toxic language. Yo
 carry the sharpest edge of these effects — on attention, sleep, body image, exposure to
 harassment — while having the least influence over how the products are designed.
 
-Three structural facts define the opportunity LAMP addresses.
+Three structural facts define the opportunity lamb addresses.
 
 1. **Lock-in is a design choice, not a law of nature.** On protocol-based social media
    (ActivityPub, AT Protocol), identity, social graph and content can move between
@@ -45,7 +45,7 @@ Three structural facts define the opportunity LAMP addresses.
    designed *with* European teenagers and young adults, including disabled and
    neurodivergent ones.
 
-LAMP exists to close gap 3 while making gaps 1 and 2 usable in practice.
+lamb exists to close gap 3 while making gaps 1 and 2 usable in practice.
 
 ### 1.2 Objectives of the action
 
@@ -54,11 +54,11 @@ design, build and test an ActivityPub-based social media service for young EU ci
 centred on user well-being, and develop and begin executing a roll-out strategy grounded
 in market research and stakeholder consultation.
 
-| Call SO | LAMP objective | Where delivered | Verifiable target |
+| Call SO | lamb objective | Where delivered | Verifiable target |
 | --- | --- | --- | --- |
 | SO1 | Youth co-creation with expert and civil-society support | WP2 | ≥ 480 young participants, 8+ MS (N/E/W/S balanced), ≥ 25 % self-identifying as disabled or neurodivergent, gender-balanced; 12 experts on the Expert Support Pool |
 | SO2 | Market conditions analysis and uptake/sustainability strategy | WP5 | Market study covering ≥ 30 comparable services; ≥ 120 mapped stakeholders; strategy co-drafted with ≥ 25 of them |
-| SO3 | Functioning prototype on an open protocol | WP3 | LAMP v1.0 federating over ActivityPub, open-sourced; ≥ 3 upstream contributions accepted by existing FOSS projects |
+| SO3 | Functioning prototype on an open protocol | WP3 | lamb v1.0 federating over ActivityPub, open-sourced; ≥ 3 upstream contributions accepted by existing FOSS projects |
 | SO4 | Testing and refinement incl. responsible AI | WP4 | ≥ 3 test waves, ≥ 900 test users; feature-comparison matrix vs. ≥ 10 platforms; ≥ 2 AI features evaluated against a fundamental-rights protocol |
 | SO5 | Promotion and first roll-out step | WP6 | ≥ 15 000 registered young users in ≥ 12 MS by M24; ≥ 40 creators/multipliers activated |
 | SO6 | Lessons learnt and ecosystem contribution | WP7 | Public "State of Youth-Centred Decentralised Social Media" report with funding recommendations; all code under EUPL-1.2/AGPL-3.0; open datasets where ethically possible |
@@ -67,7 +67,7 @@ in market research and stakeholder consultation.
 
 **Chosen technical route — one new service, built from existing open components.**
 The call allows either one new prototype or upgrades to at least two existing services.
-LAMP proposes **one new, functioning prototype**, because the barriers young people face
+lamb proposes **one new, functioning prototype**, because the barriers young people face
 on the Fediverse today (onboarding, safety defaults, discovery, aesthetics) are *product*
 barriers rooted in the assumptions of existing codebases, and cannot be reached by
 incremental patches to services whose current users would reject the necessary defaults.
@@ -78,9 +78,9 @@ generic improvement is contributed upstream, so existing services benefit regard
 
 **Protocol choice — ActivityPub as the base, AT Protocol via bridge.** ActivityPub is a
 W3C Recommendation with the largest deployed European instance base, mature
-implementations and a governance culture LAMP can contribute to. AT Protocol offers
+implementations and a governance culture lamb can contribute to. AT Protocol offers
 stronger primitives for account portability and, notably, composable feed generators —
-directly relevant to youth agency over ranking. LAMP therefore federates natively over
+directly relevant to youth agency over ranking. lamb therefore federates natively over
 ActivityPub and interoperates with the AT Protocol network through a maintained bridge,
 with a feed-generator interface modelled on AT Protocol semantics so that third-party
 "middleware" feeds can be plugged in on either side. This gives reach today and
@@ -104,7 +104,7 @@ carried through WP2 → WP3 → WP4:
 - *Data minimisation by design:* no behavioural advertising profile exists in the data
   model; GDPR and DSA minor-protection obligations are design inputs from M1.
 
-**AI, explored prominently and responsibly.** AI appears in LAMP in three roles, each with
+**AI, explored prominently and responsibly.** AI appears in lamb in three roles, each with
 a youth-co-designed control surface and a documented fundamental-rights assessment:
 (i) **moderation support** — multilingual triage and severity ranking that routes to human
 moderators, never autonomous removal of legal speech; (ii) **verification and context** —
@@ -116,7 +116,7 @@ diversity axes, and for whether young users understand what the system did and w
 
 ### 1.4 EU strategic and legislative context
 
-| Policy instrument | LAMP contribution |
+| Policy instrument | lamb contribution |
 | --- | --- |
 | European Democracy Shield (Nov 2025) | Concrete exploration of future social networking pathways supporting EU digital sovereignty |
 | Communication on European Tech Sovereignty + EU Open Source Strategy | Strengthens the open-source social media space; all outputs are EU-hosted, EU-governed, open-licensed |
@@ -138,13 +138,13 @@ funders in all Member States, not only the consortium's own.
 
 ### 1.6 Complementarity with other EU-funded work
 
-LAMP will actively seek cooperation with the two awardees of the 2025 *Building a
+lamb will actively seek cooperation with the two awardees of the 2025 *Building a
 trustworthy social media sphere* call (publication of awardees expected Q3/4 2026) through
 a joint annual workshop and shared dissemination, and will align with
 [[NGI / Horizon Europe / CERV projects to be listed]]. Complementarity is managed as a
 standing agenda item of the Steering Committee, with no duplication of funded activities;
 where an existing project already delivers a component (e.g. an accessibility test suite),
-LAMP reuses rather than rebuilds and records the reuse in the periodic report.
+lamb reuses rather than rebuilds and records the reuse in the periodic report.
 
 ---
 
@@ -152,10 +152,10 @@ LAMP reuses rather than rebuilds and records the reuse in the periodic report.
 
 ### 2.1 Logical framework
 
-| Problem | Need | LAMP response | Output | Outcome |
+| Problem | Need | lamb response | Output | Outcome |
 | --- | --- | --- | --- | --- |
 | Youth get information from platforms designed against their wellbeing | Products designed with them | WP2 co-creation, 8+ MS | Youth Design Charter, feature backlog | Design decisions traceable to youth input |
-| Existing Fediverse services are not usable or appealing for young people | A youth-grade product | WP3 build on ActivityPub | LAMP v1.0, open source | A credible European alternative exists |
+| Existing Fediverse services are not usable or appealing for young people | A youth-grade product | WP3 build on ActivityPub | lamb v1.0, open source | A credible European alternative exists |
 | No evidence on what actually helps | Systematic testing | WP4 test waves + comparison matrix | Usability/wellbeing evidence base | Design claims are validated, not asserted |
 | Alternatives fail on adoption and funding | Realistic market and uptake path | WP5 market study + strategy | Uptake & sustainability strategy | Post-project viability |
 | Insights stay inside projects | Public knowledge | WP6/WP7 outreach + report | Users acquired, public report | Ecosystem and funders learn |
@@ -227,7 +227,7 @@ present.
 **Evaluation.** Mixed methods: instrumented (privacy-preserving, aggregate) usability
 metrics; validated wellbeing and experience scales applied pre/post in test cohorts;
 moderated usability sessions surfacing key barriers; and a structured **feature-comparison
-matrix** scoring LAMP against ≥ 10 mainstream and decentralised services on safety,
+matrix** scoring lamb against ≥ 10 mainstream and decentralised services on safety,
 accessibility, agency, transparency and appeal. An independent evaluator ([[named]])
 reviews method and findings at M12 and M23.
 
@@ -303,7 +303,7 @@ gating youth safety features. By M20 a legal custodian for the codebase and trad
 identified, a maintainer commitment of ≥ 24 months post-project is secured in writing, and
 follow-on funding applications ([[Digital Europe / national funds / philanthropy]]) are
 submitted. Because everything is open source and protocol-based, the exit case is benign:
-even if LAMP the service were discontinued, its users keep their graph and its components
+even if lamb the service were discontinued, its users keep their graph and its components
 keep serving other European operators.
 
 ---
@@ -316,7 +316,7 @@ keep serving other European operators.
 | --- | --- | --- | --- | --- | --- |
 | WP1 | Coordination, management and quality | P1 | M1–M24 | 22 | Governance, reporting, risk, quality |
 | WP2 | Youth co-creation and participation (SO1) | P2 | M1–M22 | 48 | 4 waves, Youth Design Charter, Youth Board |
-| WP3 | Platform design and development (SO3) | P3 | M3–M22 | 62 | LAMP v0.5 → v1.1, open-sourced, upstream PRs |
+| WP3 | Platform design and development (SO3) | P3 | M3–M22 | 62 | lamb v0.5 → v1.1, open-sourced, upstream PRs |
 | WP4 | Testing, refinement and responsible AI (SO4) | P5 | M8–M23 | 28 | Test waves, comparison matrix, AI assessments |
 | WP5 | Market analysis, stakeholders, uptake strategy (SO2) | P4 | M2–M20 | 20 | Market study, stakeholder map, uptake strategy |
 | WP6 | Roll-out, communication and community (SO5) | P2 | M12–M24 | 20 | Campaign, creator programme, user growth |
@@ -383,9 +383,9 @@ funding; T7.5 final conference and open archive.
 | D2.3 | Youth Design Charter (living document, v2) | 2 | R | M10 |
 | D2.4 | Final participation report incl. traceability of youth input | 2 | R | M22 |
 | D3.1 | Architecture and protocol decision record | 3 | R | M5 |
-| D3.2 | LAMP v0.9 closed beta | 3 | DEC/software | M13 |
-| D3.3 | LAMP v1.0 public release, open-sourced | 3 | DEC/software | M18 |
-| D3.4 | LAMP v1.1 + upstream contribution record | 3 | DEC/software | M22 |
+| D3.2 | lamb v0.9 closed beta | 3 | DEC/software | M13 |
+| D3.3 | lamb v1.0 public release, open-sourced | 3 | DEC/software | M18 |
+| D3.4 | lamb v1.1 + upstream contribution record | 3 | DEC/software | M22 |
 | D4.1 | Test and evaluation protocol | 4 | R | M9 |
 | D4.2 | Usability, safety and wellbeing findings incl. barrier analysis | 4 | R | M16 |
 | D4.3 | Feature-comparison matrix vs. ≥ 10 platforms | 4 | R | M20 |
@@ -440,7 +440,7 @@ years with funding source, budget, role and relevance. [[TO BE COMPLETED — P1�
 
 ### 5.2 Ethics
 
-LAMP works with minors and with disabled and neurodivergent participants, so ethics is a
+lamb works with minors and with disabled and neurodivergent participants, so ethics is a
 work-package-level obligation, not a declaration: informed consent in plain language with
 parental consent where national law requires it; trained safeguarding leads at every
 in-person activity and a named child-protection officer; the right to withdraw data at any

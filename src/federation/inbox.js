@@ -172,7 +172,7 @@ function handleLike(activity, sender) {
   return { status: 202, note: 'liked' };
 }
 
-/** Remote content arrives as HTML; LAMP stores and renders plain text. */
+/** Remote content arrives as HTML; lamb stores and renders plain text. */
 export function stripHtml(html) {
   return String(html)
     .replace(/<br\s*\/?>/gi, '\n')

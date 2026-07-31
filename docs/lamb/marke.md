@@ -1,10 +1,10 @@
-# Huddle — Marke und Designsystem
+# lamb — Marke und Designsystem
 
-Visuelles Referenzdokument: `design/huddle.html` (gerendert), Tokens: `design/huddle-tokens.css`.
+Visuelles Referenzdokument: `design/lamb.html` (gerendert), Tokens: `design/lamb-tokens.css`.
 
 ## 1. Positionierung in einem Satz
 
-**Huddle ist der Kreis, der um dich herum steht** — ein dezentrales soziales Netz für
+**lamb ist der Kreis, der um dich herum steht** — ein dezentrales soziales Netz für
 15- bis 24-Jährige in Europa, in dem Rückhalt der soziale Grundcode ist und Debatte eine
 Form hat.
 
@@ -52,7 +52,7 @@ Eine laute Farbe, und die gehört dem Support.
 
 | Rolle | Wert | Verwendung |
 | --- | --- | --- |
-| Huddle Blue | `#2B4C9B` | Primärfarbe: Navigation, Struktur, Buttons, bestätigte Zustände |
+| lamb-Blau | `#2B4C9B` | Primärfarbe: Navigation, Struktur, Buttons, bestätigte Zustände |
 | Ember | `#DC6B45` | **ausschließlich** Support-Elemente |
 | Forum | `#5B57C4` | **ausschließlich** Youth-Panel-Kontexte |
 | Slate Ink | `#14171D` | Text |
@@ -67,7 +67,7 @@ Weil Ember nur an genau einer Stelle im Produkt vorkommt, bekommt die Support-Ge
 visuelles Gewicht im gesamten Interface, ohne dass irgendwo geschrien wird. Das ist der
 Kern der Farbstrategie: Knappheit erzeugt Bedeutung.
 
-Kontrastwerte sind in `design/huddle-tokens.css` nachgerechnet dokumentiert; alle
+Kontrastwerte sind in `design/lamb-tokens.css` nachgerechnet dokumentiert; alle
 Textkombinationen erfüllen WCAG 2.2 AA, die meisten AAA. Ember als Fläche trägt nur das
 Button-Label, nie Kleintext.
 
@@ -83,7 +83,7 @@ Drei Rollen, klar getrennt:
 
 Die Mono-Ebene ist die eigentliche Designentscheidung. Sie zeigt an, was das *System* weiß
 (Phase 03 · noch 6 Min · 128 Mitglieder) im Unterschied zu dem, was *Menschen* sagen. Das
-gibt Huddle eine sachliche, zivile Kante — und trennt es von jedem Wellness-Look, ohne kalt
+gibt lamb eine sachliche, zivile Kante — und trennt es von jedem Wellness-Look, ohne kalt
 zu wirken, weil daneben Ember und die runden Formen stehen.
 
 Empfehlung für die Produktion: *Inter Tight* (Display) und *Inter* (Body), beide OFL, damit
@@ -108,6 +108,6 @@ wenn der Kreis steht — die Wortmarke setzt daneben in Display 750.
 
 ## 8. Nutzung im Prototypen
 
-`design/huddle-tokens.css` ist direkt einsetzbar. Die Tokens sind mit `--hd-` präfixiert,
+`design/lamb-tokens.css` ist direkt einsetzbar. Die Tokens sind mit `--hd-` präfixiert,
 damit sie neben dem bestehenden System in `src/web/style.js` laufen können, statt es zu
 überschreiben.

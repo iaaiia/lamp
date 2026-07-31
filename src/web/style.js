@@ -1,7 +1,7 @@
 /**
- * Huddle — Stylesheet.
+ * lamb — Stylesheet.
  *
- * Umsetzung von design/huddle-tokens.css im laufenden Client. Als echte Datei
+ * Umsetzung von design/lamb-tokens.css im laufenden Client. Als echte Datei
  * ausgeliefert, damit die CSP Inline-Styles verbieten kann.
  *
  * Drei Systemregeln, die hier eingehalten werden:
@@ -233,6 +233,37 @@ main { padding-bottom: 4rem; }
   box-shadow: var(--shadow);
 }
 .card.flat, article.post { box-shadow: none; }
+
+/* ------------------------------------------------------------------ Cluster */
+/* Übersicht über Räume, nicht ein Fluss aus Beiträgen. */
+
+.cluster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.room {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.room .top { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; }
+.room h3 { font-size: 1rem; }
+.room h3 a { text-decoration: none; color: var(--ink); }
+.room h3 a:hover { color: var(--blue); }
+.room .why { font-size: .88rem; color: var(--ink-muted); margin: 0; }
+.room .foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-top: auto; flex-wrap: wrap; }
+.faces .more {
+  background: var(--surface);
+  color: var(--ink-muted);
+  border-color: var(--line);
+  font-size: .6rem;
+}
 
 /* -------------------------------------------------------------------- Chips */
 

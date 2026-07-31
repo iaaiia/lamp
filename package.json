@@ -1,7 +1,7 @@
 {
-  "name": "lamp",
+  "name": "lamb",
   "version": "0.1.0",
-  "description": "LAMP — youth-led, protocol-based social network with well-being defaults (ActivityPub)",
+  "description": "lamb — youth-led, protocol-based social network with well-being defaults (ActivityPub)",
   "type": "module",
   "license": "EUPL-1.2",
   "engines": {
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node --experimental-sqlite src/server.js",
-    "dev": "LAMP_SEED=1 node --experimental-sqlite src/server.js",
+    "dev": "LAMB_SEED=1 node --experimental-sqlite src/server.js",
     "test": "node --experimental-sqlite --test tests/*.test.js"
   }
 }

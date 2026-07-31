@@ -11,7 +11,7 @@ through a bridge; model the feed-generator interface on AT Protocol semantics.
 
 **Why:** ActivityPub is a W3C Recommendation with the largest deployed European
 instance base, so a pilot reaches real users on day one. AT Protocol's feed
-generators are the better primitive for user-chosen ranking, so LAMP adopts the
+generators are the better primitive for user-chosen ranking, so lamb adopts the
 *shape* of that interface without splitting a pilot budget across two full
 stacks.
 
@@ -56,7 +56,7 @@ und er soll in Zuwendung muenden, nicht im Klick enden.
 `postArticle()`; getestet in `tests/wellbeing.test.js` und `tests/http.test.js`.
 
 Ueber ActivityPub wird Support als `Like` uebertragen, damit fremde Server es verstehen.
-Die Semantik und die Anzeigeregeln liegen bei Huddle; was andere Server daraus machen,
+Die Semantik und die Anzeigeregeln liegen bei lamb; was andere Server daraus machen,
 laesst sich nicht kontrollieren — deshalb ist die Nicht-Vergleichbarkeit im eigenen Produkt
 verankert, nicht im Protokoll.
 
@@ -172,6 +172,30 @@ of their social graph as JSON, without asking anyone.
 than charitable. Leaving must be a supported action.
 
 **Enforced by:** `exportAccount()`, `/settings/export`, tested.
+
+## D14 — Kreise: ein Beitrag gehört dem Raum, in dem er steht
+
+**Chosen:** lamb hat keine globale Timeline, sondern Kreise — privat, thematisch, lokal,
+Youth Panel. Die Startseite ist eine Übersicht über Kreise, kein Fluss aus Beiträgen. Die
+Art des Kreises bestimmt die Sichtbarkeit seiner Beiträge; die einzelne Person kann sie
+nicht überschreiben. Private Kreise verlassen diesen Server nie und existieren für
+Nichtmitglieder nicht einmal als "kein Zutritt"-Seite.
+
+**Why:** die strukturelle Antwort auf Kontextkollaps. Wer schreibt, muss wissen, wer
+mitliest — und darf nicht versehentlich öffentlich werden, weil ein Schalter falsch stand.
+"Was hier gesagt wird, bleibt hier" ist sonst ein Appell; hier ist es eine Eigenschaft.
+
+**Enforced by:** `src/domain/circles.js`, die Kreisprüfung in `createPost()` und
+`isVisibleTo()`, `federates()` in `fanOut()`, der 404 für nicht lesbare Kreise;
+`tests/circles.test.js` (17 Tests).
+
+**Nebeneffekt, bewusst:** Kreisbeiträge tauchen weder im Folge-Strom noch im Profil auf.
+Der Strom zeigt, was jemand öffentlich unter eigenem Namen schreibt — Kreise haben ihre
+eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
+
+**Frische statt Ungelesen:** gezählt wird, was seit dem letzten Öffnen eines Kreises
+dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
+Zugmechanismus, kein Informationsdienst.
 
 ## Open questions for co-creation
 

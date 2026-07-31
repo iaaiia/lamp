@@ -1,16 +1,16 @@
-# Huddle — Produktkonzept
+# lamb — Produktkonzept
 
 ## 1. Raumtypen
 
-Huddle hat keine globale Timeline. Es hat Räume, und jeder Raum hat einen Typ, der sein
+lamb hat keine globale Timeline. Es hat Räume, und jeder Raum hat einen Typ, der sein
 Verhalten bestimmt — nicht nur sein Label.
 
 | Typ | Beispiel | Sichtbarkeit | Beitritt | Besonderheit |
 | --- | --- | --- | --- | --- |
 | **Privater Kreis** | Freundeskreis, Familie | nur Mitglieder | Einladung | Screenshots sind Regelverstoß; föderiert nicht nach außen |
-| **Themen-Huddle** | Abi & danach, Gaming, Kultur | öffentlich lesbar oder geschlossen | offen oder auf Anfrage | Feed-Modus wählbar |
-| **Mental-Health-Huddle** | Moderierter Themenraum | geschlossen | auf Anfrage | Peer-Moderation als Anwesenheit sichtbar; Inhaltshinweise Standard; keine Zitierfunktion |
-| **Lokaler Huddle** | Leipzig 15–24 | öffentlich | offen, an Ort gebunden | Brücke zu Angeboten vor Ort |
+| **Themen-Kreis** | Abi & danach, Gaming, Kultur | öffentlich lesbar oder geschlossen | offen oder auf Anfrage | Feed-Modus wählbar |
+| **Mental-Health-lamb** | Moderierter Themenraum | geschlossen | auf Anfrage | Peer-Moderation als Anwesenheit sichtbar; Inhaltshinweise Standard; keine Zitierfunktion |
+| **Lokaler lamb** | Leipzig 15–24 | öffentlich | offen, an Ort gebunden | Brücke zu Angeboten vor Ort |
 | **Youth Panel** | Handys an Schulen | öffentlich, Protokoll zitierbar | Platz sichern, begrenzte Teilnehmendenzahl | Verfahren mit fünf Phasen, feste Moderation |
 
 **Die Regel dahinter:** Ein Mensch ist nie in „dem Netzwerk“, sondern immer in einem
@@ -35,8 +35,8 @@ ist, verhält es sich anders:
 5. **Nie automatisch.** Weiterleiten, Zitieren oder Verlinken löst niemals Support aus.
 
 Föderation: Support wird als `Like` über ActivityPub übertragen, damit andere Server es
-verstehen — die Semantik („steht dahinter“) und die Anzeigeregeln liegen bei Huddle. Was
-fremde Server daraus machen, kann Huddle nicht kontrollieren; deshalb ist die
+verstehen — die Semantik („steht dahinter“) und die Anzeigeregeln liegen bei lamb. Was
+fremde Server daraus machen, kann lamb nicht kontrollieren; deshalb ist die
 Nicht-Vergleichbarkeit im eigenen Produkt verankert, nicht im Protokoll.
 
 ## 3. Feed-Modi
@@ -87,7 +87,7 @@ Fünf Regeln, die man nach einmal Lesen wiedergeben kann. Sie stehen dort, wo ge
 
 1. Rede zur Sache, nicht über die Person.
 2. Ein Nein beendet ein Thema. Auch mitten im Gespräch.
-3. Was hier gesagt wird, bleibt hier. Screenshots aus privaten Huddles sind ein Regelverstoß.
+3. Was hier gesagt wird, bleibt hier. Screenshots aus privaten Kreisen sind ein Regelverstoß.
 4. Kein Nachtreten.
 5. Bei Gefahr holen wir Menschen dazu.
 
@@ -129,7 +129,7 @@ Jedes Bedienelement sagt, was passiert. Kein Wellness-Register, kein Behörden-D
 
 | Kontext | Deutsch | English | Nie |
 | --- | --- | --- | --- |
-| Raum betreten | Huddle öffnen | Open huddle | Deinen Raum betreten |
+| Raum betreten | Kreis öffnen | Open circle | Deinen Raum betreten |
 | Beitragen | Mitreden | Join in | Deine Stimme teilen |
 | Kernaktion | Support geben | Back this | Gefällt mir |
 | Aktiv | Du stehst dahinter | You're backing this | Unterstützt ✓ |
@@ -144,12 +144,12 @@ Jedes Bedienelement sagt, was passiert. Kein Wellness-Register, kein Behörden-D
 
 ## 8. Verhältnis zum bestehenden Prototypen
 
-Der Prototyp in `src/` implementiert bereits die Substanz, auf der Huddle aufsetzt:
+Der Prototyp in `src/` implementiert bereits die Substanz, auf der lamb aufsetzt:
 ActivityPub-Föderation, chronologischer Standard-Feed, private Zähler, Antwortrechte am
 Write-Path, Pause statt Löschen, Minderjährigen-Schutzboden, Moderation ohne
 Automatik-Löschung, vollständiger Export.
 
-Was für Huddle zusätzlich zu bauen wäre, in Reihenfolge:
+Was für lamb zusätzlich zu bauen wäre, in Reihenfolge:
 
 | Schritt | Umfang |
 | --- | --- |
@@ -157,7 +157,7 @@ Was für Huddle zusätzlich zu bauen wäre, in Reihenfolge:
 | Räume als eigenes Konzept (Typ, Mitgliedschaft, Sichtbarkeit) | mittel — neues Datenmodell zwischen Konto und Beitrag |
 | Cluster-Startseite statt globaler Timeline | mittel — Feed-Logik existiert, Navigation ändert sich |
 | Youth Panels mit Phasenlogik und Protokoll | groß — eigenes Verfahren, Rollen, Zeitsteuerung |
-| Huddle-Designsystem im Client | klein — Tokens liegen vor |
+| lamb-Designsystem im Client | klein — Tokens liegen vor |
 | Onboarding-Strecke | mittel |
 
 Die Reihenfolge ist bewusst so gewählt, dass nach Schritt 1 und 3 bereits etwas

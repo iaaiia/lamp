@@ -42,6 +42,26 @@ import {
 } from './domain/safety.js';
 import { decideReport, openReports, triage, triageAgreementStats } from './domain/moderation.js';
 import {
+  admit,
+  invite,
+  circleTimeline,
+  circlesFor,
+  createCircle,
+  discoverable,
+  federates,
+  findById as findCircle,
+  findBySlug,
+  isMember,
+  isModerator,
+  isReadable,
+  join,
+  leave,
+  markRead,
+  memberCount,
+  members,
+  pendingRequests,
+} from './domain/circles.js';
+import {
   actorDocument,
   collection,
   createActivity,
@@ -69,8 +89,11 @@ import {
 } from './lib/http.js';
 import { STYLESHEET } from './web/style.js';
 import {
+  circlePage,
+  clusterPage,
   errorPage,
   formPage,
+  newCirclePage,
   moderationPage,
   profilePage,
   settingsPage,
@@ -100,8 +123,18 @@ function decorate(post, viewer) {
   };
 }
 
-/** Deliver an activity to a local author's remote followers. */
-function fanOut(author, activity) {
+/**
+ * Deliver an activity to a local author's remote followers.
+ *
+ * Ein Beitrag aus einem privaten Kreis wird nie zugestellt. "Was hier gesagt
+ * wird, bleibt hier" ist eine Fair-Play-Regel — und hier die Stelle, an der sie
+ * technisch gilt statt nur zu appellieren.
+ */
+function fanOut(author, activity, post = null) {
+  if (post?.circle_id) {
+    const circle = findCircle(post.circle_id);
+    if (!federates(circle)) return;
+  }
   const inboxes = inboxesFor(followerAccounts(author.id));
   if (inboxes.length) enqueue(author, inboxes, activity);
 }
@@ -142,6 +175,21 @@ router.get('/', (ctx, res) => {
     }));
   }
 
+  // Die Startseite ist eine Übersicht über Räume, kein Fluss aus Beiträgen.
+  const prefs = preferencesOf(ctx.viewer);
+  const withPeople = (rows) => rows.map((circle) => ({ ...circle, people: members(circle.id, 3) }));
+
+  sendHtml(res, 200, clusterPage({
+    viewer: ctx.viewer,
+    prefs,
+    circles: withPeople(circlesFor(ctx.viewer.id)),
+    suggestions: withPeople(discoverable(ctx.viewer.id, 6)),
+  }));
+});
+
+/** Der Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben. */
+router.get('/stream', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
   const prefs = preferencesOf(ctx.viewer);
   const feedId = ctx.url.searchParams.get('feed') ?? prefs.feed;
   const before = ctx.url.searchParams.get('before');
@@ -263,7 +311,7 @@ router.post('/posts', (ctx, res) => {
       replyPolicy: ctx.form.reply_policy,
     });
     triage(post);
-    fanOut(ctx.viewer, createActivity(post, ctx.viewer));
+    fanOut(ctx.viewer, createActivity(post, ctx.viewer), post);
     redirect(res, '/');
   } catch (error) {
     if (!(error instanceof DomainError)) throw error;
@@ -293,7 +341,7 @@ router.post('/posts/:id/reply', (ctx, res) => {
   try {
     const reply = createPost(ctx.viewer, { content: ctx.form.content, contentWarning: ctx.form.content_warning, inReplyTo: parent.id });
     triage(reply);
-    fanOut(ctx.viewer, createActivity(reply, ctx.viewer));
+    fanOut(ctx.viewer, createActivity(reply, ctx.viewer), reply);
     redirect(res, `/posts/${parent.id}`);
   } catch (error) {
     if (!(error instanceof DomainError)) throw error;
@@ -390,6 +438,121 @@ router.post('/@:username/unfollow', (ctx, res) => {
   redirect(res, `/@${target.username}`);
 });
 
+/* ------------------------------------------------------------------- Kreise */
+
+router.get('/circles/new', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  sendHtml(res, 200, newCirclePage({ viewer: ctx.viewer, prefs: preferencesOf(ctx.viewer) }));
+});
+
+router.post('/circles', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  try {
+    const circle = createCircle(ctx.viewer, {
+      name: ctx.form.name,
+      purpose: ctx.form.purpose,
+      kind: ctx.form.kind,
+      joining: ctx.form.joining,
+      place: ctx.form.place,
+    });
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}`);
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+    sendHtml(res, 400, newCirclePage({
+      viewer: ctx.viewer,
+      prefs: preferencesOf(ctx.viewer),
+      error: error.message,
+    }));
+  }
+});
+
+router.get('/c/:slug', (ctx, res) => {
+  const circle = findBySlug(ctx.params.slug);
+  if (!circle) return notFound(ctx, res);
+
+  // Ein privater Kreis existiert für Nichtmitglieder schlicht nicht — auch
+  // nicht als "kein Zutritt"-Seite, die seine Existenz bestätigt.
+  if (!isReadable(circle, ctx.viewer)) return notFound(ctx, res);
+
+  const member = Boolean(ctx.viewer) && isMember(circle.id, ctx.viewer.id);
+  if (member) markRead(circle.id, ctx.viewer.id);
+
+  const before = ctx.url.searchParams.get('before');
+  const { posts, nextCursor } = circleTimeline(circle.id, { before });
+
+  sendHtml(res, 200, circlePage({
+    viewer: ctx.viewer,
+    prefs: preferencesOf(ctx.viewer),
+    circle,
+    isMember: member,
+    isModerator: Boolean(ctx.viewer) && isModerator(circle.id, ctx.viewer.id),
+    posts: posts.map((p) => decorate(p, ctx.viewer)),
+    nextCursor,
+    people: members(circle.id, 3),
+    memberCount: memberCount(circle.id),
+    pending: ctx.viewer && isModerator(circle.id, ctx.viewer.id) ? pendingRequests(circle.id) : [],
+    error: ctx.url.searchParams.get('error'),
+  }));
+});
+
+router.post('/c/:slug/posts', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const circle = findBySlug(ctx.params.slug);
+  if (!circle) return notFound(ctx, res);
+  try {
+    const post = createPost(ctx.viewer, {
+      content: ctx.form.content,
+      contentWarning: ctx.form.content_warning,
+      replyPolicy: ctx.form.reply_policy,
+      circleId: circle.id,
+    });
+    triage(post);
+    fanOut(ctx.viewer, createActivity(post, ctx.viewer), post);
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}`);
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}?error=${encodeURIComponent(error.message)}`);
+  }
+});
+
+router.post('/c/:slug/join', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const circle = findBySlug(ctx.params.slug);
+  if (!circle || !isReadable(circle, ctx.viewer)) return notFound(ctx, res);
+  try {
+    join(circle, ctx.viewer);
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}`);
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}?error=${encodeURIComponent(error.message)}`);
+  }
+});
+
+router.post('/c/:slug/leave', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const circle = findBySlug(ctx.params.slug);
+  if (!circle) return notFound(ctx, res);
+  try {
+    leave(circle, ctx.viewer);
+    redirect(res, '/');
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}?error=${encodeURIComponent(error.message)}`);
+  }
+});
+
+router.post('/c/:slug/admit', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const circle = findBySlug(ctx.params.slug);
+  if (!circle) return notFound(ctx, res);
+  try {
+    admit(circle, ctx.viewer, Number(ctx.form.account_id));
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+  }
+  redirect(res, `/c/${encodeURIComponent(circle.slug)}`);
+});
+
 /* ------------------------------------------------------------------ settings */
 
 router.get('/settings', (ctx, res) => {
@@ -432,7 +595,7 @@ router.post('/settings/resume', (ctx, res) => {
 router.get('/settings/export', (ctx, res) => {
   if (!requireViewer(ctx, res)) return;
   sendJson(res, 200, exportAccount(ctx.viewer.id), {
-    'content-disposition': `attachment; filename="lamp-export-${ctx.viewer.username}.json"`,
+    'content-disposition': `attachment; filename="lamb-export-${ctx.viewer.username}.json"`,
   });
 });
 
@@ -526,7 +689,7 @@ export function createApp() {
   return async (req, res) => {
     const url = new URL(req.url, config.origin);
     const cookies = parseCookies(req.headers.cookie);
-    const sessionId = cookies.lamp_session;
+    const sessionId = cookies.lamb_session;
     const viewer = accountForSession(sessionId);
     const body = req.method === 'POST' ? await readBody(req) : '';
     const isForm = (req.headers['content-type'] ?? '').includes('application/x-www-form-urlencoded');
@@ -576,8 +739,8 @@ export function createApp() {
 
 function seedDemoData() {
   if (findLocalByUsername('mira')) return;
-  const mira = createLocalAccount({ username: 'mira', password: 'lamp-demo-password', displayName: 'Mira' });
-  const jonas = createLocalAccount({ username: 'jonas', password: 'lamp-demo-password', displayName: 'Jonas', isMinor: true });
+  const mira = createLocalAccount({ username: 'mira', password: 'lamb-demo-password', displayName: 'Mira' });
+  const jonas = createLocalAccount({ username: 'jonas', password: 'lamb-demo-password', displayName: 'Jonas', isMinor: true });
   requestFollow(jonas.id, mira.id);
   requestFollow(mira.id, jonas.id);
   createPost(mira, {
@@ -586,7 +749,18 @@ function seedDemoData() {
     replyPolicy: 'followers',
   });
   createPost(jonas, { content: 'Teste heute die Antwortsperre und den Pausenknopf.', visibility: 'followers' });
-  console.log('Demo-Konten angelegt: mira / jonas (Passwort "lamp-demo-password")');
+
+  const freunde = createCircle(mira, { name: 'Freundeskreis', kind: 'private', purpose: 'Nur wir.' });
+  invite(freunde, mira, jonas);
+  createPost(mira, { content: 'Hat Samstag jemand Zeit?', circleId: freunde.id });
+
+  const leipzig = createCircle(mira, { name: 'Leipzig 15 bis 24', kind: 'local', place: 'Leipzig', purpose: 'Was hier so läuft.' });
+  join(leipzig, jonas);
+  createPost(jonas, { content: 'Kennt jemand einen guten Ort zum Lernen am Wochenende?', circleId: leipzig.id });
+
+  createCircle(mira, { name: 'Mental Health', kind: 'topic', joining: 'request', purpose: 'Moderiert. Inhaltshinweise sind hier normal.' });
+
+  console.log('Demo-Konten angelegt: mira / jonas (Passwort "lamb-demo-password")');
 }
 
 const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop());

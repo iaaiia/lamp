@@ -1,4 +1,4 @@
-# Indicative budget — LAMP
+# Indicative budget — lamb
 
 All figures in EUR, indicative and to be replaced by the detailed budget calculator
 downloaded from the Portal. The **Part A summarised budget must match the detailed budget

@@ -10,18 +10,18 @@ const env = process.env;
 
 export const config = {
   /** Public origin of this instance, used to mint ActivityPub ids. */
-  origin: (env.LAMP_ORIGIN ?? 'http://localhost:3000').replace(/\/$/, ''),
-  port: Number(env.LAMP_PORT ?? 3000),
-  databaseFile: env.LAMP_DB ?? 'lamp.db',
-  instanceName: env.LAMP_NAME ?? 'Huddle',
+  origin: (env.LAMB_ORIGIN ?? 'http://localhost:3000').replace(/\/$/, ''),
+  port: Number(env.LAMB_PORT ?? 3000),
+  databaseFile: env.LAMB_DB ?? 'lamb.db',
+  instanceName: env.LAMB_NAME ?? 'lamb',
 
   /** Seed a demo account + posts on boot (development only). */
-  seed: env.LAMP_SEED === '1',
+  seed: env.LAMB_SEED === '1',
 
   /** Outbound federation delivery. Disabled in tests. */
   federation: {
-    enabled: env.LAMP_FEDERATION !== '0',
-    userAgent: 'LAMP/0.1 (+https://github.com/iaaiia/lamp)',
+    enabled: env.LAMB_FEDERATION !== '0',
+    userAgent: 'lamb/0.1 (+https://github.com/iaaiia/lamb)',
     deliveryTimeoutMs: 8000,
     maxAttempts: 5,
   },

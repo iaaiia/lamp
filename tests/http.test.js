@@ -18,7 +18,7 @@ before(async () => {
   freshDatabase();
   const account = makeAccount('kim', { displayName: 'Kim' });
   postId = createPost(account, { content: 'A first public post.', visibility: 'public' }).id;
-  cookie = `lamp_session=${createSession(account.id).id}`;
+  cookie = `lamb_session=${createSession(account.id).id}`;
 
   server = createServer(createApp());
   await new Promise((resolve) => server.listen(0, resolve));
@@ -48,8 +48,14 @@ describe('web surface', () => {
     );
   });
 
-  it('renders the timeline with a feed explanation and an explicit end marker', async () => {
+  it('makes the home page a cluster of circles rather than a stream', async () => {
     const html = await (await fetchPath('/', { headers: { cookie } })).text();
+    assert.match(html, /Deine Kreise/);
+    assert.match(html, /Hier ist kein Strom/);
+  });
+
+  it('renders the follow stream with a feed explanation and an explicit end marker', async () => {
+    const html = await (await fetchPath('/stream', { headers: { cookie } })).text();
     assert.match(html, /Neueste zuerst/);
     assert.match(html, /Nichts wird gewichtet/);
     assert.match(html, /Es lädt nichts von allein nach/);
@@ -78,7 +84,7 @@ describe('web surface', () => {
 
   it('exports the account as a downloadable file', async () => {
     const response = await fetchPath('/settings/export', { headers: { cookie } });
-    assert.match(response.headers.get('content-disposition'), /attachment; filename="lamp-export-kim.json"/);
+    assert.match(response.headers.get('content-disposition'), /attachment; filename="lamb-export-kim.json"/);
     const dump = await response.json();
     assert.equal(dump.profile.username, 'kim');
     assert.equal(dump.posts.length, 1);

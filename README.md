@@ -1,11 +1,11 @@
-# Huddle — der Kreis, der um dich herum steht
+# lamb — der Kreis, der um dich herum steht
 
 Ein lauffähiges, föderierendes soziales Netz für 15- bis 24-Jährige in Europa, gebaut entlang
 der EU-Ausschreibung **PPPA-2026-YOUTH-SOCIAL-MEDIA-DESIGN — Youth-Driven Social Media Design:
 Safe, Inclusive, and Publicly-Owned Social Media** (DG CONNECT, Unit I.4).
 
 Das Repository enthält drei Dinge: den **Prototypen** (`src/`, `tests/`), das **Design- und
-Markensystem** (`design/`, `docs/huddle/`) und den **Antrag**, zu dem beides gehört (`proposal/`).
+Markensystem** (`design/`, `docs/lamb/`) und den **Antrag**, zu dem beides gehört (`proposal/`).
 
 ## Was es tut
 
@@ -16,6 +16,8 @@ Eigenschaften darunter:
 
 | Eigenschaft | Was das im Produkt heißt |
 | --- | --- |
+| **Kreise statt globaler Timeline** | Private Kreise, Themen- und lokale Kreise sind echte Räume mit Mitgliedschaft. Die Art des Kreises bestimmt die Sichtbarkeit — wer in einem privaten Kreis schreibt, kann das nicht versehentlich öffentlich tun. Private Kreise verlassen diesen Server nie und existieren für Nichtmitglieder nicht einmal als Seite. |
+| **Cluster statt Strom** | Die Startseite ist eine Übersicht über Kreise, kein Fluss aus Beiträgen. Gezählt wird nur, was seit dem letzten Öffnen dazukam — eigene Beiträge nie. |
 | **Support statt Like** | Die Kernreaktion sagt „ich stehe dahinter“, nicht „finde ich gut“ — und wird als Menschen angezeigt: „Mira, Jonas und 2 weitere stehen dahinter“. Eine nackte Zahl gibt es nirgends, eine Rangliste erst recht nicht. |
 | **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
 | **Support führt weiter** | Wer einen Beitrag mit Inhaltshinweis unterstützt, bekommt danach angeboten zu antworten. Rückhalt soll in Zuwendung münden, nicht im Klick enden. |
@@ -39,13 +41,13 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 57 Tests
+npm test        # 75 Tests
 ```
 
-Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamp-demo-password`.
+Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
 
-Konfiguration über Umgebungsvariablen — `LAMP_ORIGIN`, `LAMP_PORT`, `LAMP_DB`, `LAMP_NAME`,
-`LAMP_SEED`, `LAMP_FEDERATION`, siehe `src/config.js`.
+Konfiguration über Umgebungsvariablen — `LAMB_ORIGIN`, `LAMB_PORT`, `LAMB_DB`, `LAMB_NAME`,
+`LAMB_SEED`, `LAMB_FEDERATION`, siehe `src/config.js`.
 
 ## Aufbau
 
@@ -54,12 +56,12 @@ src/
   config.js              die Wellbeing-Voreinstellungen, an einer Stelle
   db.js                  Schema — beachte, was es bewusst nicht speichern kann
   lib/                   HTTP Signatures, Passwort-Hashing, Routing
-  domain/                Konten, Beiträge, Sicherheit, Sortierungen, Moderation
+  domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
-  web/                   servergerendertes HTML + Huddle-Designsystem
-tests/                   57 Tests: Wellbeing, Sicherheit, Föderation, HTTP-Ende-zu-Ende
-design/                  huddle.html (gerendertes System), huddle-tokens.css
-docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/huddle/
+  web/                   servergerendertes HTML + lamb-Designsystem
+tests/                   75 Tests: Kreise, Wellbeing, Sicherheit, Föderation, HTTP-Ende-zu-Ende
+design/                  lamb.html (gerendertes System), lamb-tokens.css
+docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 proposal/                der Antrag, zu dem der Prototyp gehört
 ```
 
@@ -67,7 +69,9 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 
 | Pfad | Zweck |
 | --- | --- |
-| `/` | Start (oder Anmeldung, wenn abgemeldet) |
+| `/` | Deine Kreise — die Cluster-Übersicht (oder Anmeldung, wenn abgemeldet) |
+| `/stream` | Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben |
+| `/c/:slug` | ein Kreis; `/circles/new` legt einen an |
 | `/@name` | Profil als HTML — oder das Actor-Dokument bei `Accept: application/activity+json` |
 | `/@name/inbox`, `/inbox` | signierte ActivityPub-Zustellung |
 | `/@name/outbox`, `/followers`, `/following` | AS2-Collections |
@@ -78,10 +82,9 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 
 ## Was noch fehlt
 
-Räume als eigenes Konzept (private Kreise, Themen-Huddles, lokale Huddles), die Cluster-
-Startseite, Youth Panels mit Phasenlogik und Protokoll, Medien-Upload, Direktnachrichten,
-AT-Protocol-Brücke, Mehrsprachigkeit. Die Reihenfolge und der Aufwand stehen in
-`docs/huddle/produkt.md`, Abschnitt 8.
+Youth Panels mit Phasenlogik und Protokoll (der Kreistyp `panel` steht im Datenmodell, das
+Verfahren fehlt), die Onboarding-Strecke, Medien-Upload, Direktnachrichten, AT-Protocol-
+Brücke, Mehrsprachigkeit. Reihenfolge und Aufwand in `docs/lamb/produkt.md`, Abschnitt 8.
 
 ## Lizenz
 

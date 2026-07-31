@@ -34,9 +34,37 @@ CREATE TABLE IF NOT EXISTS accounts (
   UNIQUE (username, domain)
 );
 
+-- Kreise: die Raeume, aus denen lamb besteht. Ein Mensch ist nie einfach "im
+-- Netzwerk", sondern immer in einem konkreten Kreis mit bekannter Oeffentlichkeit
+-- — die strukturelle Antwort auf Kontextkollaps.
+CREATE TABLE IF NOT EXISTS circles (
+  id          INTEGER PRIMARY KEY,
+  slug        TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  purpose     TEXT NOT NULL DEFAULT '',
+  kind        TEXT NOT NULL DEFAULT 'topic',   -- private | topic | local | panel
+  joining     TEXT NOT NULL DEFAULT 'open',    -- open | request | invite
+  place       TEXT,                            -- nur fuer kind = 'local'
+  created_by  INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+  created_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memberships (
+  id         INTEGER PRIMARY KEY,
+  circle_id  INTEGER NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+  account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL DEFAULT 'member',   -- member | moderator
+  state      TEXT NOT NULL DEFAULT 'member',   -- member | pending
+  last_read_at TEXT,
+  created_at TEXT NOT NULL,
+  UNIQUE (circle_id, account_id)
+);
+CREATE INDEX IF NOT EXISTS memberships_account ON memberships (account_id);
+
 CREATE TABLE IF NOT EXISTS posts (
   id            INTEGER PRIMARY KEY,
   account_id    INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  circle_id     INTEGER REFERENCES circles(id) ON DELETE CASCADE,
   uri           TEXT NOT NULL UNIQUE,
   content       TEXT NOT NULL,
   content_warning TEXT,
@@ -49,6 +77,7 @@ CREATE TABLE IF NOT EXISTS posts (
   deleted_at    TEXT
 );
 CREATE INDEX IF NOT EXISTS posts_account_created ON posts (account_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS posts_circle_created ON posts (circle_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_created ON posts (created_at DESC);
 
 CREATE TABLE IF NOT EXISTS follows (

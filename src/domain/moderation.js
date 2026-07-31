@@ -109,7 +109,7 @@ export function openReports() {
 
 /**
  * A human decides. This is the only path that can restrict content — there is
- * no code path in LAMP where a classifier's output reaches `deleted_at`.
+ * no code path in lamb where a classifier's output reaches `deleted_at`.
  */
 export function decideReport({ reportId, moderatorId, decision, note = '' }) {
   const report = get('SELECT * FROM reports WHERE id = ?', reportId);

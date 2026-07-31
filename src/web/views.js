@@ -1,5 +1,5 @@
 /**
- * Huddle — servergerendertes HTML, ohne Client-JavaScript.
+ * lamb — servergerendertes HTML, ohne Client-JavaScript.
  *
  * Das ganze Produkt funktioniert ohne JavaScript. Das ist eine bewusste
  * Zugänglichkeits- und Sicherheitseigenschaft: nichts kann automatisch
@@ -9,6 +9,7 @@
 
 import config from '../config.js';
 import { preferencesOf } from '../domain/accounts.js';
+import { KIND_LABELS } from '../domain/circles.js';
 
 export const escapeHtml = (value) =>
   String(value ?? '')
@@ -61,7 +62,8 @@ export function layout({ title, viewer, body, prefs }) {
   ].filter(Boolean).join(' ');
 
   const nav = viewer
-    ? `<li><a href="/">Start</a></li>
+    ? `<li><a href="/">Kreise</a></li>
+       <li><a href="/stream">Strom</a></li>
        <li><a href="/@${escapeHtml(viewer.username)}">Dein Profil</a></li>
        <li><a href="/settings">Einstellungen</a></li>
        <li><a href="/moderation">Moderation</a></li>
@@ -158,7 +160,7 @@ export function postArticle(post, { viewer, showMetrics, supportSentence, suppor
 </article>`;
 }
 
-export function composer({ prefs, replyTo = null, error = null }) {
+export function composer({ prefs, replyTo = null, error = null, action = null }) {
   const labels = {
     everyone: 'Alle können antworten',
     followers: 'Nur Leute, denen ich folge',
@@ -169,7 +171,8 @@ export function composer({ prefs, replyTo = null, error = null }) {
     .map(([value, label]) => `<option value="${value}"${value === prefs.replyPolicy ? ' selected' : ''}>${label}</option>`)
     .join('');
 
-  return `<form class="card" method="post" action="${replyTo ? `/posts/${replyTo}/reply` : '/posts'}" id="reply">
+  const target = action ?? (replyTo ? `/posts/${replyTo}/reply` : '/posts');
+  return `<form class="card" method="post" action="${target}" id="reply">
   <h2 style="margin-top:0">${replyTo ? 'Antwort schreiben' : 'Was willst du sagen?'}</h2>
   ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
   <label for="content">Dein Beitrag</label>
@@ -180,11 +183,12 @@ export function composer({ prefs, replyTo = null, error = null }) {
   ${replyTo ? '' : `
   <label for="reply_policy">Wer darf antworten?</label>
   <select id="reply_policy" name="reply_policy">${options}</select>
+  ${action ? '' : `
   <label for="visibility">Wer sieht das?</label>
   <select id="visibility" name="visibility">
     <option value="public">Alle</option>
-    <option value="followers">Nur mein Kreis</option>
-  </select>`}
+    <option value="followers">Nur wer mir folgt</option>
+  </select>`}`}
   <p><button type="submit">${replyTo ? 'Antwort abschicken' : 'Beitrag veröffentlichen'}</button></p>
 </form>`;
 }
@@ -441,5 +445,177 @@ export function errorPage({ viewer, prefs, status, message }) {
     viewer,
     prefs,
     body: `<h1>${status}</h1><p class="notice">${escapeHtml(message)}</p><p><a href="/">Zurück zum Start</a></p>`,
+  });
+}
+
+/* ============================================================ Kreise */
+
+const kindChip = (circle) => {
+  const cls = circle.kind === 'panel' ? 'chip forum' : circle.kind === 'local' ? 'chip blue' : 'chip';
+  return `<span class="${cls}"><span class="dot"></span>${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}</span>`;
+};
+
+/** Presence: Menschen als Ringe, Gruppe vor Zahl. */
+function faces(people, total) {
+  const shown = people
+    .slice(0, 3)
+    .map((person) => `<span>${escapeHtml(initials(person))}</span>`)
+    .join('');
+  const rest = total - Math.min(people.length, 3);
+  return `<span class="faces" aria-label="${total} ${total === 1 ? 'Mitglied' : 'Mitglieder'}">${shown}${
+    rest > 0 ? `<span class="more">+${rest}</span>` : ''
+  }</span>`;
+}
+
+export function circleCard(circle, { people = [], href }) {
+  // Kein Dauer-Badge: gezaehlt wird nur, was seit dem letzten Oeffnen dazukam.
+  const fresh = Number(circle.fresh_count ?? 0);
+  const activity = fresh > 0
+    ? `<span class="chip ember"><span class="dot"></span>${fresh} neu</span>`
+    : circle.last_post_at
+      ? `<span class="meta small">zuletzt ${timeTag(circle.last_post_at)}</span>`
+      : '<span class="meta small">noch still</span>';
+
+  return `<article class="room">
+  <div class="top">
+    <h3><a href="${href}">${escapeHtml(circle.name)}</a></h3>
+    ${kindChip(circle)}
+  </div>
+  ${circle.purpose ? `<p class="why">${escapeHtml(circle.purpose)}</p>` : ''}
+  <div class="foot">
+    ${faces(people, Number(circle.member_count ?? people.length))}
+    ${activity}
+  </div>
+</article>`;
+}
+
+export function clusterPage({ viewer, prefs, circles, suggestions }) {
+  const mine = circles.length
+    ? `<div class="cluster">${circles.map((c) => circleCard(c, { people: c.people, href: `/c/${encodeURIComponent(c.slug)}` })).join('')}</div>`
+    : `<p class="card">Du bist noch in keinem Kreis. Tritt unten einem bei, oder öffne deinen eigenen.</p>`;
+
+  const suggested = suggestions.length
+    ? `<h2>Kreise zum Beitreten</h2>
+       <div class="cluster">${suggestions.map((c) => circleCard(c, { people: c.people, href: `/c/${encodeURIComponent(c.slug)}` })).join('')}</div>`
+    : '';
+
+  return layout({
+    title: 'Deine Kreise',
+    viewer,
+    prefs,
+    body: `
+<h1>Deine Kreise</h1>
+<p class="muted">Hier ist kein Strom, sondern eine Übersicht. Du siehst, wo etwas los ist,
+entscheidest dich für einen Kreis und gehst hinein.</p>
+<p style="margin:1rem 0 1.5rem"><a class="button" href="/circles/new">Kreis öffnen</a></p>
+${mine}
+${suggested}`,
+  });
+}
+
+export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount, pending, error }) {
+  const joinControl = viewer && !isMember
+    ? circle.joining === 'invite'
+      ? '<p class="notice">Dieser Kreis ist nur auf Einladung offen.</p>'
+      : `<form method="post" action="/c/${escapeHtml(circle.slug)}/join">
+           <button type="submit">${circle.joining === 'open' ? 'Beitreten' : 'Beitritt anfragen'}</button>
+         </form>`
+    : '';
+
+  const leaveControl = isMember
+    ? `<form method="post" action="/c/${escapeHtml(circle.slug)}/leave">
+         <button class="secondary" type="submit">Kreis verlassen</button>
+       </form>`
+    : '';
+
+  const requests = isModerator && pending.length
+    ? `<h2>Beitrittsanfragen</h2>
+       <div class="card">${pending
+         .map(
+           (person) => `<form method="post" action="/c/${escapeHtml(circle.slug)}/admit" style="display:flex;gap:.6rem;align-items:center;margin-bottom:.5rem">
+             <input type="hidden" name="account_id" value="${person.id}">
+             <span>${escapeHtml(person.display_name || person.username)}</span>
+             <button class="secondary" type="submit">Aufnehmen</button>
+           </form>`,
+         )
+         .join('')}</div>`
+    : '';
+
+  const list = posts.length
+    ? posts.map((p) => postArticle(p, p.view)).join('')
+    : '<p class="card">Noch nichts geschrieben. Fang an.</p>';
+
+  const pager = nextCursor
+    ? `<p class="pager"><a class="button secondary" href="/c/${escapeHtml(circle.slug)}?before=${encodeURIComponent(nextCursor)}">Ältere Beiträge zeigen</a></p>`
+    : `<p class="pager end">Das war alles. Es lädt nichts von allein nach.</p>`;
+
+  const privacyLine = {
+    private: 'Privater Kreis. Nur Mitglieder lesen mit, und nichts davon verlässt diesen Server.',
+    topic: 'Offener Themenkreis. Beiträge sind öffentlich und erreichen auch andere Server.',
+    local: 'Lokaler Kreis. Beiträge sind öffentlich und erreichen auch andere Server.',
+    panel: 'Youth Panel. Moderierte Debatte mit festem Ablauf; das Ergebnis wird veröffentlicht.',
+  }[circle.kind];
+
+  return layout({
+    title: circle.name,
+    viewer,
+    prefs,
+    body: `
+<div class="card">
+  <div class="top" style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start">
+    <h1 style="margin:0">${escapeHtml(circle.name)}</h1>
+    ${kindChip(circle)}
+  </div>
+  ${circle.purpose ? `<p>${escapeHtml(circle.purpose)}</p>` : ''}
+  <p class="meta small">${escapeHtml(privacyLine)}</p>
+  <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-top:.6rem">
+    ${faces(people, memberCount)}
+    <span class="meta small mono">${memberCount} ${memberCount === 1 ? 'Mitglied' : 'Mitglieder'}</span>
+    ${joinControl}
+    ${leaveControl}
+  </div>
+</div>
+${requests}
+${isMember ? composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` }) : ''}
+<h2>Beiträge</h2>
+${list}
+${pager}`,
+  });
+}
+
+export function newCirclePage({ viewer, prefs, error }) {
+  return layout({
+    title: 'Kreis öffnen',
+    viewer,
+    prefs,
+    body: `
+<h1>Kreis öffnen</h1>
+<p class="muted">Du moderierst den Kreis, den du öffnest. Moderation ist bei lamb immer benannt.</p>
+${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
+<form class="card" method="post" action="/circles">
+  <label for="name">Name</label>
+  <input type="text" id="name" name="name" maxlength="60" required>
+  <label for="purpose">Wofür ist dieser Kreis?</label>
+  <input type="text" id="purpose" name="purpose" maxlength="280">
+  <p class="hint">Ein Satz. Steht auf der Karte, damit Leute wissen, worauf sie sich einlassen.</p>
+  <fieldset style="margin-top:1rem">
+    <legend>Art</legend>
+    <label class="inline"><input type="radio" name="kind" value="private" checked>
+      <span>Privater Kreis<span class="hint">Freund:innen oder Familie. Nur Mitglieder lesen mit, nichts verlässt diesen Server, Beitritt nur auf Einladung.</span></span></label>
+    <label class="inline"><input type="radio" name="kind" value="topic">
+      <span>Themenkreis<span class="hint">Öffentlich lesbar und über ActivityPub erreichbar.</span></span></label>
+    <label class="inline"><input type="radio" name="kind" value="local">
+      <span>Lokaler Kreis<span class="hint">An einen Ort gebunden, sonst wie ein Themenkreis.</span></span></label>
+  </fieldset>
+  <label for="place">Ort (nur bei lokalen Kreisen)</label>
+  <input type="text" id="place" name="place" maxlength="60">
+  <label for="joining">Beitritt</label>
+  <select id="joining" name="joining">
+    <option value="open">Offen für alle</option>
+    <option value="request">Auf Anfrage</option>
+  </select>
+  <p class="hint">Private Kreise sind immer auf Einladung — sonst wären sie nicht privat.</p>
+  <p><button type="submit">Kreis öffnen</button></p>
+</form>`,
   });
 }

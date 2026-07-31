@@ -4,14 +4,16 @@ import config from '../config.js';
 import { all, get, now, run } from '../db.js';
 import { DomainError, findById, isPaused, preferencesOf } from './accounts.js';
 import { canReply, isFollowing, replyCooldownRemaining } from './safety.js';
+import { findById as findCircle, isMember } from './circles.js';
 
+// 'circle' wird nie von aussen gesetzt — es folgt aus der Art des Kreises.
 const VISIBILITIES = new Set(['public', 'followers', 'mentioned']);
 const REPLY_POLICIES = new Set(['everyone', 'followers', 'mentioned', 'nobody']);
 
 /** Mint the canonical ActivityPub id for a local post. */
 const postUri = (username, id) => `${config.origin}/@${username}/posts/${id}`;
 
-export function createPost(author, { content, contentWarning = null, language = 'en', visibility, replyPolicy, inReplyTo = null, media = [] }) {
+export function createPost(author, { content, contentWarning = null, language = 'en', visibility, replyPolicy, inReplyTo = null, media = [], circleId = null }) {
   const text = String(content ?? '').trim();
   if (!text) throw new DomainError('A post needs some text.', 'content');
   if (text.length > config.limits.postLength) {
@@ -27,12 +29,34 @@ export function createPost(author, { content, contentWarning = null, language = 
   }
 
   const prefs = preferencesOf(author);
-  const vis = VISIBILITIES.has(visibility) ? visibility : (author.is_minor ? 'followers' : 'public');
+
+  // In einem Kreis bestimmt der Kreis die Sichtbarkeit, nicht die einzelne
+  // Person: Wer in einem privaten Kreis schreibt, kann das nicht versehentlich
+  // öffentlich tun.
+  let circle = null;
+  if (circleId) {
+    circle = findCircle(circleId);
+    if (!circle) throw new DomainError('Diesen Kreis gibt es nicht.', 'circle');
+    if (!isMember(circle.id, author.id)) {
+      throw new DomainError('Du bist in diesem Kreis nicht Mitglied.', 'circle');
+    }
+  }
+
+  const vis = circle
+    ? (circle.kind === 'private' ? 'circle' : 'public')
+    : (VISIBILITIES.has(visibility) ? visibility : (author.is_minor ? 'followers' : 'public'));
   const policy = REPLY_POLICIES.has(replyPolicy) ? replyPolicy : prefs.replyPolicy;
 
   if (inReplyTo) {
     const parent = findPostById(inReplyTo);
-    if (!parent) throw new DomainError('That post no longer exists.');
+    if (!parent) throw new DomainError('Diesen Beitrag gibt es nicht mehr.');
+    // Antworten bleiben in dem Kreis, in dem der Ursprungsbeitrag steht.
+    if (parent.circle_id && !circleId) {
+      circle = findCircle(parent.circle_id);
+      if (!isMember(parent.circle_id, author.id)) {
+        throw new DomainError('Du bist in diesem Kreis nicht Mitglied.', 'circle');
+      }
+    }
     const verdict = canReply(parent, author);
     if (!verdict.allowed) throw new DomainError(verdict.reason, 'reply');
     const wait = replyCooldownRemaining(author.id, parent.id);
@@ -42,9 +66,10 @@ export function createPost(author, { content, contentWarning = null, language = 
   }
 
   const id = run(
-    `INSERT INTO posts (account_id, uri, content, content_warning, language, visibility, reply_policy, in_reply_to, media, created_at)
-     VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO posts (account_id, circle_id, uri, content, content_warning, language, visibility, reply_policy, in_reply_to, media, created_at)
+     VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?)`,
     author.id,
+    circle?.id ?? null,
     text,
     contentWarning || null,
     language,
@@ -100,6 +125,16 @@ export function isVisibleTo(post, viewer) {
   const author = findById(post.account_id);
   if (!author || isPaused(author)) return false;
   if (viewer && viewer.id === post.account_id) return true;
+
+  // Ein Beitrag in einem Kreis gehört dem Kreis: seine Regel schlägt jede
+  // andere. Nichtmitglieder sehen ihn nicht, egal über welchen Weg sie kommen.
+  if (post.circle_id) {
+    const circle = findCircle(post.circle_id);
+    if (!circle) return false;
+    if (circle.kind === 'private') return Boolean(viewer) && isMember(circle.id, viewer.id);
+    return true;
+  }
+
   switch (post.visibility) {
     case 'public':
       return true;

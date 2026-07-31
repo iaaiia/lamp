@@ -1,0 +1,106 @@
+/**
+ * Huddle — Design-Tokens.
+ *
+ * Einsetzbar im Prototypen (src/web/style.js) und in jedem weiteren Client.
+ * Drei Regeln, die das System zusammenhalten:
+ *
+ *   1. --ember erscheint ausschliesslich an Support-Elementen. Nirgends sonst.
+ *   2. --forum erscheint ausschliesslich in Youth-Panel-Kontexten.
+ *   3. Semantische Farben (--warn, --crit, --ok) sind von der Marke getrennt
+ *      und gelten nie als Akzent. Gruen kommt in der Marke nicht vor.
+ */
+
+:root {
+  /* Grund und Schrift — blaustichige Neutrale, passend unter dem Primaerblau */
+  --hd-fog:        #F2F3F5;
+  --hd-surface:    #FFFFFF;
+  --hd-surface-2:  #FAFAFC;
+  --hd-ink:        #14171D;
+  --hd-ink-muted:  #5E636E;
+  --hd-line:       #DCDDE1;
+  --hd-line-soft:  #E9EAEE;
+
+  /* Marke */
+  --hd-blue:       #2B4C9B;
+  --hd-blue-deep:  #1C3468;
+  --hd-blue-tint:  #E7ECF7;
+  --hd-ember:      #DC6B45;
+  --hd-ember-deep: #A8461F;
+  --hd-ember-tint: #FBEDE7;
+  --hd-forum:      #5B57C4;
+  --hd-forum-tint: #ECEBF9;
+
+  /* Semantik */
+  --hd-ok:         #1F7A6B;
+  --hd-warn:       #A96613;
+  --hd-crit:       #A8322A;
+
+  /* Form — Kreise und weiche Ecken als Grundmetapher */
+  --hd-radius-s:   10px;
+  --hd-radius-m:   16px;
+  --hd-radius-l:   24px;
+  --hd-radius-pill: 999px;
+
+  /* Raster: 4px-Basis */
+  --hd-space-1: 4px;
+  --hd-space-2: 8px;
+  --hd-space-3: 12px;
+  --hd-space-4: 16px;
+  --hd-space-5: 24px;
+  --hd-space-6: 32px;
+  --hd-space-7: 48px;
+  --hd-space-8: 72px;
+
+  /* Typo-Rollen */
+  --hd-display: ui-sans-serif, "Inter Tight", "Segoe UI", Roboto, sans-serif;
+  --hd-body:    system-ui, -apple-system, "Inter", "Segoe UI", Roboto, sans-serif;
+  --hd-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --hd-shadow: 0 1px 2px rgba(20, 23, 29, .05), 0 8px 24px -12px rgba(20, 23, 29, .18);
+  --hd-focus:  0 0 0 3px var(--hd-blue-tint);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --hd-fog:        #101319;
+    --hd-surface:    #171B23;
+    --hd-surface-2:  #1D222B;
+    --hd-ink:        #E8EAEE;
+    --hd-ink-muted:  #9AA1AF;
+    --hd-line:       #2A303B;
+    --hd-line-soft:  #222831;
+    --hd-blue:       #7EA0E8;
+    --hd-blue-deep:  #A8C0F2;
+    --hd-blue-tint:  #1B2740;
+    --hd-ember:      #F08A5E;
+    --hd-ember-deep: #F7B294;
+    --hd-ember-tint: #33201A;
+    --hd-forum:      #9A95F0;
+    --hd-forum-tint: #22203D;
+    --hd-ok:         #4FB3A0;
+    --hd-warn:       #D99A45;
+    --hd-crit:       #E0776C;
+    --hd-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -14px rgba(0, 0, 0, .7);
+    --hd-focus:  0 0 0 3px #24314D;
+  }
+}
+
+/**
+ * Kontrast, nachgerechnet (WCAG 2.2, Verhaeltnis gegen den jeweiligen Grund):
+ *
+ *   Hell                                Dunkel
+ *   Ink auf Fog            16.17  AAA   Ink auf Ground        15.44  AAA
+ *   Muted auf Fog           5.43  AA    Muted auf Surface      6.65  AA
+ *   Blue auf Weiss          8.05  AAA   Blue auf Surface       6.64  AA
+ *   Weiss auf Blue          8.05  AAA   Ember-deep auf Surf.   9.65  AAA
+ *   Ember-deep auf Weiss    5.90  AA    Forum auf Surface      6.51  AA
+ *   Forum auf Weiss         5.82  AA    Ink auf Ember          7.24  AAA
+ *   Warn auf Weiss          4.57  AA
+ *   Crit auf Weiss          6.66  AA
+ *
+ *   Weiss auf Ember         3.37  — reicht nur fuer grossen Text (>=18.66px
+ *                                   fett). Ember als Flaeche traegt deshalb
+ *                                   ausschliesslich das Button-Label, nie
+ *                                   Kleintext. Im Dunkelmodus liegt auf Ember
+ *                                   dunkle Schrift (#22140F, 7.24).
+ */

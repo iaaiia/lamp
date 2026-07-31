@@ -1,0 +1,990 @@
+<title>Huddle — Design- und Produktsystem</title>
+
+<style>
+/* ============================================================ TOKENS */
+:root {
+  /* Ground & ink — blaustichige Neutrale, damit sie unter dem Primärblau
+     "gewählt" und nicht geerbt wirken. */
+  --fog:        #F2F3F5;
+  --surface:    #FFFFFF;
+  --surface-2:  #FAFAFC;
+  --ink:        #14171D;
+  --ink-muted:  #5E636E;
+  --line:       #DCDDE1;
+  --line-soft:  #E9EAEE;
+
+  /* Marke */
+  --blue:       #2B4C9B;   /* Huddle Blue — Struktur, Vertrauen */
+  --blue-deep:  #1C3468;
+  --blue-tint:  #E7ECF7;
+  --ember:      #DC6B45;   /* Support — die einzige laute Farbe */
+  --ember-deep: #A8461F;
+  --ember-tint: #FBEDE7;
+  --forum:      #5B57C4;   /* Youth Panels */
+  --forum-tint: #ECEBF9;
+
+  /* Semantik, bewusst getrennt von der Marke */
+  --ok:         #1F7A6B;
+  --warn:       #A96613;
+  --crit:       #A8322A;
+
+  --radius-s: 10px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+  --ring: 0 0 0 3px var(--blue-tint);
+  --shadow: 0 1px 2px rgba(20,23,29,.05), 0 8px 24px -12px rgba(20,23,29,.18);
+
+  --display: ui-sans-serif, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fog:       #101319;
+    --surface:   #171B23;
+    --surface-2: #1D222B;
+    --ink:       #E8EAEE;
+    --ink-muted: #9AA1AF;
+    --line:      #2A303B;
+    --line-soft: #222831;
+    --blue:      #7EA0E8;
+    --blue-deep: #A8C0F2;
+    --blue-tint: #1B2740;
+    --ember:     #F08A5E;
+    --ember-deep:#F7B294;
+    --ember-tint:#33201A;
+    --forum:     #9A95F0;
+    --forum-tint:#22203D;
+    --ok:        #4FB3A0;
+    --warn:      #D99A45;
+    --crit:      #E0776C;
+    --ring: 0 0 0 3px #24314D;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"] {
+  --fog:       #101319;
+  --surface:   #171B23;
+  --surface-2: #1D222B;
+  --ink:       #E8EAEE;
+  --ink-muted: #9AA1AF;
+  --line:      #2A303B;
+  --line-soft: #222831;
+  --blue:      #7EA0E8;
+  --blue-deep: #A8C0F2;
+  --blue-tint: #1B2740;
+  --ember:     #F08A5E;
+  --ember-deep:#F7B294;
+  --ember-tint:#33201A;
+  --forum:     #9A95F0;
+  --forum-tint:#22203D;
+  --ok:        #4FB3A0;
+  --warn:      #D99A45;
+  --crit:      #E0776C;
+  --ring: 0 0 0 3px #24314D;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+:root[data-theme="light"] {
+  --fog:       #F2F3F5;
+  --surface:   #FFFFFF;
+  --surface-2: #FAFAFC;
+  --ink:       #14171D;
+  --ink-muted: #5E636E;
+  --line:      #DCDDE1;
+  --line-soft: #E9EAEE;
+  --blue:      #2B4C9B;
+  --blue-deep: #1C3468;
+  --blue-tint: #E7ECF7;
+  --ember:     #DC6B45;
+  --ember-deep:#A8461F;
+  --ember-tint:#FBEDE7;
+  --forum:     #5B57C4;
+  --forum-tint:#ECEBF9;
+  --ok:        #1F7A6B;
+  --warn:      #A96613;
+  --crit:      #A8322A;
+  --ring: 0 0 0 3px var(--blue-tint);
+  --shadow: 0 1px 2px rgba(20,23,29,.05), 0 8px 24px -12px rgba(20,23,29,.18);
+}
+
+/* ============================================================ BASE */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fog);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+.stack { display: flex; flex-direction: column; }
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  text-wrap: balance;
+  margin: 0;
+  letter-spacing: -0.022em;
+  line-height: 1.12;
+}
+h1 { font-size: clamp(2.6rem, 6vw, 4.1rem); font-weight: 800; letter-spacing: -0.038em; }
+h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 750; }
+h3 { font-size: 1.16rem; font-weight: 700; letter-spacing: -0.012em; }
+h4 { font-size: .95rem; font-weight: 700; }
+p  { margin: 0; max-width: 64ch; }
+a  { color: var(--blue); }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.lede { font-size: 1.14rem; color: var(--ink-muted); max-width: 60ch; }
+.muted { color: var(--ink-muted); }
+.small { font-size: .875rem; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ============================================================ SECTIONS */
+section.band { padding: 72px 0; border-top: 1px solid var(--line); }
+section.band > .wrap > header.sec { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; max-width: 62ch; }
+
+/* ============================================================ HERO */
+.hero { padding: 84px 0 64px; position: relative; overflow: hidden; }
+.hero .wrap { position: relative; z-index: 1; display: grid; gap: 40px; grid-template-columns: 1.25fr .75fr; align-items: center; }
+@media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; } }
+.hero h1 span { color: var(--blue); }
+.hero-copy { display: flex; flex-direction: column; gap: 20px; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+/* Signature: der Presence Ring — Menschen, die einen Raum umschließen. */
+.ring-figure { display: grid; place-items: center; }
+.ring-figure svg { width: min(340px, 100%); height: auto; }
+.ring-dot { fill: var(--blue); }
+.ring-dot.is-you { fill: var(--ember); }
+.ring-track { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.ring-core { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+
+/* ============================================================ CHIPS */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: .7rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink-muted);
+}
+.chip.blue  { background: var(--blue-tint);  border-color: transparent; color: var(--blue-deep); }
+.chip.ember { background: var(--ember-tint); border-color: transparent; color: var(--ember-deep); }
+.chip.forum { background: var(--forum-tint); border-color: transparent; color: var(--forum); }
+.chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ============================================================ CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+.card.flat { box-shadow: none; }
+.grid { display: grid; gap: 18px; }
+.g2 { grid-template-columns: repeat(2, 1fr); }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .g3, .g4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+
+/* ============================================================ SWATCHES */
+.swatch { border-radius: var(--radius-m); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.swatch .fill { height: 84px; }
+.swatch .meta { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.swatch .name { font-weight: 650; font-size: .9rem; }
+.swatch .hex { font-family: var(--mono); font-size: .74rem; color: var(--ink-muted); }
+
+/* ============================================================ TYPE SCALE */
+.scale-row { display: grid; grid-template-columns: 130px 1fr; gap: 20px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+.scale-row:last-child { border-bottom: 0; }
+@media (max-width: 620px) { .scale-row { grid-template-columns: 1fr; gap: 4px; } }
+
+/* ============================================================ MOCKUP SHELL */
+.screen {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.screen-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.screen-bar .brandmark { display: flex; align-items: center; gap: 8px; font-weight: 750; letter-spacing: -.02em; }
+.screen-bar .spacer { flex: 1; }
+.screen-body { padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+
+/* Huddle-Raumkarte */
+.room {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 16px 16px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+}
+.room .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.room h4 { font-size: 1.02rem; letter-spacing: -.015em; }
+.room .why { font-size: .86rem; color: var(--ink-muted); }
+.room .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 2px; }
+
+/* Avatare als kleine Ringe */
+.faces { display: flex; }
+.faces span {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--surface);
+  margin-left: -8px;
+  display: grid; place-items: center;
+  font-size: .66rem; font-weight: 700; color: #fff;
+  font-family: var(--mono);
+}
+.faces span:first-child { margin-left: 0; }
+.faces .more { background: var(--surface); color: var(--ink-muted); border-color: var(--line); }
+
+/* Post */
+.post { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.post .who { display: flex; align-items: center; gap: 10px; }
+.post .who .name { font-weight: 650; }
+.post .text { font-size: 1rem; }
+.post .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--line-soft); }
+
+/* Support-Button — der einzige Ort, an dem Ember laut wird */
+.support {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: inherit; font-weight: 650; font-size: .92rem;
+  padding: 9px 16px 9px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ember);
+  background: transparent;
+  color: var(--ember-deep);
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.support:hover { background: var(--ember-tint); }
+.support:active { transform: scale(.97); }
+.support:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ember-tint); }
+.support[aria-pressed="true"] { background: var(--ember); border-color: var(--ember); color: #fff; }
+:root[data-theme="dark"] .support[aria-pressed="true"],
+:root[data-theme="dark"] .support { color: var(--ember-deep); }
+:root[data-theme="dark"] .support[aria-pressed="true"] { background: var(--ember); color: #22140F; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .support { color: var(--ember-deep); }
+  :root:not([data-theme="light"]) .support[aria-pressed="true"] { background: var(--ember); color: #22140F; }
+}
+.support .arc { width: 17px; height: 17px; flex: none; }
+.support-note { font-size: .84rem; color: var(--ink-muted); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-weight: 650; font-size: .92rem;
+  padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  cursor: pointer; text-decoration: none;
+}
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+:root[data-theme="dark"] .btn.primary { color: #0E1420; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #0E1420; } }
+.btn.quiet { background: transparent; }
+.btn:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* Segmented control für Feed-Modi */
+.segmented { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.segmented button {
+  font: inherit; font-size: .86rem; font-weight: 620;
+  padding: 7px 14px; border-radius: 999px; border: 0; background: transparent; color: var(--ink-muted); cursor: pointer;
+}
+.segmented button[aria-selected="true"] { background: var(--blue); color: #fff; }
+:root[data-theme="dark"] .segmented button[aria-selected="true"] { color: #0E1420; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .segmented button[aria-selected="true"] { color: #0E1420; } }
+.segmented button:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* Panel-Phasenleiste: nummeriert, weil die Reihenfolge echte Information ist */
+.phases { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border: 1px solid var(--line); border-radius: var(--radius-m); overflow: hidden; background: var(--surface); }
+@media (max-width: 700px) { .phases { grid-template-columns: 1fr; } }
+.phase { padding: 13px 14px; border-right: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 4px; }
+.phase:last-child { border-right: 0; }
+@media (max-width: 700px) { .phase { border-right: 0; border-bottom: 1px solid var(--line-soft); } .phase:last-child { border-bottom: 0; } }
+.phase .num { font-family: var(--mono); font-size: .7rem; font-weight: 700; color: var(--ink-muted); letter-spacing: .1em; }
+.phase .label { font-weight: 650; font-size: .9rem; }
+.phase .dur { font-size: .78rem; color: var(--ink-muted); }
+.phase.done { background: var(--forum-tint); }
+.phase.done .num, .phase.done .label { color: var(--forum); }
+.phase.now { background: var(--forum); }
+.phase.now .num, .phase.now .label, .phase.now .dur { color: #fff; }
+:root[data-theme="dark"] .phase.now .num,
+:root[data-theme="dark"] .phase.now .label,
+:root[data-theme="dark"] .phase.now .dur { color: #14131F; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .phase.now .num,
+  :root:not([data-theme="light"]) .phase.now .label,
+  :root:not([data-theme="light"]) .phase.now .dur { color: #14131F; }
+}
+
+/* Standpunkt-Paare im Panel */
+.stances { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 700px) { .stances { grid-template-columns: 1fr; } }
+.stance { border: 1px solid var(--line); border-radius: var(--radius-m); padding: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+.stance .head { display: flex; align-items: center; gap: 8px; }
+
+.result { border: 1.5px solid var(--forum); border-radius: var(--radius-m); background: var(--forum-tint); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.result ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.result li { font-size: .94rem; }
+
+/* Regel- und Prinzipienlisten */
+.rule { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); align-items: flex-start; }
+.rule:last-child { border-bottom: 0; }
+.rule .idx { font-family: var(--mono); font-size: .74rem; font-weight: 700; color: var(--blue); padding-top: 3px; min-width: 28px; }
+
+/* Tabelle Microcopy */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 620px; }
+th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; font-size: .92rem; }
+th { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.no { color: var(--ink-muted); text-decoration: line-through; }
+td.yes { font-weight: 620; }
+
+.callout { border-left: 3px solid var(--blue); background: var(--surface); padding: 14px 18px; border-radius: 0 var(--radius-m) var(--radius-m) 0; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.callout.ember { border-left-color: var(--ember); }
+
+footer.page { padding: 44px 0 64px; border-top: 1px solid var(--line); }
+</style>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="eyebrow">Marken- und Produktsystem · v1</span>
+      <h1><span>Huddle</span> ist der Kreis,<br>der um dich herum steht.</h1>
+      <p class="lede">Ein dezentrales soziales Netz für 15- bis 24-Jährige in Europa. Statt eines
+      endlosen Stroms: überschaubare Räume. Statt „Gefällt mir“: <strong>Support</strong> — ich stehe
+      hinter dir. Statt Kommentarschlachten: moderierte Youth Panels mit festem Ablauf und
+      festgehaltenem Ergebnis.</p>
+      <div class="hero-meta">
+        <span class="chip blue"><span class="dot"></span>ActivityPub</span>
+        <span class="chip">Open Source</span>
+        <span class="chip">Gemeinwohlorientiert</span>
+        <span class="chip">Überparteilich</span>
+      </div>
+    </div>
+    <figure class="ring-figure" aria-label="Der Presence Ring: acht Personen bilden einen geschlossenen Kreis um eine Person in der Mitte.">
+      <svg viewBox="0 0 260 260" role="img">
+        <circle class="ring-track" cx="130" cy="130" r="98"></circle>
+        <circle class="ring-core" cx="130" cy="130" r="44"></circle>
+        <circle class="ring-dot is-you" cx="130" cy="130" r="13"></circle>
+        <circle class="ring-dot" cx="130" cy="32"  r="11"></circle>
+        <circle class="ring-dot" cx="199" cy="61"  r="11"></circle>
+        <circle class="ring-dot" cx="228" cy="130" r="11"></circle>
+        <circle class="ring-dot" cx="199" cy="199" r="11"></circle>
+        <circle class="ring-dot" cx="130" cy="228" r="11"></circle>
+        <circle class="ring-dot" cx="61"  cy="199" r="11"></circle>
+        <circle class="ring-dot" cx="32"  cy="130" r="11"></circle>
+        <circle class="ring-dot" cx="61"  cy="61"  r="11"></circle>
+      </svg>
+    </figure>
+  </div>
+</div>
+
+<!-- ===================================================== POSITIONIERUNG -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Positionierung</span>
+      <h2>Warm und professionell — nicht therapeutisch, nicht aktivistisch</h2>
+      <p class="lede">Die Marke muss zwei Dinge gleichzeitig können: sich anfühlen wie Freund:innen,
+      die zu einem stehen, und aussehen wie eine Institution, der man ein Youth Panel anvertraut.</p>
+    </header>
+
+    <div class="grid g2">
+      <div class="card">
+        <h3 style="margin-bottom:12px">Huddle ist</h3>
+        <div class="rule"><span class="idx">01</span><div><strong>Rückhalt.</strong> <span class="muted">Der soziale Grundcode ist Unterstützung, nicht Bewertung. Support kostet Haltung, nicht einen Klick nebenbei.</span></div></div>
+        <div class="rule"><span class="idx">02</span><div><strong>Überschaubar.</strong> <span class="muted">Räume mit Namen und Gesichtern statt anonymer Reichweite. Man weiß immer, vor wem man spricht.</span></div></div>
+        <div class="rule"><span class="idx">03</span><div><strong>Fair.</strong> <span class="muted">Debatte hat eine Form: Standpunkte, Nachfragen, Abwägen, Ergebnis. Wer moderiert, ist sichtbar.</span></div></div>
+        <div class="rule"><span class="idx">04</span><div><strong>Portabel.</strong> <span class="muted">Auf offenen Protokollen. Wer geht, nimmt Profil, Beiträge und Kontakte mit.</span></div></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px">Huddle ist nicht</h3>
+        <div class="table-scroll" style="border:0;background:transparent">
+          <table style="min-width:0">
+            <thead><tr><th>Nicht das</th><th>Sondern das</th></tr></thead>
+            <tbody>
+              <tr><td class="no">Achtsamkeit, Healing, Journey</td><td class="yes">Mitreden, Rückhalt, Ergebnis</td></tr>
+              <tr><td class="no">Blätter, Sonnen, Mandalas</td><td class="yes">Kreise, Cluster, Ringe</td></tr>
+              <tr><td class="no">Dominantes Grün, Erdtöne</td><td class="yes">Ziviles Blau, ein warmer Akzent</td></tr>
+              <tr><td class="no">Likes, Streaks, Bestenlisten</td><td class="yes">Support, Räume, Panel-Protokolle</td></tr>
+              <tr><td class="no">Handschrift, Aquarell, Verläufe</td><td class="yes">Klares Raster, ruhige Flächen</td></tr>
+              <tr><td class="no">Politische Signalfarben</td><td class="yes">Eine Palette, die keiner Seite gehört</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== FARBE -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Farbsystem</span>
+      <h2>Eine laute Farbe, und die gehört dem Support</h2>
+      <p class="lede">Blau trägt die Struktur, Ember trägt die Wärme — und Ember erscheint
+      <em>ausschließlich</em> dort, wo Menschen füreinander einstehen. Dadurch bekommt die
+      Support-Geste im ganzen Produkt visuelles Gewicht, ohne dass irgendwo geschrien wird.</p>
+    </header>
+
+    <div class="grid g4">
+      <div class="swatch"><div class="fill" style="background:var(--blue)"></div><div class="meta"><span class="name">Huddle Blue</span><span class="hex">#2B4C9B · Primär, Navigation, Struktur</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--ember)"></div><div class="meta"><span class="name">Ember</span><span class="hex">#DC6B45 · nur Support</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--forum)"></div><div class="meta"><span class="name">Forum</span><span class="hex">#5B57C4 · nur Youth Panels</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--ink)"></div><div class="meta"><span class="name">Slate Ink</span><span class="hex">#14171D · Text</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--fog);border-bottom:1px solid var(--line)"></div><div class="meta"><span class="name">Fog</span><span class="hex">#F2F3F5 · Grund</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--ink-muted)"></div><div class="meta"><span class="name">Muted</span><span class="hex">#5E636E · Sekundärtext</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--warn)"></div><div class="meta"><span class="name">Fair-Play-Hinweis</span><span class="hex">#A96613 · semantisch</span></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--crit)"></div><div class="meta"><span class="name">Meldung</span><span class="hex">#A8322A · semantisch</span></div></div>
+    </div>
+
+    <div class="callout" style="margin-top:26px">
+      <p><strong>Regeln, die das System zusammenhalten.</strong> Ember ist nie Hintergrund einer ganzen
+      Fläche und nie Navigationsfarbe. Forum erscheint nur in Panel-Kontexten. Semantische Farben
+      (Hinweis, Meldung) sind von der Markenpalette getrennt und zählen nie als Akzent. Grün kommt
+      im gesamten System nicht vor — auch nicht als „Erfolg“; bestätigte Zustände tragen Blau.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== TYPOGRAFIE -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Typografie</span>
+      <h2>Drei Rollen, klar getrennt</h2>
+      <p class="lede">Display eng und selbstbewusst, Fließtext luftig, und eine Mono-Ebene für alles,
+      was das System <em>weiß</em>: Raumnamen, Phasen, Zeiten, Zähler. Diese dritte Ebene gibt Huddle
+      die sachliche Kante, die es vom Wellness-Look trennt.</p>
+    </header>
+
+    <div class="card">
+      <div class="scale-row"><span class="mono small muted">Display / 800</span><div style="font-family:var(--display);font-size:2.6rem;font-weight:800;letter-spacing:-.038em;line-height:1.1">Mitreden, nicht mitzählen</div></div>
+      <div class="scale-row"><span class="mono small muted">Titel / 750</span><div style="font-family:var(--display);font-size:1.5rem;font-weight:750;letter-spacing:-.022em">Dein Huddle in Leipzig</div></div>
+      <div class="scale-row"><span class="mono small muted">Fließtext / 400</span><div>Bei Huddle steht eine Gruppe um dich herum. Du entscheidest, wer in welchem Kreis mitliest — und du kannst jeden Kreis wieder verlassen, ohne deine Kontakte zu verlieren.</div></div>
+      <div class="scale-row"><span class="mono small muted">Sekundär / 400</span><div class="muted small">Moderiert von Amina und zwei weiteren · 34 Mitglieder</div></div>
+      <div class="scale-row"><span class="mono small muted">Utility / Mono</span><div class="mono small">PHASE 03 · NACHFRAGEN · NOCH 6 MIN · 12 BEITRÄGE</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== SUPPORT -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Kernmechanik</span>
+      <h2>Support statt Like</h2>
+      <p class="lede">Ein Like sagt „cool“. Support sagt „ich stehe dahinter“. Damit das nicht bloß
+      ein umbenannter Button ist, verhält er sich anders — in der Geste, in der Sichtbarkeit und in
+      dem, was danach passiert.</p>
+    </header>
+
+    <div class="grid g2" style="align-items:start">
+      <div class="card">
+        <span class="eyebrow">Zustand</span>
+        <div class="stack" style="gap:18px;margin-top:14px">
+          <div class="stack" style="gap:9px">
+            <button class="support" type="button" aria-pressed="false">
+              <svg class="arc" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 15a9 9 0 0 1 17 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="19" r="2.4" fill="currentColor"/></svg>
+              Support geben
+            </button>
+            <span class="support-note">Standard. Der Bogen ist der Kreis, der sich über die Person legt.</span>
+          </div>
+          <div class="stack" style="gap:9px">
+            <button class="support" type="button" aria-pressed="true">
+              <svg class="arc" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 15a9 9 0 0 1 17 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="19" r="2.4" fill="currentColor"/></svg>
+              Du stehst dahinter
+            </button>
+            <span class="support-note">Nach dem Antippen. Kein Zähler springt hoch — es wechselt eine Haltung.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:12px">Wie Support sich anders verhält</h3>
+        <div class="rule"><span class="idx">01</span><div><strong>Namen statt Zahlen.</strong> <span class="muted">Im Raum steht „Mira, Jonas und 4 weitere stehen dahinter“ — Rückhalt ist konkret. Eine nackte Gesamtzahl gibt es nirgends.</span></div></div>
+        <div class="rule"><span class="idx">02</span><div><strong>Keine Bestenliste.</strong> <span class="muted">Support-Zahlen sind nie raumübergreifend vergleichbar. Es gibt keinen Ort, an dem Menschen nach Support sortiert werden.</span></div></div>
+        <div class="rule"><span class="idx">03</span><div><strong>Sichtbarkeit mit Halbwertszeit.</strong> <span class="muted">Support hebt einen Beitrag im eigenen Raum an und klingt über 48 Stunden ab. Nichts bleibt oben, weil es einmal gut lief.</span></div></div>
+        <div class="rule"><span class="idx">04</span><div><strong>Support an schwere Beiträge.</strong> <span class="muted">Wer einen Beitrag mit Inhaltshinweis unterstützt, bekommt zusätzlich „Antworten“ und „Nachfragen“ angeboten — Rückhalt soll in Zuwendung münden, nicht im Klick enden.</span></div></div>
+        <div class="rule"><span class="idx">05</span><div><strong>Nie automatisch.</strong> <span class="muted">Support wird nie durch Weiterleiten, Zitieren oder Verlinken ausgelöst. Es ist immer eine bewusste Handlung.</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== SCREEN 1: ONBOARDING -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Screen 01 · Onboarding</span>
+      <h2>Der Willkommenskreis</h2>
+      <p class="lede">Niemand landet in einem leeren Feed. Nach drei Schritten steht bereits ein
+      Kreis: ein lokaler Huddle, ein Themen-Huddle, ein Youth Panel — plus die eine Geste, die
+      diese Plattform ausmacht.</p>
+    </header>
+
+    <div class="screen">
+      <div class="screen-bar">
+        <span class="brandmark">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--blue)" stroke-width="2"/><circle cx="12" cy="12" r="3.6" fill="var(--ember)"/></svg>
+          Huddle
+        </span>
+        <span class="spacer"></span>
+        <span class="mono small muted">SCHRITT 3 VON 3</span>
+      </div>
+      <div class="screen-body">
+        <div class="stack" style="gap:8px">
+          <h3 style="font-size:1.5rem">Dein Kreis steht, Mira.</h3>
+          <p class="muted">Das sind deine ersten drei Räume. Du kannst sie jederzeit verlassen —
+          und du siehst immer, warum ein Raum vorgeschlagen wurde.</p>
+        </div>
+
+        <div class="grid g3">
+          <div class="room">
+            <div class="top">
+              <h4>Leipzig 15–24</h4>
+              <span class="chip blue"><span class="dot"></span>Lokal</span>
+            </div>
+            <span class="why">Vorgeschlagen, weil du Leipzig als deine Stadt angegeben hast.</span>
+            <div class="foot">
+              <div class="faces" aria-label="128 Mitglieder">
+                <span style="background:var(--blue)">AK</span>
+                <span style="background:var(--forum)">TS</span>
+                <span style="background:var(--ember)">JW</span>
+                <span class="more">+125</span>
+              </div>
+              <span class="mono small muted">128</span>
+            </div>
+          </div>
+
+          <div class="room">
+            <div class="top">
+              <h4>Abi &amp; danach</h4>
+              <span class="chip"><span class="dot"></span>Thema</span>
+            </div>
+            <span class="why">Vorgeschlagen, weil du „Schule“ und „Zukunftspläne“ gewählt hast.</span>
+            <div class="foot">
+              <div class="faces" aria-label="61 Mitglieder">
+                <span style="background:var(--ink-muted)">LN</span>
+                <span style="background:var(--blue)">MO</span>
+                <span class="more">+59</span>
+              </div>
+              <span class="mono small muted">61</span>
+            </div>
+          </div>
+
+          <div class="room">
+            <div class="top">
+              <h4>Panel: Handys an Schulen</h4>
+              <span class="chip forum"><span class="dot"></span>Youth Panel</span>
+            </div>
+            <span class="why">Läuft in deiner Region. Moderiert, mit festem Ablauf und Ergebnis.</span>
+            <div class="foot">
+              <span class="mono small muted">START DI 18:00</span>
+              <span class="btn quiet small" style="padding:5px 12px">Platz sichern</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout ember">
+          <p style="font-weight:650;margin-bottom:4px">Eine Sache noch: Bei uns gibt es kein „Gefällt mir“.</p>
+          <p class="small muted">Es gibt <strong>Support</strong>. Du gibst ihn, wenn du hinter jemandem
+          stehst — nicht, wenn du etwas nett findest. Probier es gleich an Aminas Begrüßung aus.</p>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn primary" type="button">Huddle öffnen</button>
+          <button class="btn" type="button">Räume anpassen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== SCREEN 2: HOME -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Screen 02 · Start</span>
+      <h2>Cluster statt Strom</h2>
+      <p class="lede">Die Startseite ist eine Übersicht über Räume, nicht ein Fluss aus Beiträgen.
+      Man sieht, wo etwas los ist, entscheidet sich für einen Raum und geht hinein. Der Feed-Modus
+      gilt <em>innerhalb</em> eines Raums — nicht als globaler Algorithmus über allem.</p>
+    </header>
+
+    <div class="screen">
+      <div class="screen-bar">
+        <span class="brandmark">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--blue)" stroke-width="2"/><circle cx="12" cy="12" r="3.6" fill="var(--ember)"/></svg>
+          Huddle
+        </span>
+        <span class="spacer"></span>
+        <span class="chip">mira@huddle.leipzig</span>
+      </div>
+      <div class="screen-body">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <h3 style="font-size:1.4rem">Deine Huddles</h3>
+          <span class="mono small muted">4 RÄUME · 2 MIT NEUEM</span>
+        </div>
+
+        <div class="grid g2">
+          <div class="room">
+            <div class="top">
+              <h4>Freundeskreis</h4>
+              <span class="chip"><span class="dot"></span>Privat</span>
+            </div>
+            <span class="why">Jonas hat gefragt, ob jemand Samstag Zeit hat.</span>
+            <div class="foot">
+              <div class="faces" aria-label="6 Mitglieder">
+                <span style="background:var(--ember)">JW</span>
+                <span style="background:var(--blue)">AK</span>
+                <span style="background:var(--forum)">TS</span>
+                <span class="more">+3</span>
+              </div>
+              <span class="chip ember"><span class="dot"></span>3 neu</span>
+            </div>
+          </div>
+
+          <div class="room">
+            <div class="top">
+              <h4>Mental Health · Moderiert</h4>
+              <span class="chip"><span class="dot"></span>Thema</span>
+            </div>
+            <span class="why">Zwei Beiträge mit Inhaltshinweis. Peer-Moderation ist online.</span>
+            <div class="foot">
+              <div class="faces" aria-label="212 Mitglieder">
+                <span style="background:var(--ink-muted)">SR</span>
+                <span style="background:var(--blue)">DM</span>
+                <span class="more">+210</span>
+              </div>
+              <span class="chip"><span class="dot" style="background:var(--ok)"></span>Mod online</span>
+            </div>
+          </div>
+
+          <div class="room">
+            <div class="top">
+              <h4>Leipzig 15–24</h4>
+              <span class="chip blue"><span class="dot"></span>Lokal</span>
+            </div>
+            <span class="why">Ruhig heute. 4 Beiträge seit gestern.</span>
+            <div class="foot">
+              <div class="faces" aria-label="128 Mitglieder">
+                <span style="background:var(--blue)">KP</span>
+                <span style="background:var(--ember)">NB</span>
+                <span class="more">+126</span>
+              </div>
+              <span class="mono small muted">128</span>
+            </div>
+          </div>
+
+          <div class="room" style="border-color:var(--forum)">
+            <div class="top">
+              <h4>Panel: Handys an Schulen</h4>
+              <span class="chip forum"><span class="dot"></span>Phase 3</span>
+            </div>
+            <span class="why">Nachfragen läuft noch 6 Minuten. Du bist dran.</span>
+            <div class="foot">
+              <div class="faces" aria-label="18 Teilnehmende">
+                <span style="background:var(--forum)">AM</span>
+                <span style="background:var(--blue)">HL</span>
+                <span class="more">+16</span>
+              </div>
+              <span class="btn quiet small" style="padding:5px 12px;border-color:var(--forum);color:var(--forum)">Mitreden</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== SCREEN 3: RAUM -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Screen 03 · Huddle-Raum</span>
+      <h2>Im Raum: Rückhalt sichtbar machen</h2>
+      <p class="lede">Ein Beitrag mit Inhaltshinweis öffnet sich erst auf Wunsch. Wer Support gibt,
+      bekommt danach angeboten, tatsächlich etwas zu sagen. Und der Feed-Modus steht offen sichtbar
+      über dem Raum, mit einem Satz, der erklärt, was er tut.</p>
+    </header>
+
+    <div class="screen">
+      <div class="screen-bar">
+        <button class="btn quiet small" type="button" style="padding:5px 12px">← Räume</button>
+        <span class="brandmark" style="font-size:.95rem">Mental Health · Moderiert</span>
+        <span class="spacer"></span>
+        <span class="chip"><span class="dot" style="background:var(--ok)"></span>2 Mods online</span>
+      </div>
+      <div class="screen-body">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="segmented" role="tablist" aria-label="Feed-Modus">
+            <button role="tab" aria-selected="true" type="button">Chronologisch</button>
+            <button role="tab" aria-selected="false" type="button">Themen</button>
+            <button role="tab" aria-selected="false" type="button">Balanced</button>
+          </div>
+          <span class="small muted">Neueste zuerst. Nichts wird hochgespült, nichts versteckt.</span>
+        </div>
+
+        <div class="post">
+          <div class="who">
+            <span class="faces" aria-hidden="true"><span style="background:var(--blue)">SR</span></span>
+            <span class="name">Sara</span>
+            <span class="mono small muted">VOR 12 MIN</span>
+            <span class="chip" style="margin-left:auto">Inhaltshinweis: Prüfungsdruck</span>
+          </div>
+          <p class="text">Ich hab die dritte Klausur in Folge verhauen und komm gerade an nichts mehr
+          ran. Muss das nicht lösen, wollte es nur mal irgendwo hinschreiben, wo niemand sofort
+          Ratschläge gibt.</p>
+          <div class="actions">
+            <button class="support" type="button" aria-pressed="true">
+              <svg class="arc" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 15a9 9 0 0 1 17 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="19" r="2.4" fill="currentColor"/></svg>
+              Du stehst dahinter
+            </button>
+            <span class="support-note">Mira, Jonas und 4 weitere stehen dahinter</span>
+          </div>
+          <div class="callout ember" style="padding:12px 16px">
+            <p class="small"><strong>Du stehst hinter Sara.</strong> Willst du ihr auch etwas
+            schreiben? <a href="#">Antworten</a> · <a href="#">Nur nachfragen, wie es geht</a></p>
+          </div>
+        </div>
+
+        <div class="post">
+          <div class="who">
+            <span class="faces" aria-hidden="true"><span style="background:var(--ember)">JW</span></span>
+            <span class="name">Jonas</span>
+            <span class="mono small muted">VOR 40 MIN</span>
+          </div>
+          <p class="text">Kleine Sache, die mir geholfen hat: Ich hab meine Benachrichtigungen ab
+          22 Uhr aus. Seitdem schlaf ich schneller ein. Keine große Methode, nur ein Schalter.</p>
+          <div class="actions">
+            <button class="support" type="button" aria-pressed="false">
+              <svg class="arc" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 15a9 9 0 0 1 17 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="19" r="2.4" fill="currentColor"/></svg>
+              Support geben
+            </button>
+            <span class="support-note">Amina steht dahinter</span>
+            <span class="spacer" style="flex:1"></span>
+            <a href="#" class="small muted">Antworten</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== SCREEN 4: PANEL -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Screen 04 · Youth Panel</span>
+      <h2>Debatte mit Form und Ergebnis</h2>
+      <p class="lede">Ein Youth Panel ist kein Kommentarbereich, sondern ein Verfahren: fünf Phasen,
+      feste Zeiten, sichtbare Moderation. Standpunkte stehen paarweise nebeneinander, damit Zustimmung
+      und Widerspruch gleich viel Fläche bekommen. Am Ende steht ein Protokoll, das man weitergeben kann.</p>
+    </header>
+
+    <div class="screen">
+      <div class="screen-bar">
+        <button class="btn quiet small" type="button" style="padding:5px 12px">← Räume</button>
+        <span class="brandmark" style="font-size:.95rem">Panel: Handys an Schulen</span>
+        <span class="spacer"></span>
+        <span class="chip forum"><span class="dot"></span>Moderation: Amina</span>
+      </div>
+      <div class="screen-body">
+        <div class="phases">
+          <div class="phase done"><span class="num">01</span><span class="label">Frage klären</span><span class="dur">abgeschlossen</span></div>
+          <div class="phase done"><span class="num">02</span><span class="label">Standpunkte</span><span class="dur">abgeschlossen</span></div>
+          <div class="phase now"><span class="num">03</span><span class="label">Nachfragen</span><span class="dur">noch 6 Min</span></div>
+          <div class="phase"><span class="num">04</span><span class="label">Abwägen</span><span class="dur">10 Min</span></div>
+          <div class="phase"><span class="num">05</span><span class="label">Ergebnis</span><span class="dur">5 Min</span></div>
+        </div>
+
+        <div class="card flat" style="border-radius:var(--radius-m)">
+          <span class="eyebrow">Die Frage</span>
+          <p style="font-size:1.12rem;font-weight:650;margin-top:6px">Sollen Handys während der
+          Unterrichtszeit an weiterführenden Schulen eingeschlossen werden?</p>
+        </div>
+
+        <div class="stances">
+          <div class="stance">
+            <div class="head"><span class="chip forum">Standpunkt A</span><span class="mono small muted">7 TEILNEHMENDE</span></div>
+            <p class="small">Einschließen hilft der Konzentration, aber nur, wenn die Schule
+            gleichzeitig erklärt, wie man das Gerät sinnvoll nutzt. Sonst ist es reine Verwahrung.</p>
+            <div class="actions" style="border:0;padding:0;gap:8px">
+              <button class="btn quiet small" type="button" style="padding:5px 12px">Nachfrage stellen</button>
+            </div>
+          </div>
+          <div class="stance">
+            <div class="head"><span class="chip forum">Standpunkt B</span><span class="mono small muted">9 TEILNEHMENDE</span></div>
+            <p class="small">Ein Verbot trifft die, die das Handy für Übersetzung, Organisation oder
+            Barrierefreiheit brauchen. Regeln pro Fach wären fairer als ein Schloss für alle.</p>
+            <div class="actions" style="border:0;padding:0;gap:8px">
+              <button class="btn quiet small" type="button" style="padding:5px 12px">Nachfrage stellen</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout" style="border-left-color:var(--warn)">
+          <p class="small"><strong>Fair Play in dieser Phase:</strong> Nachfragen richten sich an den
+          Standpunkt, nicht an die Person. Wer schon zweimal gefragt hat, wartet, bis andere dran
+          waren. Die Moderation kann Beiträge in die nächste Phase verschieben.</p>
+        </div>
+
+        <div class="result">
+          <span class="eyebrow" style="color:var(--forum)">Vorschau · Panel-Protokoll</span>
+          <h4 style="font-size:1.05rem">Was am Ende festgehalten wird</h4>
+          <ol>
+            <li>Die Frage im Wortlaut und wer sie eingebracht hat.</li>
+            <li>Alle Standpunkte, unverkürzt, mit Anzahl der Teilnehmenden dahinter.</li>
+            <li>Punkte, bei denen Einigkeit bestand — und die, bei denen ausdrücklich keine bestand.</li>
+            <li>Offene Fragen, die das Panel nicht klären konnte.</li>
+            <li>Wer moderiert hat, und wohin das Protokoll weitergegeben wird.</li>
+          </ol>
+          <p class="small muted">Das Protokoll ist ein Dokument mit fester Adresse. Es lässt sich
+          zitieren, teilen und an eine Schulkonferenz, einen Jugendrat oder eine Kommune weitergeben.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== FAIR PLAY -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Sicherheit</span>
+      <h2>Fair-Play-Regeln, in Sprache, die niemand überliest</h2>
+      <p class="lede">Regeln stehen dort, wo gehandelt wird — nicht in einer verlinkten
+      Nutzungsordnung. Fünf Sätze, die jede:r nach einmal Lesen wiedergeben kann.</p>
+    </header>
+
+    <div class="grid g2" style="align-items:start">
+      <div class="card">
+        <div class="rule"><span class="idx">01</span><div><strong>Rede zur Sache, nicht über die Person.</strong></div></div>
+        <div class="rule"><span class="idx">02</span><div><strong>Ein Nein beendet ein Thema.</strong> <span class="muted">Auch mitten im Gespräch.</span></div></div>
+        <div class="rule"><span class="idx">03</span><div><strong>Was hier gesagt wird, bleibt hier.</strong> <span class="muted">Screenshots aus privaten Huddles sind ein Regelverstoß.</span></div></div>
+        <div class="rule"><span class="idx">04</span><div><strong>Kein Nachtreten.</strong> <span class="muted">Mehrere kurz hintereinander gegen eine Person — das erkennt das System und bremst es.</span></div></div>
+        <div class="rule"><span class="idx">05</span><div><strong>Bei Gefahr holen wir Menschen dazu.</strong> <span class="muted">Keine Automatik, sondern echte Ansprechpartner:innen.</span></div></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:12px">Was Technik darf — und was nicht</h3>
+        <div class="table-scroll" style="border:0;background:transparent">
+          <table style="min-width:0">
+            <thead><tr><th>Automatische Erkennung</th><th>Entscheidung</th></tr></thead>
+            <tbody>
+              <tr><td>sortiert die Meldeliste nach Dringlichkeit</td><td class="yes">Mensch</td></tr>
+              <tr><td>erkennt Muster von Nachtreten und verlangsamt</td><td class="yes">Mensch prüft nach</td></tr>
+              <tr><td>schlägt einen Inhaltshinweis vor</td><td class="yes">Autor:in</td></tr>
+              <tr><td>meldet ihre eigene Schwäche je Sprache</td><td class="yes">Moderationsteam</td></tr>
+              <tr><td class="no">entfernt Beiträge selbstständig</td><td class="no">nie</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted" style="margin-top:12px">Jede Entfernung trägt einen Namen und eine
+        Begründung. Betroffene sehen beides und können widersprechen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== MICROCOPY -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Sprache</span>
+      <h2>Microcopy: einladend, konkret, nie therapeutisch</h2>
+      <p class="lede">Jedes Bedienelement sagt, was passiert. Kein Wort aus dem Wellness- oder
+      Coaching-Register, kein Behörden-Deutsch.</p>
+    </header>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Kontext</th><th>Deutsch</th><th>English</th><th>Nie</th></tr></thead>
+        <tbody>
+          <tr><td>Raum betreten</td><td class="yes">Huddle öffnen</td><td>Open huddle</td><td class="no">Deinen Raum betreten</td></tr>
+          <tr><td>Beitragen</td><td class="yes">Mitreden</td><td>Join in</td><td class="no">Deine Stimme teilen</td></tr>
+          <tr><td>Kernaktion</td><td class="yes">Support geben</td><td>Back this</td><td class="no">Gefällt mir</td></tr>
+          <tr><td>Aktion aktiv</td><td class="yes">Du stehst dahinter</td><td>You're backing this</td><td class="no">Unterstützt ✓</td></tr>
+          <tr><td>Rückhalt anzeigen</td><td class="yes">Mira und 4 weitere stehen dahinter</td><td>Mira and 4 others are backing this</td><td class="no">5 Supports</td></tr>
+          <tr><td>Panel starten</td><td class="yes">Youth Panel starten</td><td>Start a youth panel</td><td class="no">Dialograum eröffnen</td></tr>
+          <tr><td>Regeln</td><td class="yes">Fair-Play-Regeln</td><td>Fair play rules</td><td class="no">Community-Richtlinien</td></tr>
+          <tr><td>Inhaltshinweis</td><td class="yes">Inhaltshinweis: Prüfungsdruck</td><td>Heads-up: exam stress</td><td class="no">Trigger-Warnung</td></tr>
+          <tr><td>Pause</td><td class="yes">Kreis ruhen lassen</td><td>Put your circle on hold</td><td class="no">Digital Detox</td></tr>
+          <tr><td>Ende der Liste</td><td class="yes">Das war alles. Es lädt nichts von allein nach.</td><td>That's everything. Nothing loads on its own.</td><td class="no">Du bist auf dem Laufenden ✨</td></tr>
+          <tr><td>Meldung</td><td class="yes">Melden — ein Mensch schaut drauf</td><td>Report — a person will look at this</td><td class="no">Verstoß einreichen</td></tr>
+          <tr><td>Weggehen</td><td class="yes">Konto mitnehmen</td><td>Take your account with you</td><td class="no">Daten exportieren</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== FEEDS -->
+<section class="band">
+  <div class="wrap">
+    <header class="sec">
+      <span class="eyebrow">Sichtbarkeit</span>
+      <h2>Drei Modi, pro Raum wählbar, jeder erklärt sich</h2>
+    </header>
+    <div class="grid g3">
+      <div class="card">
+        <span class="chip blue"><span class="dot"></span>Standard</span>
+        <h3 style="margin:12px 0 8px">Chronologisch</h3>
+        <p class="small muted">Neueste zuerst. Nichts wird gewichtet, nichts versteckt. Der Modus,
+        in dem jeder Raum startet.</p>
+      </div>
+      <div class="card">
+        <span class="chip">Optional</span>
+        <h3 style="margin:12px 0 8px">Themen</h3>
+        <p class="small muted">Nach Gesprächsfäden gruppiert statt nach Zeit. Nützlich in großen
+        Räumen, in denen mehrere Dinge parallel laufen.</p>
+      </div>
+      <div class="card">
+        <span class="chip">Optional</span>
+        <h3 style="margin:12px 0 8px">Balanced</h3>
+        <p class="small muted">Sorgt dafür, dass in Diskussionen auch die weniger vertretene Seite
+        sichtbar bleibt. Nur in Panels und Themenräumen verfügbar.</p>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:22px">
+      <p class="small"><strong>Gemeinsam für alle drei:</strong> Support hebt einen Beitrag nur
+      innerhalb seines Raums an, höchstens um wenige Plätze, und der Effekt klingt nach 48 Stunden ab.
+      Kein Modus nutzt Verweildauer, Scrollverhalten oder abgeleitete Interessen — diese Daten werden
+      gar nicht erst erhoben. Und keiner der Modi lädt beim Scrollen nach.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="page">
+  <div class="wrap stack" style="gap:10px">
+    <span class="eyebrow">Huddle · Marken- und Produktsystem v1</span>
+    <p class="small muted">Erarbeitet für die Ausschreibung PPPA-2026-YOUTH-SOCIAL-MEDIA-DESIGN.
+    Farbwerte, Typo-Rollen und Komponenten sind als CSS-Tokens in <span class="mono">design/huddle-tokens.css</span>
+    umgesetzt und direkt in den bestehenden Prototypen einsetzbar.</p>
+  </div>
+</footer>

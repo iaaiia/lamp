@@ -1,0 +1,151 @@
+/** Posts: creation, visibility, reactions, deletion. */
+
+import config from '../config.js';
+import { all, get, now, run } from '../db.js';
+import { DomainError, findById, isPaused, preferencesOf } from './accounts.js';
+import { canReply, isFollowing, replyCooldownRemaining } from './safety.js';
+
+const VISIBILITIES = new Set(['public', 'followers', 'mentioned']);
+const REPLY_POLICIES = new Set(['everyone', 'followers', 'mentioned', 'nobody']);
+
+/** Mint the canonical ActivityPub id for a local post. */
+const postUri = (username, id) => `${config.origin}/@${username}/posts/${id}`;
+
+export function createPost(author, { content, contentWarning = null, language = 'en', visibility, replyPolicy, inReplyTo = null, media = [] }) {
+  const text = String(content ?? '').trim();
+  if (!text) throw new DomainError('A post needs some text.', 'content');
+  if (text.length > config.limits.postLength) {
+    throw new DomainError(`Posts are limited to ${config.limits.postLength} characters.`, 'content');
+  }
+
+  // Alt text is not optional. An image without a description is not publishable
+  // — accessibility is an acceptance criterion, not a nice-to-have.
+  for (const item of media) {
+    if (!item.alt || !String(item.alt).trim()) {
+      throw new DomainError('Every image needs a description (alt text).', 'media');
+    }
+  }
+
+  const prefs = preferencesOf(author);
+  const vis = VISIBILITIES.has(visibility) ? visibility : (author.is_minor ? 'followers' : 'public');
+  const policy = REPLY_POLICIES.has(replyPolicy) ? replyPolicy : prefs.replyPolicy;
+
+  if (inReplyTo) {
+    const parent = findPostById(inReplyTo);
+    if (!parent) throw new DomainError('That post no longer exists.');
+    const verdict = canReply(parent, author);
+    if (!verdict.allowed) throw new DomainError(verdict.reason, 'reply');
+    const wait = replyCooldownRemaining(author.id, parent.id);
+    if (wait > 0) {
+      throw new DomainError(`Take a breath — you can reply in this thread again in ${wait}s.`, 'reply');
+    }
+  }
+
+  const id = run(
+    `INSERT INTO posts (account_id, uri, content, content_warning, language, visibility, reply_policy, in_reply_to, media, created_at)
+     VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?)`,
+    author.id,
+    text,
+    contentWarning || null,
+    language,
+    vis,
+    policy,
+    inReplyTo,
+    JSON.stringify(media),
+    now(),
+  );
+  run('UPDATE posts SET uri = ? WHERE id = ?', postUri(author.username, id), id);
+  return findPostById(id);
+}
+
+/** Store a post that arrived over federation. */
+export function ingestRemotePost(author, { uri, content, contentWarning = null, language = 'en', inReplyTo = null, createdAt, media = [] }) {
+  const existing = get('SELECT * FROM posts WHERE uri = ?', uri);
+  if (existing) return existing;
+  const id = run(
+    `INSERT INTO posts (account_id, uri, content, content_warning, language, visibility, reply_policy, in_reply_to, media, created_at)
+     VALUES (?, ?, ?, ?, ?, 'public', 'followers', ?, ?, ?)`,
+    author.id,
+    uri,
+    String(content ?? '').slice(0, config.limits.postLength),
+    contentWarning,
+    language,
+    inReplyTo,
+    JSON.stringify(media),
+    createdAt ?? now(),
+  );
+  return findPostById(id);
+}
+
+export const findPostById = (id) =>
+  get('SELECT * FROM posts WHERE id = ? AND deleted_at IS NULL', id);
+
+export const findPostByUri = (uri) =>
+  get('SELECT * FROM posts WHERE uri = ? AND deleted_at IS NULL', uri);
+
+export const deletePost = (postId, accountId) =>
+  run('UPDATE posts SET deleted_at = ? WHERE id = ? AND account_id = ?', now(), postId, accountId);
+
+export const repliesTo = (postId) =>
+  all(
+    `SELECT p.*, a.username, a.domain, a.display_name, a.paused_at
+     FROM posts p JOIN accounts a ON a.id = p.account_id
+     WHERE p.in_reply_to = ? AND p.deleted_at IS NULL AND a.paused_at IS NULL
+     ORDER BY p.created_at ASC`,
+    postId,
+  );
+
+/** Can `viewer` (possibly null) see this post? */
+export function isVisibleTo(post, viewer) {
+  const author = findById(post.account_id);
+  if (!author || isPaused(author)) return false;
+  if (viewer && viewer.id === post.account_id) return true;
+  switch (post.visibility) {
+    case 'public':
+      return true;
+    case 'followers':
+      return Boolean(viewer) && isFollowing(viewer.id, post.account_id);
+    case 'mentioned': {
+      if (!viewer) return false;
+      const handle = viewer.domain ? `@${viewer.username}@${viewer.domain}` : `@${viewer.username}`;
+      return post.content.includes(handle);
+    }
+    default:
+      return false;
+  }
+}
+
+/* ------------------------------------------------------------------ reactions */
+
+export function react(accountId, postId, kind = 'like') {
+  run(
+    'INSERT OR IGNORE INTO reactions (account_id, post_id, kind, created_at) VALUES (?, ?, ?, ?)',
+    accountId,
+    postId,
+    kind,
+    now(),
+  );
+}
+
+export const unreact = (accountId, postId, kind = 'like') =>
+  run('DELETE FROM reactions WHERE account_id = ? AND post_id = ? AND kind = ?', accountId, postId, kind);
+
+export const countReactions = (postId, kind = 'like') =>
+  get('SELECT COUNT(*) AS n FROM reactions WHERE post_id = ? AND kind = ?', postId, kind).n;
+
+export const hasReacted = (accountId, postId, kind = 'like') =>
+  Boolean(get('SELECT 1 FROM reactions WHERE account_id = ? AND post_id = ? AND kind = ?', accountId, postId, kind));
+
+/**
+ * Whether a reaction count may be shown to `viewer`.
+ *
+ * Default: counts are for the author only. Public scoreboards are the feature
+ * young co-creators most consistently name as harmful, so opting in is a
+ * deliberate act by the *author*, not a viewer setting.
+ */
+export function metricsVisible(post, viewer) {
+  const author = findById(post.account_id);
+  if (!author) return false;
+  if (viewer && viewer.id === author.id) return true;
+  return Boolean(preferencesOf(author).showMetrics);
+}

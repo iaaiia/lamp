@@ -48,10 +48,10 @@ describe('web surface', () => {
     );
   });
 
-  it('makes the home page a cluster of circles rather than a stream', async () => {
+  it('makes the home page a space you push around rather than a stream', async () => {
     const html = await (await fetchPath('/', { headers: { cookie } })).text();
-    assert.match(html, /Deine Kreise/);
-    assert.match(html, /Hier ist kein Strom/);
+    assert.match(html, /Dein Himmel/);
+    assert.match(html, /Schieb ihn hin und her/);
   });
 
   it('renders the follow stream with a feed explanation and an explicit end marker', async () => {

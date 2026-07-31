@@ -197,7 +197,52 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D18 — Der Himmel: eine Fläche zum Schieben statt eines Rasters zum Abklicken
+
+**Chosen:** die Startseite ist eine Fläche, die größer ist als der Bildschirm. Kreise
+liegen darin als weiche Wolken; man schiebt sie mit Finger, Trackpad oder Pfeiltasten
+und findet dabei Dinge, die man nicht gesucht hat. Eigene Kreise liegen links, wo die
+Fläche beginnt, unbekannte rechts jenseits des Randes.
+
+**Why:** das Kachelraster (D15) war korrekt und zu starr — jede Auskunft kostete einen
+Klick. Auf einer Fläche gibt jede Wolke von sich aus Auskunft (Name, Art, Größe, Zustand),
+und sobald Zeiger oder Tastaturfokus sie erreicht, klappt die Vorschau mit Zweck und
+letztem Beitrag auf. Der Klick ist erst nötig, wenn man wirklich hineingeht — und aus der
+Wolke führt ein zweiter Weg direkt ins Schreibfeld statt über zwei Seiten.
+
+**Warum nicht radial:** eine Fläche ohne Skript startet immer oben links. Dort soll das
+Eigene liegen, nicht Leere. Deshalb Bänder statt Ringe.
+
+**Positionen sind fest:** aus dem Slug abgeleitet. Ein Kreis liegt morgen dort, wo er
+heute lag. Ein Himmel, der sich bei jedem Laden neu sortiert, wäre kein Ort, sondern ein
+Spielautomat.
+
+**Weiterhin ohne JavaScript.** Das Schieben macht der Browser selbst. Die Drift der Wolken
+ist CSS und hält sich an `prefers-reduced-motion`; im reizarmen Modus werden aus den Wolken
+ruhige Scheiben ohne Verlauf. Dieselben Kreise stehen zusätzlich als schlichte Liste unter
+der Fläche — für Tastatur, Screenreader und alle, denen das gerade zu viel ist.
+
+**Enforced by:** `src/web/sky.js`, `skyPage()`; `tests/ui.test.js` prüft Determinismus,
+die Bänder, die Größendeckelung, die Ränder und dass keine Wolke Links verschachtelt.
+
+## D19 — Erzeugte Styles brauchen einen Nonce, Inline-Styles bleiben verboten
+
+**Chosen:** `style-src 'self' 'nonce-…'` erlaubt genau einen erzeugten `<style>`-Block pro
+Seite — für Dinge, die sich erst zur Laufzeit ergeben, etwa die Wolkenpositionen.
+`style="…"`-Attribute bleiben verboten.
+
+**Why:** beim Bau des Himmels fiel auf, dass sieben vorhandene Inline-Styles von der CSP
+längst verworfen wurden — sie waren still wirkungslos. Genau deshalb bleibt das Verbot: ein
+Fehler, den man sieht, ist besser als eine Regel, die heimlich nichts tut. Die Styles
+wurden in Klassen überführt.
+
+**Enforced by:** `sendHtml()`; `tests/ui.test.js` prüft Nonce, Header und die Abwesenheit
+von Inline-Styles.
+
 ## D15 — Kachelraster statt Liste, und ein Zeichen, das etwas aussagt
+
+*(Überholt durch D18 für die Startseite. Die Kacheln und das Kreiszeichen leben in der
+Suche weiter.)*
 
 **Chosen:** die Startseite ist ein Bento-Raster aus Kreiskacheln, ab dem kleinsten Gerät
 zweispaltig. Die große Kachel gehört dem Kreis, in dem gerade etwas passiert — erst

@@ -11,6 +11,7 @@ import config from '../config.js';
 import { preferencesOf } from '../domain/accounts.js';
 import { KIND_LABELS } from '../domain/circles.js';
 import { circleSigil } from './sigil.js';
+import { layoutSky } from './sky.js';
 
 export const escapeHtml = (value) =>
   String(value ?? '')
@@ -54,7 +55,7 @@ function timeTag(iso) {
   return `<time datetime="${escapeHtml(iso)}">${escapeHtml(label)}</time>`;
 }
 
-export function layout({ title, viewer, body, prefs, current = null }) {
+export function layout({ title, viewer, body, prefs, current = null, head = '' }) {
   const p = prefs ?? preferencesOf(viewer);
   const classes = [
     p.reducedMotion ? 'reduced-motion' : '',
@@ -73,9 +74,9 @@ export function layout({ title, viewer, body, prefs, current = null }) {
   // nichts einblenden, nachladen oder sich merken.
   const dock = viewer
     ? `<nav class="dock" aria-label="Schnellzugriff">
-         <a href="/"${current === 'circles' ? ' aria-current="page"' : ''}>Kreise</a>
+         <a href="/"${current === 'sky' ? ' aria-current="page"' : ''}>Himmel</a>
          <a class="compose" href="/compose" aria-label="Neuer Beitrag">+</a>
-         <a href="/discover"${current === 'discover' ? ' aria-current="page"' : ''}>Finden</a>
+         <a href="/discover"${current === 'discover' ? ' aria-current="page"' : ''}>Suchen</a>
        </nav>`
     : '';
 
@@ -87,6 +88,7 @@ export function layout({ title, viewer, body, prefs, current = null }) {
 <title>${escapeHtml(title)} — ${escapeHtml(config.instanceName)}</title>
 <link rel="stylesheet" href="/style.css">
 <link rel="alternate" type="application/activity+json" href="${config.origin}">
+${head}
 </head>
 <body class="${classes}${viewer ? ' has-dock' : ''}">
 <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -184,7 +186,7 @@ export function composer({ prefs, replyTo = null, error = null, action = null })
 
   const target = action ?? (replyTo ? `/posts/${replyTo}/reply` : '/posts');
   return `<form class="card" method="post" action="${target}" id="reply">
-  <h2 style="margin-top:0">${replyTo ? 'Antwort schreiben' : 'Was willst du sagen?'}</h2>
+  <h2 class="flush">${replyTo ? 'Antwort schreiben' : 'Was willst du sagen?'}</h2>
   ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
   <label for="content">Dein Beitrag</label>
   <textarea id="content" name="content" maxlength="${config.limits.postLength}" required></textarea>
@@ -231,7 +233,7 @@ Beiträge aus Kreisen stehen in ihrem Kreis.</p>
   <form method="get" action="/">
     <label for="feed" class="small">Wie dieser Kreis sortiert wird</label>
     <select id="feed" name="feed">${picker}</select>
-    <p style="margin:.7rem 0 0"><button class="secondary" type="submit">Sortierung übernehmen</button></p>
+    <p class="tight"><button class="secondary" type="submit">Sortierung übernehmen</button></p>
   </form>
 </div>
 ${composer({ prefs, error })}
@@ -289,9 +291,9 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
     prefs,
     body: `
 <div class="card">
-  <div class="who" style="display:flex;gap:.6rem;align-items:center;margin-bottom:.6rem">
+  <div class="who profile-head">
     <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(account))}</span></span>
-    <h1 style="margin:0">${escapeHtml(account.display_name || account.username)}</h1>
+    <h1 class="flush">${escapeHtml(account.display_name || account.username)}</h1>
   </div>
   <p class="meta mono small">${escapeHtml(handleOf(account))}</p>
   ${account.bio ? `<p>${escapeHtml(account.bio)}</p>` : ''}
@@ -392,7 +394,7 @@ export function moderationPage({ viewer, prefs, reports, stats }) {
     <form method="post" action="/moderation/${r.id}">
       <label for="note-${r.id}" class="small">Begründung</label>
       <input type="text" id="note-${r.id}" name="note" maxlength="500">
-      <p style="margin:.6rem 0 0">
+      <p class="tight">
         <button name="decision" value="actioned" type="submit">Beitrag entfernen</button>
         <button class="secondary" name="decision" value="dismissed" type="submit">Verwerfen</button>
       </p>
@@ -516,40 +518,100 @@ export function circleTile(circle, { hero = false, index = 0 } = {}) {
 </a>`;
 }
 
-export function clusterPage({ viewer, prefs, circles, suggestions }) {
-  // Die Hero-Kachel ist der Kreis, in dem gerade etwas passiert: erst Frisches,
-  // dann zuletzt Geschriebenes. Reichweite bestimmt hier nichts — der größte
-  // Kreis bekommt keinen Platzvorteil.
-  const ranked = [...circles].sort((a, b) => {
-    const fresh = Number(b.fresh_count ?? 0) - Number(a.fresh_count ?? 0);
-    if (fresh !== 0) return fresh;
-    return String(b.last_post_at ?? '').localeCompare(String(a.last_post_at ?? ''));
-  });
-  const [hero, ...rest] = ranked;
 
-  const mine = circles.length
-    ? `<div class="cluster">
-         ${hero ? circleTile(hero, { hero: true, index: 0 }) : ''}
-         ${rest.map((c, i) => circleTile(c, { index: i + 1 })).join('')}
-       </div>`
-    : `<p class="card">Du bist noch in keinem Kreis. Finde unten einen, oder öffne deinen eigenen.</p>`;
+/* ============================================================ Himmel */
 
-  const suggested = suggestions.length
-    ? `<h2>Kreise zum Beitreten</h2>
-       <div class="cluster">${suggestions.map((c, i) => circleTile(c, { index: 100 + i })).join('')}</div>`
-    : '';
+/**
+ * Eine Wolke. Sie zeigt von sich aus Namen und Zustand; sobald der Zeiger oder
+ * der Tastaturfokus sie erreicht, klappt die Vorschau auf — ohne Klick. Der
+ * Klick ist erst nötig, wenn man wirklich hinein will.
+ */
+function cloud(entry, index, viewerCircles) {
+  const { circle, near } = entry;
+  const fresh = Number(circle.fresh_count ?? 0);
+  const members = Number(circle.member_count ?? 0);
+  const isMember = viewerCircles.has(circle.id);
+  const href = `/c/${encodeURIComponent(circle.slug)}`;
+
+  const state = fresh > 0
+    ? `<span class="fresh">${fresh} neu</span>`
+    : circle.last_post_at
+      ? `<span class="when">${timeTag(circle.last_post_at)}</span>`
+      : '<span class="when">noch still</span>';
+
+  // Für Mitglieder führt ein zweiter Weg direkt ins Schreibfeld, für alle
+  // anderen ins Beitreten — beides ein Klick, nicht drei.
+  //
+  // Die Wolke ist deshalb kein <a>: ein Link im Link ist ungültiges HTML, und
+  // der Browser hebt die inneren Links dann aus dem Element heraus. Stattdessen
+  // deckt der Namenslink über ::after die ganze Wolke ab, und die Aktion liegt
+  // als eigener Link darüber.
+  const action = isMember
+    ? `<span class="act"><a class="over" href="${href}?write=1">Etwas schreiben</a></span>`
+    : circle.joining === 'invite'
+      ? '<span class="act muted">Nur auf Einladung</span>'
+      : `<span class="act"><a class="over" href="${href}">Reinschauen und beitreten</a></span>`;
+
+  return `<div class="cloud${near ? '' : ' far'}${circle.kind === 'private' ? ' closed' : ''}" id="cloud-${index}">
+  <span class="orb" aria-hidden="true"><span class="body"></span></span>
+  <span class="tag">
+    <a class="name" href="${href}">${escapeHtml(circle.name)}</a>
+    <span class="line">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)} · ${members} ${
+      members === 1 ? 'Mitglied' : 'Mitglieder'
+    }</span>
+    ${state}
+    <span class="peek"><span class="peek-inner">
+      ${circle.purpose ? `<span class="purpose">${escapeHtml(circle.purpose)}</span>` : ''}
+      ${circle.last_post_content
+        ? `<span class="quote"><strong>${escapeHtml(circle.last_post_author)}:</strong> ${escapeHtml(
+            circle.last_post_content.length > 100
+              ? `${circle.last_post_content.slice(0, 100).trimEnd()}…`
+              : circle.last_post_content,
+          )}</span>`
+        : ''}
+      ${action}
+    </span></span>
+  </span>
+</div>`;
+}
+
+export function skyPage({ viewer, prefs, near, far, nonce }) {
+  const { clouds, css } = layoutSky(near, far);
+  const mine = new Set(near.map((circle) => circle.id));
+
+  // Derselbe Bestand noch einmal als schlichte Liste — für Tastatur, Screenreader
+  // und für alle, denen eine Fläche zum Schieben gerade zu viel ist.
+  const list = [...near, ...far]
+    .map(
+      (circle) => `<li><a href="/c/${encodeURIComponent(circle.slug)}">${escapeHtml(circle.name)}</a>
+        <span class="muted small">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)} ·
+        ${Number(circle.member_count ?? 0)} Mitglieder${
+          Number(circle.fresh_count ?? 0) > 0 ? ` · ${circle.fresh_count} neu` : ''
+        }</span></li>`,
+    )
+    .join('');
 
   return layout({
-    title: 'Deine Kreise',
+    title: 'Himmel',
     viewer,
     prefs,
-    current: 'circles',
+    current: 'sky',
+    head: `<style nonce="${escapeHtml(nonce)}">${css}</style>`,
     body: `
-<h1>Deine Kreise</h1>
-<p class="muted">Hier ist kein Strom, sondern eine Übersicht. Du siehst, wo etwas los ist,
-entscheidest dich für einen Kreis und gehst hinein.</p>
-${mine}
-${suggested}`,
+<div class="sky-intro">
+  <h1>Dein Himmel</h1>
+  <p class="muted">Schieb ihn hin und her. Innen liegen deine Kreise, weiter außen
+  welche, die du noch nicht kennst.</p>
+</div>
+<div class="sky" tabindex="0" role="region" aria-label="Kreise als Fläche — mit Finger, Trackpad oder Pfeiltasten verschiebbar">
+  <div class="field">
+    ${clouds.map((entry, i) => cloud(entry, i, mine)).join('')}
+  </div>
+</div>
+<details class="sky-list">
+  <summary>Alle Kreise als Liste</summary>
+  <ul>${list}</ul>
+</details>`,
   });
 }
 
@@ -615,7 +677,7 @@ ${targets ? `<div class="cluster">${targets}</div>` : ''}
   });
 }
 
-export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount, pending, error }) {
+export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount, pending, error, writeOpen = false }) {
   const joinControl = viewer && !isMember
     ? circle.joining === 'invite'
       ? '<p class="notice">Dieser Kreis ist nur auf Einladung offen.</p>'
@@ -634,7 +696,7 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
     ? `<h2>Beitrittsanfragen</h2>
        <div class="card">${pending
          .map(
-           (person) => `<form method="post" action="/c/${escapeHtml(circle.slug)}/admit" style="display:flex;gap:.6rem;align-items:center;margin-bottom:.5rem">
+           (person) => `<form class="request-row" method="post" action="/c/${escapeHtml(circle.slug)}/admit">
              <input type="hidden" name="account_id" value="${person.id}">
              <span>${escapeHtml(person.display_name || person.username)}</span>
              <button class="secondary" type="submit">Aufnehmen</button>
@@ -662,7 +724,7 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
   // andere gesagt haben — nicht mit einem leeren Feld, das zum Senden auffordert.
   // <details> kann das nativ; es braucht dafür kein JavaScript.
   const composeBlock = isMember
-    ? `<details class="compose-slot"${error ? ' open' : ''}>
+    ? `<details class="compose-slot"${error || writeOpen ? ' open' : ''}>
          <summary>Etwas in diesen Kreis schreiben</summary>
          ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}
        </details>`
@@ -712,7 +774,7 @@ ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
   <label for="purpose">Wofür ist dieser Kreis?</label>
   <input type="text" id="purpose" name="purpose" maxlength="280">
   <p class="hint">Ein Satz. Steht auf der Karte, damit Leute wissen, worauf sie sich einlassen.</p>
-  <fieldset style="margin-top:1rem">
+  <fieldset class="spaced">
     <legend>Art</legend>
     <label class="inline"><input type="radio" name="kind" value="private" checked>
       <span>Privater Kreis<span class="hint">Freund:innen oder Familie. Nur Mitglieder lesen mit, nichts verlässt diesen Server, Beitritt nur auf Einladung.</span></span></label>

@@ -85,14 +85,21 @@ export function sendActivityJson(res, status, payload) {
   res.end(body);
 }
 
-export function sendHtml(res, status, html) {
+/**
+ * `nonce` erlaubt genau einen erzeugten <style>-Block pro Seite — für Dinge, die
+ * sich erst zur Laufzeit ergeben, etwa die Positionen der Wolken am Himmel.
+ * Inline-`style="..."`-Attribute bleiben verboten; sie wären sonst still
+ * wirkungslos, was schwerer zu bemerken ist als ein Fehler.
+ */
+export function sendHtml(res, status, html, nonce = null) {
+  const styleSrc = nonce ? `'self' 'nonce-${nonce}'` : "'self'";
   res.writeHead(status, {
     'content-type': 'text/html; charset=utf-8',
     'content-length': Buffer.byteLength(html),
     'referrer-policy': 'same-origin',
     'x-content-type-options': 'nosniff',
     'content-security-policy':
-      "default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'none'; form-action 'self'",
+      `default-src 'self'; img-src 'self' data: https:; style-src ${styleSrc}; script-src 'none'; form-action 'self'`,
   });
   res.end(html);
 }

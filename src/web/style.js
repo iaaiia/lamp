@@ -237,6 +237,215 @@ main { padding-bottom: 4rem; }
 }
 .card.flat, article.post { box-shadow: none; }
 
+/* -------------------------------------------------------------------- Himmel */
+/* Eine Fläche, die größer ist als der Bildschirm. Geschoben wird sie vom Browser
+   selbst — Finger, Trackpad, Pfeiltasten. Dafür braucht es kein Skript. */
+
+.sky-intro { margin-bottom: .9rem; }
+.sky-intro h1 { margin-bottom: .3rem; }
+
+.sky {
+  position: relative;
+  overflow: auto;
+  overscroll-behavior: contain;
+  height: min(74vh, 40rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  background:
+    radial-gradient(90% 70% at 22% 12%, color-mix(in oklab, var(--blue) 9%, transparent), transparent 70%),
+    radial-gradient(80% 60% at 84% 82%, color-mix(in oklab, var(--forum) 9%, transparent), transparent 70%),
+    var(--surface);
+  cursor: grab;
+  touch-action: pan-x pan-y;
+  scrollbar-width: none;
+}
+.sky::-webkit-scrollbar { display: none; }
+.sky:active { cursor: grabbing; }
+.sky:focus-visible { box-shadow: var(--focus); }
+
+/* Die eigentliche Fläche: knapp doppelt so breit wie das Fenster, damit es
+   wirklich etwas zu schieben gibt — aber nicht endlos. Der Himmel hat Ränder. */
+.field {
+  position: relative;
+  /* Reichlich Fläche: Wolken brauchen Abstand, sonst überlagern sich ihre
+     Beschriftungen. Und es soll wirklich etwas zu schieben geben. */
+  width: 210%;
+  height: 200%;
+  min-width: 40rem;
+  min-height: 44rem;
+}
+/* Auf breiten Schirmen passt mehr ins Bild, also braucht die Fläche weniger
+   Übergröße — sonst schiebt man lange durch Leere. */
+@media (min-width: 60rem) {
+  .field { width: 145%; height: 135%; }
+  .sky { height: min(68vh, 34rem); }
+}
+
+.cloud {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: max(var(--d), 7.5rem);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  text-decoration: none;
+  color: var(--ink);
+  animation: drift var(--drift, 30s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+/* Der Körper: ein heller Hof mit dunklerem Kern, weich gezeichnet. Kein
+   Glanzlicht, keine Spiegelung — die Wolke ist Atmosphäre, kein Objekt.
+   Die Beschriftung liegt darunter, nicht darin: Text im Unschärfefeld ist
+   hübsch und unlesbar. */
+/* Der Durchmesser skaliert mit vmin, wird aber gedeckelt: auf einem breiten
+   Schirm dürfen Wolken nicht zu Planeten werden. */
+.cloud .orb {
+  width: clamp(4.5rem, var(--d), 9.5rem);
+  height: clamp(4.5rem, var(--d), 9.5rem);
+  position: relative;
+  display: block;
+  flex: none;
+}
+.cloud .body {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 32%, var(--c2) 0%, transparent 48%),
+    radial-gradient(circle at 52% 55%, var(--c1) 0%, color-mix(in oklab, var(--c1) 50%, transparent) 54%, transparent 76%);
+  filter: blur(5px);
+  opacity: .95;
+  transition: transform .35s ease, opacity .35s ease, filter .35s ease;
+}
+.cloud.far .body { filter: blur(10px); opacity: .55; }
+
+/* Private Kreise tragen dieselbe geschlossene zweite Schale wie ihr Zeichen. */
+.cloud.closed .orb::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in oklab, var(--c1) 75%, transparent);
+  opacity: .85;
+  z-index: 1;
+}
+
+.cloud .tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .1rem;
+  text-align: center;
+  max-width: 11rem;
+  padding: .25rem .5rem;
+  border-radius: var(--radius-m);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+}
+.cloud .name {
+  font-family: var(--display);
+  font-weight: 750;
+  font-size: .9rem;
+  letter-spacing: -.015em;
+  line-height: 1.2;
+  color: var(--ink);
+  text-decoration: none;
+}
+/* Der Namenslink deckt die ganze Wolke ab — man trifft sie überall. */
+.cloud .name::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.cloud .name:hover { color: var(--blue-deep); }
+
+/* Die Aktion liegt darüber, damit sie eigenständig anklickbar bleibt. */
+.cloud .act .over { position: relative; z-index: 2; }
+.cloud.far .name { opacity: .9; }
+.cloud .line, .cloud .when {
+  font-family: var(--mono);
+  font-size: .6rem;
+  letter-spacing: .04em;
+  color: var(--ink-muted);
+}
+.cloud .fresh {
+  font-family: var(--mono);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--blue-deep);
+}
+
+/* Die Vorschau klappt bei Zeiger oder Tastaturfokus auf — ohne Klick. Der Klick
+   ist erst nötig, wenn man wirklich hineingeht. Das äußere Element ist ein
+   einzeiliges Grid, dessen einzige Zeile von 0fr auf 1fr wächst; deshalb liegt
+   der ganze Inhalt in genau einem Kind. */
+.cloud .peek {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .3s ease, opacity .25s ease;
+  opacity: 0;
+  width: 100%;
+}
+.cloud .peek-inner {
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  font-size: .76rem;
+  line-height: 1.45;
+  text-align: left;
+}
+.cloud:hover .peek, .cloud:focus-within .peek { grid-template-rows: 1fr; opacity: 1; }
+.cloud:hover, .cloud:focus-within { z-index: 3; }
+.cloud:hover .tag, .cloud:focus-within .tag {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  max-width: 15.5rem;
+  width: max-content;
+}
+.cloud:hover .body, .cloud:focus-within .body { transform: scale(1.1); opacity: 1; filter: blur(3px); }
+.cloud:focus-within .tag { box-shadow: var(--focus); }
+
+.cloud .peek .purpose { color: var(--ink-muted); }
+.cloud .peek .quote { color: var(--ink); }
+.cloud .peek .act { font-weight: 640; color: var(--blue-deep); margin-top: .15rem; }
+.cloud .peek .sep { opacity: .5; margin: 0 .3rem; }
+
+@keyframes drift {
+  from { transform: translate3d(-.7vmin, .5vmin, 0); }
+  to   { transform: translate3d(.7vmin, -.6vmin, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud { animation: none; }
+  .cloud .body, .cloud .peek { transition: none; }
+}
+body.reduced-motion .cloud { animation: none; }
+body.reduced-motion .cloud .body, body.reduced-motion .cloud .peek { transition: none; }
+
+/* Reizarm: die Wolken werden zu ruhigen Scheiben ohne Farbverlauf. */
+body.low-stimulus .cloud .body {
+  background: color-mix(in oklab, var(--ink-muted) 22%, transparent);
+  filter: blur(3px);
+}
+body.low-stimulus .cloud { animation: none; }
+
+.sky-list { margin-top: 1rem; }
+.sky-list > summary {
+  cursor: pointer;
+  font-weight: 640;
+  color: var(--ink-muted);
+  padding: .5rem 0;
+}
+.sky-list ul { list-style: none; padding: 0; margin: .5rem 0 0; display: flex; flex-direction: column; gap: .5rem; }
+.sky-list li { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
+
+/* --------------------------------------------------------- Hilfsklassen */
+.flush { margin: 0; }
+.tight { margin: .7rem 0 0; }
+.spaced { margin-top: 1rem; }
+.profile-head { display: flex; gap: .6rem; align-items: center; margin-bottom: .6rem; }
+.request-row { display: flex; gap: .6rem; align-items: center; margin-bottom: .5rem; }
+
 /* ------------------------------------------------------------------ Cluster */
 /* Ein Raster aus Räumen, kein Fluss aus Beiträgen. Mobile zuerst: zwei Spalten
    ab dem kleinsten Gerät, damit die Übersicht auch in der Hand eine Übersicht

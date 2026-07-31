@@ -88,10 +88,11 @@ import {
   sessionCookie,
   wantsActivityJson,
 } from './lib/http.js';
+import { randomToken } from './lib/crypto.js';
 import { STYLESHEET } from './web/style.js';
 import {
   circlePage,
-  clusterPage,
+  skyPage,
   composePage,
   discoverPage,
   errorPage,
@@ -178,16 +179,18 @@ router.get('/', (ctx, res) => {
     }));
   }
 
-  // Die Startseite ist eine Übersicht über Räume, kein Fluss aus Beiträgen.
+  // Die Startseite ist eine Fläche, kein Fluss und keine Liste: eigene Kreise
+  // innen, unbekannte weiter außen. Entdecken heisst schieben.
   const prefs = preferencesOf(ctx.viewer);
-  const withPeople = (rows) => rows.map((circle) => ({ ...circle, people: members(circle.id, 3) }));
+  const nonce = randomToken(16);
 
-  sendHtml(res, 200, clusterPage({
+  sendHtml(res, 200, skyPage({
     viewer: ctx.viewer,
     prefs,
-    circles: withPeople(circlesFor(ctx.viewer.id)),
-    suggestions: withPeople(discoverable(ctx.viewer.id, 6)),
-  }));
+    near: circlesFor(ctx.viewer.id),
+    far: discoverable(ctx.viewer.id, 8),
+    nonce,
+  }), nonce);
 });
 
 /** Der Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben. */
@@ -522,6 +525,8 @@ router.get('/c/:slug', (ctx, res) => {
     memberCount: memberCount(circle.id),
     pending: ctx.viewer && isModerator(circle.id, ctx.viewer.id) ? pendingRequests(circle.id) : [],
     error: ctx.url.searchParams.get('error'),
+    // Aus dem Himmel führt ein Weg direkt ins Schreibfeld, statt über zwei Seiten.
+    writeOpen: ctx.url.searchParams.get('write') === '1',
   }));
 });
 

@@ -17,6 +17,7 @@ import { createSession } from '../src/domain/accounts.js';
 import { createCircle, join, searchCircles } from '../src/domain/circles.js';
 import { createPost } from '../src/domain/posts.js';
 import { circleSigil } from '../src/web/sigil.js';
+import { layoutSky } from '../src/web/sky.js';
 import { circleTile } from '../src/web/views.js';
 
 describe('Kreiszeichen', () => {
@@ -113,16 +114,24 @@ describe('Seiten', () => {
 
   const load = async (path) => (await fetch(`${base}${path}`, { headers: { cookie }, redirect: 'manual' })).text();
 
-  it('macht den Kreis zur großen Kachel, in dem etwas passiert — nicht den neuesten', async () => {
+  it('legt eigene Kreise nach innen und unbekannte nach außen', async () => {
     const html = await load('/');
-    const hero = html.match(/<a class="tile hero" href="([^"]+)"/);
+    assert.match(html, /class="cloud"/, 'eigene Kreise liegen nah');
+    assert.match(html, /Lebhafter Kreis/);
+    assert.match(html, /Stiller Kreis/);
+  });
 
-    assert.ok(hero, 'es gibt genau eine große Kachel');
-    assert.equal(hero[1], '/c/lebhafter-kreis', 'sie zeigt auf den Kreis, in dem etwas passiert');
-    assert.ok(
-      html.indexOf('Lebhafter Kreis') < html.indexOf('Stiller Kreis'),
-      'und er steht vor dem stillen Kreis',
-    );
+  it('zeigt Vorschau und zweiten Weg ohne Klick', async () => {
+    const html = await load('/');
+    assert.match(html, /Hier ist gerade etwas los/, 'der letzte Beitrag steht in der Wolke');
+    assert.match(html, /\?write=1/, 'und ein Weg direkt ins Schreibfeld');
+  });
+
+  it('bietet denselben Bestand als Liste an', async () => {
+    const html = await load('/');
+    const list = html.slice(html.indexOf('sky-list'));
+    assert.match(list, /Lebhafter Kreis/);
+    assert.match(list, /Stiller Kreis/);
   });
 
   it('stellt die Frage nach dem Kreis vor das Textfeld', async () => {
@@ -149,6 +158,76 @@ describe('Seiten', () => {
   it('liefert weiterhin kein Client-JavaScript aus', async () => {
     for (const path of ['/', '/compose', '/discover', '/c/lebhafter-kreis']) {
       assert.doesNotMatch(await load(path), /<script/i, `${path} enthält ein Skript`);
+    }
+  });
+});
+
+describe('Himmel', () => {
+  it('legt jeden Kreis immer an dieselbe Stelle', () => {
+    const near = [{ slug: 'abi-2027', kind: 'topic', member_count: 4 }];
+    const far = [{ slug: 'skaten', kind: 'local', member_count: 9 }];
+    assert.deepEqual(layoutSky(near, far).clouds, layoutSky(near, far).clouds);
+  });
+
+  it('legt Eigenes nach links und Unbekanntes nach rechts', () => {
+    const near = [{ slug: 'meins', kind: 'topic', member_count: 3 }];
+    const far = [{ slug: 'fremdes', kind: 'topic', member_count: 3 }];
+    const [mine, theirs] = layoutSky(near, far).clouds;
+
+    assert.ok(mine.x < 50, 'eigene Kreise liegen dort, wo die Fläche beginnt');
+    assert.ok(theirs.x > 50, 'unbekannte liegen jenseits des Randes');
+    assert.equal(mine.near, true);
+    assert.equal(theirs.near, false);
+  });
+
+  it('deckelt die Größe, damit ein großer Kreis nicht alles verdeckt', () => {
+    const huge = layoutSky([{ slug: 'gross', kind: 'topic', member_count: 90000 }], []).clouds[0];
+    const big = layoutSky([{ slug: 'gross', kind: 'topic', member_count: 900 }], []).clouds[0];
+    assert.equal(huge.size, big.size);
+  });
+
+  it('hält jede Wolke innerhalb der Fläche', () => {
+    const many = Array.from({ length: 40 }, (_, i) => ({ slug: `kreis-${i}`, kind: 'topic', member_count: i + 1 }));
+    for (const cloud of layoutSky(many, many).clouds) {
+      assert.ok(cloud.x >= 5 && cloud.x <= 95, `x außerhalb: ${cloud.x}`);
+      assert.ok(cloud.y >= 5 && cloud.y <= 93, `y außerhalb: ${cloud.y}`);
+    }
+  });
+});
+
+describe('Himmel im Browser', () => {
+  let server;
+  let base;
+  let cookie;
+
+  before(async () => {
+    freshDatabase();
+    const mira = makeAccount('flieger', { displayName: 'Mira' });
+    cookie = `lamb_session=${createSession(mira.id).id}`;
+    createCircle(mira, { name: 'Mein Kreis', kind: 'topic' });
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  it('erlaubt genau einen erzeugten Style-Block und sonst keine Inline-Styles', async () => {
+    const response = await fetch(`${base}/`, { headers: { cookie } });
+    const html = await response.text();
+    const nonce = html.match(/<style nonce="([a-f0-9]+)">/);
+
+    assert.ok(nonce, 'die Positionen kommen als signierter Style-Block');
+    assert.match(response.headers.get('content-security-policy'), new RegExp(`style-src 'self' 'nonce-${nonce[1]}'`));
+    assert.doesNotMatch(html, /style="/, 'Inline-Styles wären still wirkungslos und bleiben verboten');
+  });
+
+  it('verschachtelt keine Links — sonst hebt der Browser sie aus der Wolke', async () => {
+    const html = await (await fetch(`${base}/`, { headers: { cookie } })).text();
+    const clouds = html.match(/<div class="cloud[^"]*"[^>]*>[\s\S]*?<\/div>/g) ?? [];
+    assert.ok(clouds.length > 0);
+    for (const cloud of clouds) {
+      assert.doesNotMatch(cloud, /<a[^>]*>(?:(?!<\/a>)[\s\S])*<a /, 'ein Link im Link');
     }
   });
 });

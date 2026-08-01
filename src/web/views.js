@@ -12,6 +12,7 @@ import { preferencesOf } from '../domain/accounts.js';
 import { KIND_LABELS } from '../domain/circles.js';
 import { circleSigil } from './sigil.js';
 import { layoutSky } from './sky.js';
+import { orbCss, orbHtml } from './orb.js';
 import {
   iconBack,
   iconPlus,
@@ -544,39 +545,6 @@ function faces(people, total) {
  * Eine Kachel. Statt eines Dauerbadges nur ein Punkt, wenn seit dem letzten
  * Öffnen etwas dazukam — und sonst schlicht, wann zuletzt geschrieben wurde.
  */
-export function circleTile(circle, { hero = false, index = 0 } = {}) {
-  const fresh = Number(circle.fresh_count ?? 0);
-  const members = Number(circle.member_count ?? 0);
-
-  // Eine Fußzeile, nicht zwei halbe: Größe und Zustand gehören zusammen.
-  const status = fresh > 0
-    ? `<span class="fresh">${fresh} neu</span>`
-    : circle.last_post_at
-      ? `<span class="sub">${timeTag(circle.last_post_at)}</span>`
-      : `<span class="sub">noch still</span>`;
-
-  return `<a class="tile${hero ? ' hero' : ''}" href="/c/${encodeURIComponent(circle.slug)}">
-  <span class="kind">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}</span>
-  ${circleSigil(circle, { size: hero ? 96 : 52, id: `s${index}` })}
-  <span class="tile-text">
-    <span class="label">${escapeHtml(circle.name)}</span>
-    ${hero && circle.purpose ? `<span class="why">${escapeHtml(circle.purpose)}</span>` : ''}
-    ${hero && circle.last_post_content
-      ? `<span class="preview"><strong>${escapeHtml(circle.last_post_author)}:</strong> ${escapeHtml(
-          circle.last_post_content.length > 120
-            ? `${circle.last_post_content.slice(0, 120).trimEnd()}…`
-            : circle.last_post_content,
-        )}</span>`
-      : ''}
-  </span>
-  <span class="foot-line">
-    <span class="sub">${members} ${members === 1 ? 'Mitglied' : 'Mitglieder'}</span>
-    ${status}
-  </span>
-</a>`;
-}
-
-
 /* ============================================================ Himmel */
 
 /**
@@ -673,12 +641,64 @@ export function skyPage({ viewer, prefs, near, far, nonce }) {
   });
 }
 
-export function discoverPage({ viewer, prefs, query, results }) {
+/**
+ * Eine Kachel. Die Kugel oben ist dieselbe wie im Himmel, nur in Kachelgröße —
+ * ein Kreis sieht überall gleich aus, sonst muss man ihn zweimal lernen.
+ */
+export function circleTile(circle, { hero = false, index = 0 } = {}) {
+  const fresh = Number(circle.fresh_count ?? 0);
+  const members = Number(circle.member_count ?? 0);
+
+  const status = fresh > 0
+    ? `<span class="fresh">${fresh} neu</span>`
+    : circle.last_post_at
+      ? `<span class="sub">${timeTag(circle.last_post_at)}</span>`
+      : '<span class="sub">noch still</span>';
+
+  return `<a class="tile${hero ? ' hero' : ''}${circle.kind === 'private' ? ' closed' : ''}"
+   href="/c/${encodeURIComponent(circle.slug)}">
+  <span class="kind">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}</span>
+  <span class="tile-orb">${orbHtml(`orb-${index}`)}</span>
+  <span class="tile-text">
+    <span class="label">${escapeHtml(circle.name)}</span>
+    ${hero && circle.purpose ? `<span class="why">${escapeHtml(circle.purpose)}</span>` : ''}
+    ${hero && circle.last_post_content
+      ? `<span class="preview"><strong>${escapeHtml(circle.last_post_author)}:</strong> ${escapeHtml(
+          circle.last_post_content.length > 110
+            ? `${circle.last_post_content.slice(0, 110).trimEnd()}…`
+            : circle.last_post_content,
+        )}</span>`
+      : ''}
+  </span>
+  <span class="foot-line">
+    <span class="sub">${members} ${members === 1 ? 'Mitglied' : 'Mitglieder'}</span>
+    ${status}
+  </span>
+</a>`;
+}
+
+/**
+ * Ein Kachelraster mit den zugehörigen Kugelfarben.
+ * Die erste Kachel darf groß sein, wenn sie etwas zu zeigen hat.
+ * @returns {{html: string, css: string}}
+ */
+export function tileGrid(circles, { heroFirst = false, offset = 0 } = {}) {
+  const html = circles
+    .map((circle, i) => circleTile(circle, { index: offset + i, hero: heroFirst && i === 0 }))
+    .join('');
+  const css = circles.map((circle, i) => orbCss(circle, `orb-${offset + i}`)).join('\n');
+  return { html: `<div class="cluster">${html}</div>`, css };
+}
+
+export function discoverPage({ viewer, prefs, query, results, nonce }) {
+  // Wenn der erste Treffer etwas zu zeigen hat, bekommt er die große Kachel.
+  const grid = tileGrid(results, { heroFirst: Boolean(results[0]?.last_post_content) });
+
   const list = results.length
-    ? `<div class="cluster">${results.map((c, i) => circleTile(c, { index: 200 + i })).join('')}</div>`
+    ? grid.html
     : query
       ? `<p class="card">Nichts gefunden für „${escapeHtml(query)}“. Vielleicht ist es Zeit, diesen Kreis zu öffnen.</p>`
-      : `<p class="card">Noch keine offenen Kreise. Öffne den ersten.</p>`;
+      : '<p class="card">Noch keine offenen Kreise. Öffne den ersten.</p>';
 
   return layout({
     title: 'Kreise finden',
@@ -686,46 +706,35 @@ export function discoverPage({ viewer, prefs, query, results }) {
     prefs,
     current: 'discover',
     bar: { title: 'Kreise finden' },
+    head: `<style nonce="${escapeHtml(nonce)}">${grid.css}</style>`,
     body: `
-<form method="get" action="/discover" role="search" class="card">
+<form method="get" action="/discover" role="search" class="card search-card">
   <label for="q">Wonach suchst du?</label>
   <input type="text" id="q" name="q" value="${escapeHtml(query ?? '')}" placeholder="Schule, Leipzig, Gaming …">
+  <div class="actions-row">
+    <button type="submit">Suchen</button>
+    <a class="button secondary" href="/circles/new">Kreis öffnen</a>
+  </div>
   <p class="hint">Durchsucht Namen und Zweck offener Kreise. Private Kreise erscheinen hier nie.</p>
-  <p><button type="submit">Suchen</button></p>
 </form>
-${list}
-<h2>Eigenen Kreis öffnen</h2>
-<div class="card">
-  <p>Nichts Passendes dabei? Du kannst jederzeit selbst einen Kreis öffnen — du moderierst
-  ihn dann.</p>
-  <p><a class="button secondary" href="/circles/new">Kreis öffnen</a></p>
-</div>`,
+<h2>${query ? `Treffer für „${escapeHtml(query)}“` : 'Kreise zum Beitreten'}</h2>
+${list}`,
   });
 }
 
-export function composePage({ viewer, prefs, circles }) {
-  const targets = circles.length
-    ? circles
-        .map(
-          (c, i) => `<a class="tile" href="/c/${encodeURIComponent(c.slug)}#reply">
-  <span class="kind">${escapeHtml(KIND_LABELS[c.kind] ?? c.kind)}</span>
-  ${circleSigil(c, { size: 48, id: `t${i}` })}
-  <span class="label">${escapeHtml(c.name)}</span>
-  <span class="sub">${Number(c.member_count ?? 0) === 1 ? '1 Mitglied liest mit' : `${Number(c.member_count ?? 0)} Mitglieder lesen mit`}</span>
-</a>`,
-        )
-        .join('')
-    : '';
+export function composePage({ viewer, prefs, circles, nonce }) {
+  const grid = tileGrid(circles);
 
   return layout({
     title: 'Neuer Beitrag',
     viewer,
     prefs,
     bar: { title: 'Wo willst du das sagen?', back: '/' },
+    head: `<style nonce="${escapeHtml(nonce)}">${grid.css}</style>`,
     body: `
-<p class="muted">Bei lamb schreibt man immer in einen bestimmten Kreis. Deshalb steht diese
-Frage vor dem Textfeld und nicht danach — du weißt, wer mitliest, bevor du anfängst.</p>
-${targets ? `<div class="cluster">${targets}</div>` : ''}
+<p class="muted lede">Bei lamb schreibt man immer in einen bestimmten Kreis. Deshalb steht
+diese Frage vor dem Textfeld und nicht danach — du weißt, wer mitliest, bevor du anfängst.</p>
+${circles.length ? grid.html : '<p class="card">Du bist noch in keinem Kreis.</p>'}
 <h2>Oder öffentlich unter deinem Namen</h2>
 <div class="card">
   <p>Ein Beitrag auf deinem Profil ist für alle sichtbar, die dir folgen — auch auf anderen

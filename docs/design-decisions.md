@@ -197,6 +197,24 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D21 — Eine Bildsprache: dieselbe Kugel im Himmel wie auf den Kacheln
+
+**Chosen:** Kreise erscheinen überall als weiche Kugel — im Himmel groß und driftend, auf
+den Inhaltsseiten in Kachelgröße. Die kleinen Ringzeichen fallen damit als zweite Sprache
+weg (sie leben nur noch als Profil-Avatar weiter).
+
+**Why:** vorher war derselbe Kreis am Himmel eine Kugel und auf der Suchseite ein
+Ringzeichen. Wer eine Wolke wiedererkennen will, musste den Kreis zweimal lernen. Eine
+Sprache genügt, wenn sie dieselbe Information trägt.
+
+**Die Kugel bleibt Auskunft, nicht Dekoration:** Durchmesser wächst mit der
+Mitgliederzahl (gedeckelt), private Kreise tragen die geschlossene zweite Schale, die
+Farbe steht fest aus dem Slug. Der Kern sitzt je nach Kreis anders im Hof, damit nicht
+alle dasselbe Gesicht haben. Ember kommt nie vor.
+
+**Enforced by:** `src/web/orb.js`, `circleTile()`, `tileGrid()`; die Farben kommen wie am
+Himmel über den nonce-signierten Style-Block, damit Inline-Styles verboten bleiben.
+
 ## D20 — App-Zuschnitt: Leiste oben, Tabs unten, Pillen dazwischen
 
 **Chosen:** oben eine App-Leiste (links zurück, in der Mitte wo man ist, rechts eine

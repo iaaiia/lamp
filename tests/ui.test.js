@@ -19,6 +19,7 @@ import { createPost } from '../src/domain/posts.js';
 import { circleSigil } from '../src/web/sigil.js';
 import { layoutSky } from '../src/web/sky.js';
 import { circleTile } from '../src/web/views.js';
+import { STYLESHEET } from '../src/web/style.js';
 
 describe('Kreiszeichen', () => {
   const circle = { slug: 'abi-2027', kind: 'topic', member_count: 12 };
@@ -328,5 +329,14 @@ describe('Überschriften', () => {
       const html = await (await fetch(`${base}${pfad}`)).text();
       assert.equal((html.match(/<h1/g) ?? []).length, 1, `${pfad}`);
     }
+  });
+});
+
+describe('Grundlayout', () => {
+  it('gibt dem Inhalt Innenabstand und eine Lesebreite', () => {
+    // Beim Umbau auf die App-Leiste war diese Regel einmal verlorengegangen und
+    // der Text klebte am Bildschirmrand. Ein Stylesheet ohne sie ist kaputt.
+    assert.match(STYLESHEET, /main,\s*\n?footer\.site \.inner \{[^}]*max-width: 48rem/);
+    assert.match(STYLESHEET, /main,\s*\n?footer\.site \.inner \{[^}]*padding: [^;]+;/);
   });
 });

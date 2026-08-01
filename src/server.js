@@ -456,12 +456,14 @@ router.get('/discover', (ctx, res) => {
   const results = query.trim()
     ? searchCircles(query)
     : discoverable(ctx.viewer.id, 12);
+  const nonce = randomToken(16);
   sendHtml(res, 200, discoverPage({
     viewer: ctx.viewer,
     prefs: preferencesOf(ctx.viewer),
     query,
     results,
-  }));
+    nonce,
+  }), nonce);
 });
 
 /**
@@ -470,11 +472,13 @@ router.get('/discover', (ctx, res) => {
  */
 router.get('/compose', (ctx, res) => {
   if (!requireViewer(ctx, res)) return;
+  const nonce = randomToken(16);
   sendHtml(res, 200, composePage({
     viewer: ctx.viewer,
     prefs: preferencesOf(ctx.viewer),
     circles: circlesFor(ctx.viewer.id),
-  }));
+    nonce,
+  }), nonce);
 });
 
 router.get('/circles/new', (ctx, res) => {

@@ -228,6 +228,14 @@ small, .small { font-size: .875rem; }
 .icon-btn:focus-visible { box-shadow: var(--focus); }
 .icon { display: block; }
 
+/* Inhaltsbreite und Innenabstand — beim Umbau auf die App-Leiste war das
+   verloren gegangen, und der Text klebte am linken Rand. */
+main,
+footer.site .inner {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.15rem 1.25rem;
+}
 main { padding-bottom: 4rem; }
 
 /* -------------------------------------------------------------------- Karten */
@@ -535,106 +543,163 @@ body.low-stimulus .cloud { animation: none; }
 .request-row { display: flex; gap: .6rem; align-items: center; margin-bottom: .5rem; }
 
 /* ------------------------------------------------------------------ Cluster */
-/* Ein Raster aus Räumen, kein Fluss aus Beiträgen. Mobile zuerst: zwei Spalten
-   ab dem kleinsten Gerät, damit die Übersicht auch in der Hand eine Übersicht
-   bleibt und nicht zur Liste zerfällt. */
+/* Ein Bento-Raster: gleiche Bildsprache wie im Himmel, nur geordnet. Die erste
+   Kachel darf groß sein, wenn sie etwas zu zeigen hat. */
 
 .cluster {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: .75rem;
-  margin-bottom: 1.75rem;
+  gap: .8rem;
+  margin-bottom: 1.5rem;
 }
-@media (min-width: 40rem) { .cluster { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
+@media (min-width: 46rem) { .cluster { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
 
 .tile {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: .5rem;
-  padding: .9rem;
+  gap: .55rem;
+  padding: 1rem .9rem .9rem;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-l);
   text-decoration: none;
   color: var(--ink);
-  min-height: 9.5rem;
-  transition: border-color .18s ease, transform .18s ease;
+  overflow: hidden;
+  transition: border-color .2s ease, transform .2s ease;
 }
 .tile:hover { border-color: var(--blue); }
 .tile:active { transform: scale(.985); }
 .tile:focus-visible { box-shadow: var(--focus); border-color: var(--blue); }
 
-.tile .sigil { display: block; margin: -.1rem 0 .2rem -.2rem; }
+/* Die Kugel: derselbe weiche Körper wie am Himmel, nur in Kachelgröße. */
+.tile-orb {
+  display: grid;
+  place-items: center;
+  height: 7rem;
+  margin: -.3rem 0 .1rem;
+}
+.orb-mark {
+  position: relative;
+  display: block;
+  width: var(--od, 64px);
+  height: var(--od, 64px);
+}
+/* Aufbau wie im Vorbild: ein leuchtender Hof, darin ein versetzter dunkler
+   Kern, beides weich auslaufend. Zwei Verläufe genügen — mehr wird Matsch. */
+.orb-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at var(--ox, 36%) var(--oy, 30%),
+      var(--c2) 0%,
+      color-mix(in oklab, var(--c2) 70%, transparent) 22%,
+      transparent 52%),
+    radial-gradient(circle at 50% 52%,
+      color-mix(in oklab, var(--c1) 92%, white) 0%,
+      var(--c1) 38%,
+      color-mix(in oklab, var(--c1) 45%, transparent) 62%,
+      transparent 78%);
+  filter: blur(3px);
+  transition: transform .25s ease, filter .25s ease;
+}
+.tile:hover .orb-body { transform: scale(1.08); filter: blur(3px); }
+
+/* Private Kreise tragen die geschlossene zweite Schale — wie überall sonst. */
+.tile.closed .orb-mark::after {
+  content: "";
+  position: absolute;
+  inset: 17%;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in oklab, var(--c1) 75%, transparent);
+  opacity: .85;
+}
+
 .tile-text { display: flex; flex-direction: column; gap: .25rem; }
-.tile .label { font-family: var(--display); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; }
-.tile .sub { font-size: .78rem; color: var(--ink-muted); }
+.tile .label {
+  font-family: var(--display);
+  font-weight: 750;
+  font-size: .98rem;
+  letter-spacing: -.018em;
+  line-height: 1.25;
+}
+.tile .why { font-size: .86rem; color: var(--ink-muted); line-height: 1.45; }
+.tile .sub { font-size: .76rem; color: var(--ink-muted); }
 .tile .foot-line {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: .5rem;
   margin-top: auto;
-  padding-top: .5rem;
+  padding-top: .55rem;
   flex-wrap: wrap;
 }
 .tile .kind {
   position: absolute;
-  top: .75rem;
-  right: .75rem;
+  top: .8rem;
+  right: .85rem;
   font-family: var(--mono);
-  font-size: .6rem;
+  font-size: .58rem;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--ink-muted);
+  z-index: 1;
 }
-
-/* Die Hero-Kachel: der Kreis, in dem gerade etwas passiert. Zwei Spalten breit,
-   damit die Übersicht eine Blickrichtung hat statt gleichförmig zu flimmern. */
-.tile.hero {
-  grid-column: span 2;
-  min-height: 10rem;
-  padding: 1.1rem;
-  background:
-    radial-gradient(115% 85% at 88% 6%, var(--blue-tint) 0%, transparent 60%),
-    var(--surface);
-}
-.tile.hero .sigil { position: absolute; top: .9rem; right: .9rem; margin: 0; opacity: .95; }
-.tile.hero .tile-text { max-width: 62%; margin-top: .2rem; }
-@media (min-width: 40rem) { .tile.hero .tile-text { max-width: 78%; } }
-.tile.hero .label { font-size: 1.35rem; }
-.tile.hero .why { font-size: .88rem; color: var(--ink-muted); line-height: 1.45; }
-/* Beitragsvorschau statt Leerraum: Die Hero-Kachel zeigt, was dort gerade
-   gesagt wurde — Beiträge mit Inhaltshinweis nie, die öffnet man bewusst. */
-.tile.hero .preview {
-  font-size: .9rem;
-  line-height: 1.5;
-  color: var(--ink);
-  margin-top: .5rem;
-  padding-left: .7rem;
-  border-left: 2px solid var(--line);
-}
-.tile.hero .preview strong { font-weight: 650; }
-@media (min-width: 40rem) { .tile.hero { grid-column: span 2; grid-row: span 2; min-height: 14rem; } }
-
-/* Frisches wird markiert, nicht gezählt: ein Punkt, kein Dauerbadge. */
 .tile .fresh {
   display: inline-flex;
   align-items: center;
-  gap: .35rem;
+  gap: .3rem;
   font-family: var(--mono);
-  font-size: .68rem;
-  font-weight: 600;
+  font-size: .66rem;
+  font-weight: 700;
   letter-spacing: .06em;
-  color: var(--ember-deep);
+  color: var(--blue-deep);
 }
 .tile .fresh::before {
   content: "";
-  width: 7px; height: 7px;
+  width: 6px; height: 6px;
   border-radius: 50%;
-  background: var(--ember);
+  background: var(--blue);
 }
+
+/* Die große Kachel: zwei Spalten breit, Kugel links, Text rechts. */
+.tile.hero {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "orb text" "orb foot";
+  align-items: center;
+  gap: .2rem 1rem;
+  padding: 1.1rem;
+  background:
+    radial-gradient(110% 80% at 12% 20%, var(--blue-tint) 0%, transparent 62%),
+    var(--surface);
+}
+.tile.hero .tile-orb { grid-area: orb; height: auto; margin: 0; }
+.tile.hero .tile-text { grid-area: text; }
+.tile.hero .foot-line { grid-area: foot; padding-top: .4rem; }
+.tile.hero .label { font-size: 1.15rem; }
+.tile.hero .preview {
+  font-size: .85rem;
+  line-height: 1.5;
+  margin-top: .4rem;
+  padding-left: .65rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink);
+}
+.tile.hero .preview strong { font-weight: 660; }
+@media (min-width: 46rem) { .tile.hero { grid-column: span 2; } }
+
+/* Reizarm: die Kugeln werden zu ruhigen Scheiben. */
+body.low-stimulus .orb-body {
+  background: color-mix(in oklab, var(--ink-muted) 24%, transparent);
+  filter: blur(2px);
+}
+
+.search-card { margin-bottom: 1.5rem; }
+.search-card .actions-row { margin-top: .9rem; }
 
 .faces .more {
   background: var(--surface);
@@ -659,113 +724,6 @@ body.low-stimulus .cloud { animation: none; }
 .room h3 a:hover { color: var(--blue); }
 .room .why { font-size: .88rem; color: var(--ink-muted); margin: 0; }
 .room .foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-top: auto; flex-wrap: wrap; }
-
-/* ------------------------------------------------------------ Kreis-Kopfzeile */
-
-.circle-head {
-  display: flex;
-  gap: .9rem;
-  align-items: flex-start;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
-  padding: 1.1rem;
-  margin-bottom: 1rem;
-}
-.circle-head .sigil { flex: none; margin-top: -.15rem; }
-.circle-head-text { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
-
-.circle-head p { margin: 0; }
-.circle-actions { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-top: .5rem; }
-
-/* Eingeklapptes Schreibfeld — nativ, ohne Skript. */
-.compose-slot { margin-bottom: 1rem; }
-.compose-slot > summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .8rem 1.1rem;
-  background: var(--surface);
-  border: 1px dashed var(--line);
-  border-radius: var(--radius-l);
-  font-weight: 640;
-  color: var(--ink-muted);
-}
-.compose-slot > summary::-webkit-details-marker { display: none; }
-.compose-slot > summary::before {
-  content: "+";
-  font-size: 1.1rem;
-  line-height: 1;
-  color: var(--blue);
-  font-weight: 700;
-}
-.compose-slot > summary:hover { border-color: var(--blue); color: var(--ink); }
-.compose-slot > summary:focus-visible { box-shadow: var(--focus); }
-.compose-slot[open] > summary { margin-bottom: .6rem; border-style: solid; }
-
-/* ------------------------------------------------------- Aktionsleiste unten */
-/* In Daumenreichweite. Drei Ziele, mehr nicht — eine Leiste, die alles anbietet,
-   hilft bei nichts. */
-
-.dock {
-  position: fixed;
-  left: 50%;
-  bottom: max(.75rem, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 14;
-  display: flex;
-  align-items: center;
-  gap: .1rem;
-  padding: .4rem .5rem;
-  width: min(24rem, calc(100vw - 1.5rem));
-  justify-content: space-between;
-  background: color-mix(in oklab, var(--surface) 94%, transparent);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  box-shadow: 0 8px 30px -10px rgba(20, 23, 29, .3);
-}
-@media (prefers-color-scheme: dark) { .dock { box-shadow: 0 10px 34px -10px rgba(0, 0, 0, .85); } }
-
-/* Ein Ziel: Icon und Wort. Icons stehen nie allein. */
-.dock .tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .1rem;
-  padding: .4rem .55rem;
-  border-radius: 1.1rem;
-  color: var(--ink-muted);
-  text-decoration: none;
-  font-size: .66rem;
-  font-weight: 640;
-  letter-spacing: .01em;
-  min-width: 3.4rem;
-}
-.dock .tab.is-active { background: var(--blue-tint); color: var(--blue-deep); }
-.dock .tab:hover { color: var(--ink); }
-.dock .tab:focus-visible { box-shadow: var(--focus); }
-
-/* Die Handlung in der Mitte, erhöht — sie ist keine Seite, sondern ein Tun. */
-.dock .compose {
-  display: grid;
-  place-items: center;
-  width: 3.2rem;
-  height: 3.2rem;
-  flex: none;
-  border-radius: 50%;
-  background: var(--blue);
-  color: var(--blue-ink);
-  box-shadow: 0 6px 16px -6px color-mix(in oklab, var(--blue) 70%, transparent);
-  margin-top: -1.1rem;
-}
-.dock .compose:hover { background: var(--blue-deep); }
-.dock .compose:focus-visible { box-shadow: var(--focus); }
-
-/* Platz, damit die Leiste nie den letzten Beitrag verdeckt. */
-body.has-dock main { padding-bottom: 7.5rem; }
 
 /* -------------------------------------------------------------------- Chips */
 

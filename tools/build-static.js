@@ -102,12 +102,17 @@ function seed() {
   });
   react(mira.id, antwort.id);
   react(jonas.id, antwort.id);
+  createPost(tomas, { content: 'Der Lesesaal im Erdgeschoss ist sonntags meistens leer.', inReplyTo: antwort.id });
 
-  createPost(mira, {
+  const flohmarkt = createPost(mira, {
     content: 'Falls jemand Samstag zum Flohmarkt will: Ich fahre gegen zehn los.',
     circleId: leipzig.id,
     replyPolicy: 'everyone',
   });
+  createPost(tomas, { content: 'Ich komme mit. Treffpunkt an der Haltestelle?', inReplyTo: flohmarkt.id });
+  createPost(amina, { content: 'Bringt Kleingeld mit, die meisten Stände nehmen nichts anderes.', inReplyTo: flohmarkt.id });
+  react(jonas.id, flohmarkt.id);
+  react(tomas.id, flohmarkt.id);
 
   const schwer = createPost(jonas, {
     content: 'Dritte Klausur in Folge verhauen. Ich muss das nicht gelöst kriegen, ich wollte es nur mal irgendwo hinschreiben, wo nicht sofort jemand Ratschläge gibt.',
@@ -118,13 +123,16 @@ function seed() {
   react(mira.id, schwer.id);
   react(amina.id, schwer.id);
 
-  createPost(mira, {
+  const schalter = createPost(mira, {
     content: 'Kleine Sache, die mir hilft: Benachrichtigungen ab 22 Uhr aus. Keine große Methode, nur ein Schalter.',
     circleId: mental.id,
     replyPolicy: 'followers',
   });
+  createPost(amina, { content: 'Mache ich seit einem Monat. Der Unterschied ist größer, als ich dachte.', inReplyTo: schalter.id });
+  react(jonas.id, schalter.id);
 
-  createPost(mira, { content: 'Hat jemand die Zusammenfassung von Kapitel 4?', circleId: abi.id, replyPolicy: 'everyone' });
+  const kapitel = createPost(mira, { content: 'Hat jemand die Zusammenfassung von Kapitel 4?', circleId: abi.id, replyPolicy: 'everyone' });
+  createPost(jonas, { content: 'Ich schick sie dir heute Abend.', inReplyTo: kapitel.id });
   createPost(mira, { content: 'Samstag jemand Zeit?', circleId: freunde.id, replyPolicy: 'everyone' });
 
   createPost(mira, {

@@ -532,6 +532,7 @@ router.get('/c/:slug', (ctx, res) => {
 
   const before = ctx.url.searchParams.get('before');
   const { posts, nextCursor } = circleTimeline(circle.id, { before });
+  const nonce = randomToken(16);
 
   sendHtml(res, 200, circlePage({
     viewer: ctx.viewer,
@@ -539,15 +540,16 @@ router.get('/c/:slug', (ctx, res) => {
     circle,
     isMember: member,
     isModerator: Boolean(ctx.viewer) && isModerator(circle.id, ctx.viewer.id),
-    posts: posts.map((p) => decorate(p, ctx.viewer)),
+    posts: posts.map((p) => ({ ...decorate(p, ctx.viewer), replies: p.replies ?? [] })),
     nextCursor,
     people: members(circle.id, 3),
+    nonce,
     memberCount: memberCount(circle.id),
     pending: ctx.viewer && isModerator(circle.id, ctx.viewer.id) ? pendingRequests(circle.id) : [],
     error: ctx.url.searchParams.get('error'),
     // Aus dem Himmel führt ein Weg direkt ins Schreibfeld, statt über zwei Seiten.
     writeOpen: ctx.url.searchParams.get('write') === '1',
-  }));
+  }), nonce);
 });
 
 router.post('/c/:slug/posts', (ctx, res) => {

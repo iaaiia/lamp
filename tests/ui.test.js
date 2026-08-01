@@ -414,3 +414,70 @@ describe('Körnung', () => {
     assert.match(STYLESHEET, /\.orb-body \{[^}]*mask-image: radial-gradient/s);
   });
 });
+
+describe('Der gesuchte Kreis', () => {
+  let server;
+  let base;
+  let cookie;
+
+  before(async () => {
+    freshDatabase();
+    const mira = makeAccount('gast', { displayName: 'Mira' });
+    const jonas = makeAccount('jonas9', { displayName: 'Jonas' });
+    cookie = `lamb_session=${createSession(mira.id).id}`;
+
+    const kreis = createCircle(mira, { name: 'Kultur Leipzig', kind: 'local', purpose: 'Was hier läuft.' });
+    join(kreis, jonas);
+    const beitrag = createPost(mira, { content: 'Samstag jemand Zeit?', circleId: kreis.id, replyPolicy: 'everyone' });
+    createPost(jonas, { content: 'Ich bin dabei.', inReplyTo: beitrag.id });
+
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  const load = async (pfad, mit = true) =>
+    (await fetch(`${base}${pfad}`, mit ? { headers: { cookie } } : {})).text();
+
+  it('führt die Welt der Startseite fort, statt in ein anderes Produkt zu fallen', async () => {
+    for (const pfad of ['/discover', '/c/kultur-leipzig']) {
+      const html = await load(pfad);
+      assert.match(html, /class="[^"]*on-stage/, `${pfad} steht nicht auf der Bühne`);
+      assert.match(html, /class="orbfield stage-orbs"/, `${pfad} hat keine Kugeln`);
+    }
+  });
+
+  it('zeigt den Kreis oben mit Bild, Namen und Zahl', async () => {
+    const html = await load('/c/kultur-leipzig');
+    assert.match(html, /class="space-orb"/);
+    assert.match(html, /<h2 class="space-name">Kultur Leipzig<\/h2>/);
+    assert.match(html, /2 Mitglieder/);
+  });
+
+  it('zeigt Beiträge, Kommentare und Support zusammen in einer Karte', async () => {
+    const html = await load('/c/kultur-leipzig');
+    const karte = html.slice(html.indexOf('<article class="post card-post">'));
+    const ende = karte.indexOf('</article>');
+
+    const inhalt = karte.slice(0, ende);
+    assert.match(inhalt, /Samstag jemand Zeit\?/, 'der Beitrag');
+    assert.match(inhalt, /class="support"/, 'der Support-Button');
+    assert.match(inhalt, /Ich bin dabei\./, 'und der Kommentar — in derselben Karte');
+  });
+
+  it('lässt Gäste mitlesen und sagt, wofür sie ein Konto brauchen', async () => {
+    const html = await load('/c/kultur-leipzig', false);
+    assert.match(html, /Samstag jemand Zeit\?/, 'mitlesen geht ohne Konto');
+    assert.match(html, /Ich bin dabei\./);
+    assert.doesNotMatch(html, /class="support"/, 'aber kein Support-Button');
+    assert.match(html, /Zum Mitreden und Support geben brauchst du eins/);
+  });
+
+  it('bleibt auch auf der Bühne ohne Skript', async () => {
+    for (const pfad of ['/discover', '/c/kultur-leipzig']) {
+      assert.doesNotMatch(await load(pfad), /<script/i, `${pfad} enthält ein Skript`);
+    }
+  });
+});

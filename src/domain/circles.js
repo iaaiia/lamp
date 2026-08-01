@@ -271,6 +271,19 @@ export function circleTimeline(circleId, { before = null, limit = 20 } = {}) {
     limit + 1,
   );
   const page = rows.slice(0, limit);
+
+  // Die ersten Antworten gleich mitliefern: Ein Gespräch, das man erst
+  // aufklappen muss, ist keins.
+  for (const post of page) {
+    post.replies = all(
+      `SELECT p.*, a.username, a.domain, a.display_name
+       FROM posts p JOIN accounts a ON a.id = p.account_id
+       WHERE p.in_reply_to = ? AND p.deleted_at IS NULL AND a.paused_at IS NULL
+       ORDER BY p.created_at ASC LIMIT 4`,
+      post.id,
+    );
+  }
+
   return {
     posts: page,
     nextCursor: rows.length > limit ? `${page.at(-1).created_at}|${page.at(-1).id}` : null,

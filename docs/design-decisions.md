@@ -197,6 +197,35 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D25 — Die Bühne: eine Welt vom Plakat bis in den Kreis
+
+**Chosen:** wer auf der Startseite sucht, bleibt in derselben Welt. Suchergebnisse und
+Kreisseiten stehen auf demselben Himmel, mit denselben körnigen Kugeln im Hintergrund;
+darüber liegen helle Karten. Oben der gesuchte Kreis mit seiner Kugel als Bild und dem
+Namen in der Serifenschrift, darunter die Beiträge — jeder mit Support-Button und den
+ersten Kommentaren **in derselben Karte**.
+
+**Why:** ein Suchfeld, das in ein optisch anderes Produkt führt, bricht das Versprechen der
+Startseite. Und ein Gespräch, das man erst aufklappen muss, ist keins: Deshalb liefert der
+Kreisverlauf die ersten Antworten gleich mit, statt nur eine Zahl zu zeigen.
+
+**Gäste dürfen mitlesen.** Öffentliche Kreise sind öffentlich; ohne Konto fehlen nur
+Support und Antworten, und die Seite sagt das in einem Satz, statt eine Anmeldewand zu
+bauen.
+
+**Die Kugeln sind hier Dekoration**, kein Spielzeug: keine Skripte auf Inhaltsseiten, also
+nichts zu schieben. Sie liegen an den Rändern und hinter den Karten.
+
+**Zwei Fehler, die erst der Browser gezeigt hat:** Die Kugeln lagen zuerst *vor* den Karten
+— ein positioniertes Element malt über statischen Inhalt, auch bei `z-index: 0`, also
+brauchen die Karten auf der Bühne ausdrücklich eine eigene Ebene. Und beim Auftrennen von
+`postArticle` blieb das schließende `</article>` im Inneren stehen, wodurch die Kommentare
+außerhalb ihrer Karte landeten.
+
+**Enforced by:** `src/web/stage.js`, `circlePage()`, `discoverPage()`, `circleTimeline()`;
+`tests/ui.test.js` prüft die fortgeführte Welt, den Kreiskopf, Beitrag + Support + Kommentar
+in einer Karte, den Gastzugang und die Skriptfreiheit.
+
 ## D23 — Körnig und verblassend, nicht glatt
 
 **Chosen:** alle Kugeln — auf dem Plakat, auf den Kacheln, am Himmel — tragen dieselbe

@@ -452,6 +452,136 @@ body.landing {
   white-space: nowrap;
 }
 
+/* -------------------------------------------------------------------- Bühne */
+/* Der Himmel vom Plakat, weitergeführt in die Inhaltsseiten: dieselbe Welt,
+   nur mit Karten darauf. Die Kugeln sind hier Dekoration — kein Skript, also
+   nichts zu schieben; sie liegen hinter den Karten und schauen durch. */
+
+body.on-stage {
+  background: linear-gradient(178deg, #0E1A33 0%, #16294B 46%, #1E3A63 100%);
+  background-attachment: fixed;
+  color: #EEF2F8;
+}
+body.on-stage .appbar {
+  background: color-mix(in oklab, #0E1A33 78%, transparent);
+  border-bottom-color: rgba(255, 255, 255, .1);
+  color: #EEF2F8;
+}
+body.on-stage .appbar .icon-btn {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .16);
+  color: #EEF2F8;
+}
+body.on-stage main { position: relative; z-index: 1; }
+body.on-stage footer.site { background: transparent; border-top-color: rgba(255, 255, 255, .1); }
+body.on-stage footer.site .inner { color: rgba(226, 232, 244, .6); }
+body.on-stage footer.site a { color: #C9D8F2; }
+
+/* Hinter den Karten, nicht davor. Ein positioniertes Element malt über
+   statischen Inhalt, auch bei z-index 0 — deshalb bekommen die Karten auf der
+   Bühne ausdrücklich eine eigene Ebene. */
+.orbfield.stage-orbs { position: fixed; z-index: 0; }
+.stage-orbs .f-orb { cursor: default; }
+.stage-orbs .f-body { opacity: .62; }
+
+body.on-stage main > *,
+body.on-stage .space-head,
+body.on-stage article.post,
+body.on-stage .card,
+body.on-stage .compose-slot,
+body.on-stage .cluster,
+body.on-stage .pager,
+body.on-stage h2 {
+  position: relative;
+  z-index: 1;
+}
+body.on-stage .orbfield.stage-orbs { z-index: 0; }
+
+/* Die leise Handlung auf dunklem Grund: umrandet statt grau gefüllt. */
+body.on-stage .space-actions button.secondary,
+body.on-stage .space-actions .button.secondary {
+  background: transparent;
+  border-color: rgba(255, 255, 255, .35);
+  color: #EEF2F8;
+}
+body.on-stage .space-actions button.secondary:hover { border-color: #FFFFFF; color: #FFFFFF; background: rgba(255, 255, 255, .08); }
+
+/* Der gesuchte Kreis: Kugel als Bild, Name in der Serifenschrift. */
+.space-head {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  padding: 1.5rem 0 2rem;
+}
+.space-orb {
+  display: grid;
+  place-items: center;
+  width: 7rem;
+  height: 7rem;
+  margin-bottom: .3rem;
+}
+.space-orb .orb-mark { --od: 7rem; width: 7rem; height: 7rem; }
+.space-name {
+  font-family: var(--serif, ui-serif, Georgia, serif);
+  font-size: clamp(2rem, 9vw, 3rem);
+  font-weight: 400;
+  letter-spacing: -.02em;
+  line-height: 1.05;
+  margin: 0;
+}
+.space-meta { font-size: .74rem; color: rgba(226, 232, 244, .66); margin: 0; letter-spacing: .08em; text-transform: uppercase; }
+.space-purpose { margin: .4rem 0 0; color: rgba(232, 238, 248, .86); max-width: 30ch; }
+.space-actions { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; justify-content: center; margin-top: .8rem; }
+.stage-hint { font-size: .84rem; color: rgba(226, 232, 244, .6); margin: .6rem 0 0; max-width: 34ch; }
+.stage-hint a { color: #C9D8F2; }
+
+/* Karten liegen hell auf dem Himmel. */
+body.on-stage .card,
+body.on-stage article.post,
+body.on-stage .compose-slot > summary {
+  background: rgba(255, 255, 255, .96);
+  color: #14171D;
+  border-color: rgba(255, 255, 255, .5);
+  box-shadow: 0 20px 48px -26px rgba(0, 0, 0, .8);
+}
+body.on-stage article.post { border-radius: var(--radius-l); padding: 1.15rem; }
+body.on-stage .card a, body.on-stage article.post a { color: var(--blue); }
+body.on-stage .meta, body.on-stage .muted, body.on-stage .support-note { color: #5E636E; }
+body.on-stage .pager .end { color: rgba(226, 232, 244, .6); }
+body.on-stage .compose-slot > summary { border-style: dashed; color: #5E636E; }
+
+/* Das Suchfeld wandert vom Plakat mit — dieselbe weiße Pille. */
+.stage-search.find { margin: .5rem auto 1.5rem; position: relative; z-index: 1; }
+h2.on-sky { color: #EEF2F8; position: relative; z-index: 1; margin-top: 1.5rem; }
+.stage-hint.centered { margin-left: auto; margin-right: auto; text-align: center; max-width: none; }
+body.on-stage .tile {
+  background: rgba(255, 255, 255, .96);
+  color: #14171D;
+  border-color: rgba(255, 255, 255, .5);
+  box-shadow: 0 18px 44px -26px rgba(0, 0, 0, .8);
+}
+body.on-stage .tile .sub, body.on-stage .tile .kind, body.on-stage .tile .why { color: #5E636E; }
+body.on-stage .cluster { position: relative; z-index: 1; }
+
+/* Kommentare unter dem Beitrag: leicht abgesetzt, nicht als eigene Karte. */
+.comments {
+  margin-top: .9rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+.comment { display: flex; gap: .6rem; align-items: flex-start; }
+.comment .faces span { width: 24px; height: 24px; font-size: .6rem; }
+.comment .c-head { margin: 0; font-size: .85rem; display: flex; gap: .45rem; align-items: baseline; flex-wrap: wrap; }
+.comment .c-body { margin: .1rem 0 0; font-size: .92rem; line-height: 1.5; overflow-wrap: anywhere; }
+.more-comments { margin: 0; font-size: .85rem; }
+
 /* -------------------------------------------------------------------- Himmel */
 /* Eine Fläche, die größer ist als der Bildschirm. Geschoben wird sie vom Browser
    selbst — Finger, Trackpad, Pfeiltasten. Dafür braucht es kein Skript. */

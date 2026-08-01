@@ -680,14 +680,49 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .chat-window.is-chat { padding-bottom: 1rem; }
 .pager.top { margin: 0 0 .5rem; }
 
-/* Nachrichten: links die Kugel, rechts der Text. Keine Karte, keine Blase,
-   keine Seitenwahl — die Skizze zeigt eine Spalte, und eine Spalte liest sich
-   auf dem Handy als Gespräch. */
-.msg { display: flex; gap: .8rem; align-items: flex-start; }
-.msg-orb { flex: none; text-decoration: none; display: block; padding-top: .15rem; }
+/* Nachrichten: die Kugel ist der Inhalt, nicht die Verzierung. Sie liegt
+   versetzt und in wechselnder Größe im Verlauf, und sie klappt auf — Person,
+   Rückhalt, Antworten. Aufklappen ist ein <details>, also ohne Skript. */
+.msg {
+  display: flex;
+  gap: .9rem;
+  align-items: flex-start;
+  margin-bottom: .4rem;
+}
+.orb-pop { flex: none; position: relative; margin: var(--my, 0) 0 0 var(--mx, 0); }
+.msg-orb {
+  display: block;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 50%;
+  transition: transform .18s ease;
+}
+.msg-orb::-webkit-details-marker { display: none; }
+.msg-orb:hover { transform: scale(1.06); }
+.msg-orb:focus-visible { box-shadow: var(--focus); }
+.orb-pop[open] > .msg-orb { transform: scale(1.06); }
 .msg-orb .orb-mark { display: block; }
 
-.bubble { flex: 1; min-width: 0; }
+/* Was die Kugel zeigt, wenn man sie antippt. */
+.orb-panel {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + .4rem);
+  left: 0;
+  min-width: 12.5rem;
+  max-width: 16rem;
+  padding: .8rem .9rem;
+  background: #FDFCFA;
+  border-radius: 22px;
+  box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .08), 0 20px 44px -24px rgba(22, 26, 30, .5);
+}
+.orb-person { display: flex; gap: .55rem; align-items: center; text-decoration: none; color: var(--ink); }
+.orb-person .p-meta { display: block; font-size: .72rem; color: var(--ink-muted); }
+.orb-note { margin: .6rem 0 .7rem; font-size: .8rem; color: var(--ink-muted); }
+.orb-actions { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
+.orb-actions .button.small { padding: .4rem .8rem; min-height: 0; font-size: .8rem; }
+
+.bubble { flex: 1; min-width: 0; padding-top: .2rem; }
 .bubble-head { margin: 0 0 .2rem; font-size: .82rem; display: flex; gap: .45rem; align-items: baseline; flex-wrap: wrap; }
 .bubble-head a { font-weight: 680; color: var(--ink); text-decoration: none; }
 .bubble-head a:hover { color: var(--blue); }

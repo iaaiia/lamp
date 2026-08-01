@@ -20,6 +20,7 @@ import { circleSigil } from '../src/web/sigil.js';
 import { layoutSky } from '../src/web/sky.js';
 import { circleTile } from '../src/web/views.js';
 import { STYLESHEET } from '../src/web/style.js';
+import { personOrbCss } from '../src/web/orb.js';
 
 describe('Kreiszeichen', () => {
   const circle = { slug: 'abi-2027', kind: 'topic', member_count: 12 };
@@ -55,6 +56,24 @@ describe('Kreiszeichen', () => {
       const svg = circleSigil({ slug, kind: 'topic', member_count: 5 }, { id: 'x' });
       assert.doesNotMatch(svg, /DC6B45|F08A5E/i);
     }
+  });
+});
+
+describe('Menschenkugel', () => {
+  const farbe = (regel) => regel.match(/--c1:(#[0-9A-F]{6})/i)[1];
+  const groesse = (regel) => regel.match(/--od:(\d+)px/)[1];
+
+  it('gibt einem Menschen seine Farbe, dem Beitrag seine Form', () => {
+    // Wiedererkennbar und trotzdem verspielt: die Farbe bleibt über alle
+    // Nachrichten hinweg dieselbe, Größe und Versatz wechseln.
+    const a = personOrbCss('mira', '1', 'x');
+    const b = personOrbCss('mira', '77', 'y');
+    assert.equal(farbe(a), farbe(b), 'dieselbe Person, dieselbe Farbe');
+    assert.notEqual(groesse(a), groesse(b), 'anderer Beitrag, andere Größe');
+  });
+
+  it('liegt bei gleicher Eingabe immer gleich', () => {
+    assert.equal(personOrbCss('mira', '1', 'x'), personOrbCss('mira', '1', 'x'));
   });
 });
 
@@ -468,14 +487,19 @@ describe('Der gesuchte Kreis', () => {
     assert.match(html, /2 Mitglieder/);
   });
 
-  it('zeigt Nachricht, Support und Antworten zusammen in einer Blase', async () => {
+  it('zeigt Nachricht und Antwort zusammen, das Handeln in der Kugel', async () => {
     const html = await load('/c/kultur-leipzig');
-    const blase = html.slice(html.indexOf('<div class="bubble">'));
-    const inhalt = blase.slice(0, blase.indexOf('</div>\n</div>'));
+    const nachricht = html.slice(html.indexOf('<div class="msg"'));
+    const eine = nachricht.slice(0, nachricht.indexOf('<div class="msg"', 10) + 1 || undefined);
 
-    assert.match(inhalt, /Samstag jemand Zeit\?/, 'die Nachricht');
-    assert.match(inhalt, /class="support tiny"/, 'der Support-Knopf');
-    assert.match(inhalt, /Ich bin dabei\./, 'und die Antwort — in derselben Blase');
+    assert.match(eine, /Samstag jemand Zeit\?/, 'die Nachricht');
+    assert.match(eine, /Ich bin dabei\./, 'und die Antwort daneben');
+
+    // Support, Person und Antworten hängen an der Kugel, nicht am Text.
+    const kugel = eine.slice(eine.indexOf('class="orb-pop"'), eine.indexOf('class="bubble"'));
+    assert.match(kugel, /class="msg-orb"/);
+    assert.match(kugel, /class="support tiny"/, 'der Support-Knopf');
+    assert.match(kugel, /class="orb-person"/, 'wer da spricht');
   });
 
   it('lässt Gäste mitlesen und sagt, wofür sie ein Konto brauchen', async () => {
@@ -550,6 +574,21 @@ describe('Chatfenster', () => {
     assert.match(html, /class="orb-mark" id="msgorb-0"/);
     assert.match(html, /#msgorb-0\{--c1:#[0-9A-F]{6};--c2:#[0-9A-F]{6};--od:\d+px/i);
     assert.doesNotMatch(html, /class="msg is-me"/, 'keine Seitenwahl mehr');
+  });
+
+  it('legt die Kugeln versetzt und verschieden groß — aber immer gleich', async () => {
+    // Verspielt heißt nicht beliebig: der Versatz kommt aus dem Beitrag, sieht
+    // zufällig aus und ist beim nächsten Aufruf derselbe.
+    const html = await load('/c/kultur');
+    const regeln = [...html.matchAll(/#msgorb-\d+\{([^}]*)\}/g)].map((m) => m[1]);
+    assert.ok(regeln.length >= 2, 'mindestens zwei Kugeln');
+    assert.notEqual(regeln[0], regeln[1], 'zwei Kugeln liegen nicht gleich');
+    for (const regel of regeln) {
+      assert.match(regel, /--od:\d+px/, 'eine eigene Größe');
+      assert.match(regel, /--mx:[\d.]+rem/, 'ein seitlicher Versatz');
+      assert.match(regel, /--my:-?[\d.]+rem/, 'und einer in der Höhe');
+    }
+    assert.equal((await load('/c/kultur')).match(/#msgorb-0\{[^}]*\}/)[0], `#msgorb-0{${regeln[0]}}`);
   });
 
   it('gibt jedem Wort in der Ansichtszeile eine eigene Ansicht', async () => {

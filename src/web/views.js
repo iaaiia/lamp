@@ -751,22 +751,25 @@ ${circles.length ? grid.html : '<p class="card">Du bist noch in keinem Kreis.</p
 }
 
 /**
- * Eine Nachricht im Gespräch: links die Kugel der Sprecherin, rechts daneben
- * der Text. Keine Karte, keine Blase, keine Seitenwahl für eigene Nachrichten —
- * die Skizze zeigt eine Spalte aus Kugeln unterschiedlicher Größe mit Text
- * daneben, und genau das ist es. Support und Antworten stehen klein darunter.
+ * Eine Nachricht im Gespräch ist eine Kugel mit Text daneben — und die Kugel
+ * ist das interaktive Stück: sie öffnet, wer da spricht, wer dahintersteht und
+ * wie man antwortet. Die Kugeln liegen nicht in einer Flucht, sondern versetzt
+ * und unterschiedlich groß; die Versetzung kommt aus dem Beitrag selbst, ist
+ * also zufällig anzusehen und trotzdem jedes Mal dieselbe.
+ *
+ * Aufklappen ist ein <details> — kein Skript, wie überall sonst auch.
  */
 function chatMessage(post, replies, viewer, orbId) {
   const v = post.view;
+  const name = post.display_name || post.username;
 
   const support = v.showMetrics && v.supportSentence
-    ? `<span class="bubble-support">${escapeHtml(v.supportSentence)}</span>`
-    : '';
+    ? `<p class="orb-note">${escapeHtml(v.supportSentence)}</p>`
+    : '<p class="orb-note">Rückhalt bleibt im Kreis</p>';
 
   const supportButton = viewer
     ? `<form method="post" action="/posts/${post.id}/support">
-         <button class="support tiny" type="submit" aria-pressed="${v.supported ? 'true' : 'false'}"
-           aria-label="${v.supported ? 'Du stehst dahinter' : 'Support geben'}">
+         <button class="support tiny" type="submit" aria-pressed="${v.supported ? 'true' : 'false'}">
            ${supportArc}<span>${v.supported ? 'Du stehst dahinter' : 'Support'}</span>
          </button>
        </form>`
@@ -787,23 +790,31 @@ function chatMessage(post, replies, viewer, orbId) {
     )
     .join('');
 
-  return `<div class="msg">
-  <a class="msg-orb" href="/@${escapeHtml(post.username)}" aria-label="Profil von ${escapeHtml(
-    post.display_name || post.username,
-  )}">${orbHtml(orbId)}</a>
+  return `<div class="msg" id="m${post.id}">
+  <details class="orb-pop">
+    <summary class="msg-orb" aria-label="Was zu dieser Nachricht gehört: ${escapeHtml(name)}, Rückhalt, Antworten">
+      ${orbHtml(orbId)}
+    </summary>
+    <div class="orb-panel">
+      <a class="orb-person" href="/@${escapeHtml(post.username)}">
+        <span class="faces"><span>${escapeHtml(initials(post))}</span></span>
+        <span><strong>${escapeHtml(name)}</strong><span class="p-meta mono">${escapeHtml(handleOf(post))}</span></span>
+      </a>
+      ${support}
+      <div class="orb-actions">
+        ${supportButton}
+        <a class="button secondary small" href="/posts/${post.id}">${
+          v.replyCount === 0 ? 'Antworten' : `${v.replyCount} ${v.replyCount === 1 ? 'Antwort' : 'Antworten'}`
+        }</a>
+      </div>
+    </div>
+  </details>
   <div class="bubble">
     <p class="bubble-head">
-      <a href="/@${escapeHtml(post.username)}">${escapeHtml(post.display_name || post.username)}</a>
+      <a href="/@${escapeHtml(post.username)}">${escapeHtml(name)}</a>
       <span class="bubble-time">${timeTag(post.created_at)}</span>
     </p>
     ${body}
-    <div class="bubble-actions">
-      ${supportButton}
-      ${support}
-      <a href="/posts/${post.id}" class="small">${
-        v.replyCount === 0 ? 'Antworten' : `${v.replyCount} ${v.replyCount === 1 ? 'Antwort' : 'Antworten'}`
-      }</a>
-    </div>
     ${antworten ? `<div class="replies">${antworten}</div>` : ''}
   </div>
 </div>`;
@@ -946,7 +957,7 @@ ${posts.length
     stage: true,
     writebar: composerBar,
     head: `<style nonce="${escapeHtml(nonce)}">${stageOrbsCss(orbs)}${posts
-      .map((p, i) => personOrbCss(p.username + (p.domain ?? ''), `msgorb-${i}`))
+      .map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `msgorb-${i}`, i))
       .join('')}</style>`,
     body: `
 ${stageOrbsHtml(orbs)}

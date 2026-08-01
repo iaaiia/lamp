@@ -286,6 +286,25 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D29 — Die Kugel ist der Inhalt, nicht die Verzierung
+
+**Chosen:** im Gespräch ist jede Nachricht eine Kugel mit Text daneben — und die Kugel ist
+das interaktive Stück: sie klappt auf und zeigt, wer da spricht (mit Weg zum Profil), wie
+der Rückhalt steht und wie man antwortet. Die Kugeln liegen nicht in einer Flucht: Größe,
+seitlicher Versatz und Höhe streuen. Die Farbe gehört dem Menschen — daran erkennt man ihn
+über den ganzen Verlauf wieder —, Größe und Versatz gehören dem Beitrag.
+
+**Why:** „verspielt“ und „vorhersehbar“ sind kein Widerspruch, wenn die Streuung erzeugt
+statt gewürfelt ist: aus dem Beitrag gerechnet sieht sie zufällig aus und ist bei jedem
+Aufruf dieselbe. Ein Gespräch, das jedes Mal anders aussieht, wäre nicht verspielt, sondern
+unbrauchbar. Und die Handlungen gehören an die Kugel, weil sie sonst als Knopfreihe unter
+jedem Text stehen — das ist das Kartenlayout, aus dem wir gerade herausgegangen sind.
+
+**Enforced by:** `personOrbCss()` in `src/web/orb.js`, `chatMessage()` in `src/web/views.js`
+(Aufklappen ist ein `<details>` — weiterhin ohne Skript); `tests/ui.test.js` prüft, dass die
+Kugeln verschieden liegen, dass dieselbe Person dieselbe Farbe behält und dass zwei Aufrufe
+dieselbe Anordnung ergeben.
+
 ## D28 — Eine Navigation, eine Leiste, eine Spalte
 
 **Chosen:** die Skizze aus der Werkstatt gilt. Oben: das Zeichen mit dem Wort „lamb“ (führt

@@ -47,18 +47,27 @@ export function orbHtml(id) {
 }
 
 /**
- * Eine Kugel für einen Menschen statt für einen Kreis: dieselbe Farbe aus
- * derselben Streuung, aber der Durchmesser kommt aus dem Namen — im Gespräch
- * sollen die Kugeln unterschiedlich groß liegen, wie in der Skizze, statt eine
- * Reihe gleicher Punkte zu bilden.
+ * Eine Kugel für einen Menschen statt für einen Kreis. Im Gespräch soll sie
+ * verspielt liegen: unterschiedlich groß, seitlich und in der Höhe versetzt —
+ * wie in der Skizze, statt einer Reihe gleicher Punkte.
  */
-export function personOrbCss(seedText, id) {
-  const seed = hash(seedText ?? '');
-  const [light, dark] = PALETTE[seed % PALETTE.length];
-  const size = 34 + (seed % 5) * 6;
+export function personOrbCss(personSeed, postSeed, id, index = 0) {
+  // Die Farbe gehört dem Menschen — daran erkennt man ihn wieder. Größe und
+  // Versatz gehören dem Beitrag, damit die Kugeln nicht in Reih und Glied
+  // liegen. Beides ist erzeugt, also jedes Mal gleich.
+  const person = hash(personSeed ?? '');
+  const seed = hash(postSeed ?? '');
+  const [light, dark] = PALETTE[person % PALETTE.length];
+  // Größe, seitlicher Versatz und Höhe streuen — die Kugeln sollen nicht in
+  // einer Flucht liegen, sondern verspielt versetzt. Aus dem Beitrag erzeugt:
+  // sieht zufällig aus, ist aber jedes Mal dieselbe Anordnung.
+  const size = 52 + (seed % 6) * 11;
+  const inset = (seed >>> 4) % 5;
+  const lift = ((seed >>> 12) % 5) - 2;
   const shiftX = 30 + (seed % 24);
   const shiftY = 26 + ((seed >>> 8) % 22);
-  return `#${id}{--c1:${light};--c2:${dark};--od:${size}px;--ox:${shiftX}%;--oy:${shiftY}%}`;
+  return `#${id}{--c1:${light};--c2:${dark};--od:${size}px;--ox:${shiftX}%;--oy:${shiftY}%;` +
+    `--mx:${inset * 0.7 + (index % 2) * 1.1}rem;--my:${lift * 0.35}rem}`;
 }
 
 /** Die Custom Properties für eine Kugel. */

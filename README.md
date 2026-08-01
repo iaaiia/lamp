@@ -38,7 +38,18 @@ Jede Zeile ist durch Tests abgedeckt. Warum jede Entscheidung so fiel und wo sie
 wird, steht in `docs/design-decisions.md`; was auf welches Ausschreibungsziel einzahlt —
 inklusive ehrlicher Lückenliste — in `docs/call-traceability.md`.
 
-## Starten
+## Rundgang ansehen
+
+**[iaaiia.github.io/lamp](https://iaaiia.github.io/lamp/)** — ein Rundgang durch echte,
+mit Demodaten gefüllte Seiten: der Himmel lässt sich schieben, Wolken öffnen sich, alle
+Seiten sind verlinkt.
+
+Was dort **nicht** geht: anmelden, schreiben, Support geben, föderieren. GitHub Pages
+liefert Dateien aus und führt kein Node aus — es gibt dort keine Datenbank und keine
+Sitzungen. Der Rundgang wird mit `npm run build:pages` aus demselben Code erzeugt, den auch
+der Server benutzt.
+
+## Selbst starten
 
 Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten, kein Build.**
 
@@ -51,6 +62,19 @@ Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
 
 Konfiguration über Umgebungsvariablen — `LAMB_ORIGIN`, `LAMB_PORT`, `LAMB_DB`, `LAMB_NAME`,
 `LAMB_SEED`, `LAMB_FEDERATION`, siehe `src/config.js`.
+
+### Öffentlich betreiben
+
+```bash
+docker build -t lamb .
+docker run -p 8080:8080 -v lamb-data:/data \
+  -e LAMB_ORIGIN=https://deine-adresse.example lamb
+```
+
+`LAMB_ORIGIN` muss auf die öffentliche Adresse zeigen: Daraus werden die
+ActivityPub-Kennungen gebildet, und wenn die nicht stimmen, kann kein anderer Server
+antworten. Das Abbild braucht keine weiteren Dienste — Node bringt SQLite mit. Ein
+Volume auf `/data` genügt, damit die Daten einen Neustart überleben.
 
 ## Aufbau
 

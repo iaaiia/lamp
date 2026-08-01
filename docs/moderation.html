@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moderation — lamb</title>
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+<body class=" has-dock">
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+<header class="site">
+  <div class="inner">
+    <a class="brandmark" href="index.html"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+  <circle cx="12" cy="12" r="10" fill="none" stroke="var(--blue)" stroke-width="2"></circle>
+  <circle cx="12" cy="12" r="3.6" fill="var(--ember)"></circle>
+</svg>lamb</a>
+    <nav class="site" aria-label="Hauptnavigation"><ul><li><a href="stream.html">Strom</a></li>
+       <li><a href="settings.html">Einstellungen</a></li>
+       <li><a href="moderation.html">Moderation</a></li>
+       <li><form method="get" action="#demo" data-demo="inert" action="#demo"><button class="quiet" type="submit">Abmelden</button></form></li></ul></nav>
+  </div>
+</header>
+<div class="demo-banner" id="demo">
+  <strong>Rundgang mit Demodaten.</strong> Schieben, stöbern und lesen geht.
+  Anmelden, Schreiben und Föderation brauchen den laufenden Server —
+  <a href="https://github.com/iaaiia/lamp#selbst-starten">so startest du ihn</a>.
+</div>
+<main id="main" tabindex="-1">
+
+<h1>Moderation</h1>
+<p class="notice">Die automatische Erkennung sortiert diese Liste nur. Sie kann nichts entfernen
+oder ausblenden — jede Entscheidung hier trifft ein Mensch, und sie wird mit Namen festgehalten.</p>
+<div class="table-scroll">
+<table>
+  <caption>Offene Fälle, dringendste zuerst</caption>
+  <thead><tr><th scope="col">Einstufung</th><th scope="col">Grund</th><th scope="col">Sprache</th><th scope="col">Entscheidung</th></tr></thead>
+  <tbody><tr><td colspan="4">Die Liste ist leer.</td></tr></tbody>
+</table>
+</div>
+
+<h2>Trefferquote nach Sprache</h2>
+<p>Wie oft ein automatisch markierter Fall von einem Menschen tatsächlich bestätigt wurde. Ein
+niedriger oder fehlender Wert heißt: Der Erkennung ist in dieser Sprache nicht zu trauen.</p>
+<div class="table-scroll">
+<table>
+  <thead><tr><th scope="col">Sprache</th><th scope="col">Entschieden</th><th scope="col">Bestätigt</th><th scope="col">Übereinstimmung</th></tr></thead>
+  <tbody><tr><td colspan="4">Noch keine entschiedenen Fälle.</td></tr></tbody>
+</table>
+</div>
+</main>
+<nav class="dock" aria-label="Schnellzugriff">
+         <a href="index.html">Himmel</a>
+         <a class="compose" href="compose.html" aria-label="Neuer Beitrag">+</a>
+         <a href="discover.html">Suchen</a>
+       </nav>
+<footer class="site">
+  <div class="inner">
+    <p>lamb läuft auf ActivityPub. Dein Konto, deine Beiträge und
+    deine Kontakte kannst du jederzeit <a href="index.html">mitnehmen</a> — auf einen
+    anderen Server, ohne deinen Kreis zu verlieren.</p>
+    <p>Keine Werbeprofile. Keine Rangliste. Kein Nachladen beim Scrollen.</p>
+  </div>
+</footer>
+</body>
+</html>

@@ -5,9 +5,12 @@
 # braucht es einen Node-Host (siehe Dockerfile).
 name: Rundgang veröffentlichen
 
+# Der Standard-Branch dieses Repositories ist claude/erstellung-k1jxn8, nicht
+# main. Die Umgebung github-pages nimmt Deployments nur vom Standard-Branch an —
+# ein Lauf auf main scheitert deshalb, bevor auch nur ein Schritt beginnt.
 on:
   push:
-    branches: [main]
+    branches: [claude/erstellung-k1jxn8, main]
   workflow_dispatch:
 
 permissions:

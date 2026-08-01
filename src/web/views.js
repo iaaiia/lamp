@@ -124,6 +124,7 @@ export function layout({ title, viewer, body, prefs, current = null, head = '', 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} — ${escapeHtml(config.instanceName)}</title>
 <link rel="stylesheet" href="/style.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="alternate" type="application/activity+json" href="${config.origin}">
 ${head}
 </head>

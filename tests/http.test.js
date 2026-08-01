@@ -38,14 +38,30 @@ describe('web surface', () => {
     assert.match(html, /Zum Inhalt springen/, 'a skip link is present for keyboard users');
   });
 
-  it('ships no client-side JavaScript at all', async () => {
-    const html = await (await fetchPath('/', { headers: { cookie } })).text();
-    assert.doesNotMatch(html, /<script/i);
-    assert.match(
-      (await fetchPath('/')).headers.get('content-security-policy'),
-      /script-src 'none'/,
-      'and the CSP forbids it',
-    );
+  it('ships no client-side JavaScript in the application', async () => {
+    // Die Anwendung bleibt skriptfrei. Genau eine Seite darf ein Skript laden —
+    // die abgemeldete Startseite, wo Kugeln geschoben werden. Dieser Test hält
+    // die Grenze fest, damit die Ausnahme nicht leise wächst.
+    for (const path of ['/', '/stream', '/compose', '/discover', '/settings']) {
+      const response = await fetchPath(path, { headers: { cookie } });
+      assert.doesNotMatch(await response.text(), /<script/i, `${path} enthält ein Skript`);
+      assert.match(
+        response.headers.get('content-security-policy'),
+        /script-src 'none'/,
+        `${path} erlaubt Skript`,
+      );
+    }
+  });
+
+  it('makes the signed-out landing the one named exception', async () => {
+    const response = await fetchPath('/');
+    assert.match(response.headers.get('content-security-policy'), /script-src 'self'/);
+    assert.match(await response.text(), /<script src="\/orbs.js" defer><\/script>/);
+
+    // Und auch abgemeldet gilt die Regel überall sonst weiter.
+    const andere = await fetchPath('/login');
+    assert.match(andere.headers.get('content-security-policy'), /script-src 'none'/);
+    assert.doesNotMatch(await andere.text(), /<script/i);
   });
 
   it('makes the home page a space you push around rather than a stream', async () => {

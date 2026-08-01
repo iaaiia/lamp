@@ -340,3 +340,59 @@ describe('Grundlayout', () => {
     assert.match(STYLESHEET, /main,\s*\n?footer\.site \.inner \{[^}]*padding: [^;]+;/);
   });
 });
+
+describe('Startseite', () => {
+  let server;
+  let base;
+
+  before(async () => {
+    freshDatabase();
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  const load = async (pfad = '/') => (await fetch(`${base}${pfad}`)).text();
+
+  it('sagt in einem Satz, worum es geht, und bietet genau eine Handlung', async () => {
+    const html = await load();
+    assert.match(html, /<h1 class="stage-title">lamb ist hier<\/h1>/);
+    assert.match(html, /<form class="stage-search" method="get" action="\/discover"/);
+    assert.equal((html.match(/<button/g) ?? []).length, 1, 'genau eine Schaltfläche');
+  });
+
+  it('funktioniert ohne Skript vollständig', async () => {
+    const html = await load();
+    // Die Kugeln sind schon im ausgelieferten HTML — ohne Skript liegen sie
+    // still da, und die Seite bleibt bedienbar.
+    assert.equal((html.match(/class="f-orb"/g) ?? []).length, 5);
+    assert.match(html, /<input type="text" id="q" name="q"/);
+    assert.match(html, /href="\/register"/);
+    assert.match(html, /href="\/login"/);
+  });
+
+  it('lässt das Suchfeld auch abgemeldet etwas finden', async () => {
+    const mira = makeAccount('wirt');
+    createCircle(mira, { name: 'Offener Kreis', kind: 'topic' });
+    createCircle(mira, { name: 'Privater Kreis', kind: 'private' });
+
+    const treffer = await (await fetch(`${base}/discover?q=kreis`)).text();
+    assert.match(treffer, /Offener Kreis/);
+    assert.doesNotMatch(treffer, /Privater Kreis/, 'private Kreise nie');
+  });
+
+  it('deckelt die Zahl der Kugeln, statt endlos nachzulegen', async () => {
+    const skript = await (await fetch(`${base}/orbs.js`)).text();
+    assert.match(skript, /const MAX = \d+/);
+    assert.match(skript, /if \(orbs\(\)\.length >= MAX\) return null/);
+  });
+
+  it('lädt und misst nichts im Browser', async () => {
+    const skript = await (await fetch(`${base}/orbs.js`)).text();
+    for (const verboten of ['fetch(', 'XMLHttpRequest', 'localStorage', 'sessionStorage', 'document.cookie', 'navigator.send']) {
+      assert.ok(!skript.includes(verboten), `Skript enthält ${verboten}`);
+    }
+  });
+});

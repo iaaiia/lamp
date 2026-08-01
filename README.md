@@ -25,7 +25,7 @@ Eigenschaften darunter:
 | **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
 | **Support führt weiter** | Wer einen Beitrag mit Inhaltshinweis unterstützt, bekommt danach angeboten zu antworten. Rückhalt soll in Zuwendung münden, nicht im Klick enden. |
 | **Neueste zuerst** | Der Standard ist streng chronologisch. Andere Sortierungen sind Plugins, müssen gewählt werden und sich auf dem Bildschirm erklären. Keine nutzt Reaktionsdaten. |
-| **Kein Nachladen beim Scrollen** | Blättern ist ein Link. Das Ende steht in Worten da. Das Produkt liefert null Client-JavaScript aus, und die CSP verbietet es. |
+| **Kein Nachladen beim Scrollen** | Blättern ist ein Link. Das Ende steht in Worten da. Die Anwendung liefert null Client-JavaScript aus, und die CSP verbietet es (`script-src 'none'`). Einzige Ausnahme ist die abgemeldete Startseite, wo Kugeln geschoben werden — sie lädt nichts, misst nichts, merkt sich nichts, und ohne Skript funktioniert sie vollständig. |
 | **Antworten nur mit Einverständnis** | Die Autor:in entscheidet, wer antworten darf; die Regel greift beim Schreiben — lokal wie föderiert. 30 Sekunden Abkühlung bremsen Nachtreten. |
 | **Bildbeschreibung ist Pflicht** | Ein Beitrag mit unbeschriebenem Bild wird abgelehnt. Unbeschriebene Bilder von anderen Servern werden verworfen statt angezeigt. |
 | **Pause statt Löschen** | Ein Klick blendet Profil und Beiträge aus und stoppt die Föderation. Nichts wird gelöscht, der Kreis bleibt, ein Klick holt alles zurück. |
@@ -55,7 +55,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 105 Tests
+npm test        # 111 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -86,7 +86,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   105 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   111 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)
@@ -97,7 +97,7 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 
 | Pfad | Zweck |
 | --- | --- |
-| `/` | Dein Himmel — die schiebbare Fläche (oder Anmeldung, wenn abgemeldet) |
+| `/` | Abgemeldet das Plakat mit den Kugeln, angemeldet dein Himmel |
 | `/stream` | Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben |
 | `/c/:slug` | ein Kreis; `/circles/new` legt einen an |
 | `/compose` | „Wo willst du das sagen?" — Kreiswahl vor dem Schreiben |

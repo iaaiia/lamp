@@ -90,6 +90,8 @@ import {
 } from './lib/http.js';
 import { randomToken } from './lib/crypto.js';
 import { STYLESHEET } from './web/style.js';
+import { landingPage } from './web/landing.js';
+import { ORBS_SCRIPT } from './web/orbs-script.js';
 import {
   circlePage,
   skyPage,
@@ -160,23 +162,30 @@ router.get('/style.css', (ctx, res) => {
 
 /* ------------------------------------------------------------------ timeline */
 
+router.get('/favicon.svg', (ctx, res) => {
+  res.writeHead(200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' });
+  res.end(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+      '<circle cx="12" cy="12" r="10" fill="none" stroke="#2B4C9B" stroke-width="2"/>' +
+      '<circle cx="12" cy="12" r="3.6" fill="#DC6B45"/></svg>',
+  );
+});
+
+/** Das eine Skript im Produkt — siehe src/web/orbs.client.js. */
+router.get('/orbs.js', (ctx, res) => {
+  res.writeHead(200, {
+    'content-type': 'text/javascript; charset=utf-8',
+    'cache-control': 'public, max-age=3600',
+  });
+  res.end(ORBS_SCRIPT);
+});
+
 router.get('/', (ctx, res) => {
+  // Abgemeldet: das Plakat mit den Kugeln davor.
   if (!ctx.viewer) {
-    return sendHtml(res, 200, formPage({
-      viewer: null,
-      prefs: preferencesOf(null),
-      title: config.instanceName,
-      intro:
-        'Der Kreis, der um dich herum steht. Ein soziales Netz auf offenen Protokollen: neueste Beiträge zuerst, keine Rangliste, kein Nachladen beim Scrollen — und dein Konto kannst du jederzeit mitnehmen.',
-      action: '/login',
-      fields: `
-        <label for="username">Name</label>
-        <input type="text" id="username" name="username" autocomplete="username" required>
-        <label for="password">Passwort</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required>`,
-      submitLabel: 'Anmelden',
-      footer: '<p><a href="/register">Konto anlegen</a></p>',
-    }));
+    const nonce = randomToken(16);
+    const page = landingPage({ query: '' });
+    return sendHtml(res, 200, page.html.replace('__NONCE__', nonce), nonce, { allowScript: true });
   }
 
   // Die Startseite ist eine Fläche, kein Fluss und keine Liste: eigene Kreise
@@ -451,11 +460,14 @@ router.post('/@:username/unfollow', (ctx, res) => {
 /* ------------------------------------------------------------------- Kreise */
 
 router.get('/discover', (ctx, res) => {
-  if (!requireViewer(ctx, res)) return;
+  // Auch ohne Anmeldung: Offene Kreise sind offen, und das Suchfeld auf der
+  // Startseite darf nicht ins Leere führen. Private Kreise erscheinen nie.
   const query = ctx.url.searchParams.get('q') ?? '';
   const results = query.trim()
     ? searchCircles(query)
-    : discoverable(ctx.viewer.id, 12);
+    : ctx.viewer
+      ? discoverable(ctx.viewer.id, 12)
+      : searchCircles('', 12);
   const nonce = randomToken(16);
   sendHtml(res, 200, discoverPage({
     viewer: ctx.viewer,

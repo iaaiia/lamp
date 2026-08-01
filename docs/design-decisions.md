@@ -197,6 +197,38 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D22 — Die Startseite ist die eine Ausnahme von der Skriptfreiheit
+
+**Chosen:** die abgemeldete Startseite ist ein Plakat: „lamb ist hier“, darunter ein
+Suchfeld, davor Kugeln, die man mit dem Finger schieben kann und von denen beim Scrollen
+weitere hereintreiben. Dafür lädt genau diese eine Seite ein Skript. Überall sonst bleibt
+`script-src 'none'`.
+
+**Why:** Ziehen und Erzeugen sind Dinge, für die CSS keinen Weg hat — das war nicht
+verhandelbar. Die Frage war nur, wie weit die Ausnahme reicht. Sie reicht bis zu dieser
+Seite und keinen Schritt weiter, und ein Test hält die Grenze fest, damit sie nicht leise
+wächst.
+
+**Was das Skript nicht tut**, und was ebenfalls geprüft wird: nichts nachladen, nichts
+messen, nichts merken — kein `fetch`, kein Speicher, keine Kennung. Und die Zahl der
+Kugeln ist gedeckelt; unendlich nachlegen wäre genau das Muster, das dieses Produkt sonst
+ablehnt.
+
+**Ohne Skript** liegen die fünf Kugeln still an ihrem Platz, und Überschrift, Suche und
+Anmeldung funktionieren vollständig.
+
+**Zwei Regeln aus dem Bau:** Die Kugeln liegen an den Rändern, nie über der Mittelbahn —
+eine Seite, deren Suchfeld von einer Kugel verdeckt wird, ist hübsch und unbenutzbar. Und
+das Kugelfeld nimmt selbst keine Eingaben an (`pointer-events: none`), nur die Kugeln; sonst
+fängt es jeden Klick ab. Beides ist beim Ausprobieren im Browser aufgefallen, nicht beim
+Schreiben.
+
+**Diese Seite folgt bewusst nicht dem Hell/Dunkel-Wechsel.** Sie ist ein Plakat und bleibt
+der abendliche Himmel — eine Entscheidung, kein Versäumnis; überall sonst gilt weiter beides.
+
+**Enforced by:** `src/web/landing.js`, `src/web/orbs.client.js`, `sendHtml({ allowScript })`;
+`tests/http.test.js` und `tests/ui.test.js`.
+
 ## D21 — Eine Bildsprache: dieselbe Kugel im Himmel wie auf den Kacheln
 
 **Chosen:** Kreise erscheinen überall als weiche Kugel — im Himmel groß und driftend, auf

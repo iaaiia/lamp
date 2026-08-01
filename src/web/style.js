@@ -250,6 +250,182 @@ main { padding-bottom: 4rem; }
 }
 .card.flat, article.post { box-shadow: none; }
 
+/* ------------------------------------------------------------------- Plakat */
+/* Die abgemeldete Startseite. Bewusst einfarbig gedacht: Diese eine Seite folgt
+   nicht dem hell/dunkel-Wechsel, sondern bleibt der abendliche Himmel. Eine
+   Entscheidung, kein Versäumnis — überall sonst gilt weiter beides. */
+
+body.landing {
+  margin: 0;
+  min-height: 100svh;
+  background: linear-gradient(178deg, #0E1A33 0%, #16294B 42%, #1E3A63 100%);
+  color: #F3F5F9;
+  overflow-x: hidden;
+}
+
+/* Die Fläche ist höher als der Bildschirm: erst der Inhalt, darunter offener
+   Himmel. Das gibt dem Scrollen ein Ziel — und beim Scrollen treiben weitere
+   Kugeln herein. Die Höhe ist begrenzt; unendlich wäre genau das Muster, das
+   dieses Produkt sonst ablehnt. */
+.stage {
+  position: relative;
+  min-height: 190svh;
+  display: grid;
+  grid-template-rows: 100svh auto;
+  isolation: isolate;
+}
+.stage-content { align-self: center; justify-self: center; }
+
+/* Ganz unten eine Zeile, die sagt, dass hier Schluss ist. */
+.stage-end {
+  position: relative;
+  z-index: 1;
+  align-self: end;
+  justify-self: center;
+  padding: 0 1.5rem 3rem;
+  text-align: center;
+  font-size: .85rem;
+  color: rgba(226, 232, 244, .6);
+}
+
+/* Die Kugeln liegen davor. Ohne Skript treiben sie nur; mit Skript kann man
+   sie anfassen und beim Scrollen kommen weitere dazu. */
+/* Das Feld liegt über dem Inhalt, nimmt selbst aber keine Eingaben an — sonst
+   fängt es jeden Klick ab und Suchfeld und Links sind unbedienbar. Nur die
+   Kugeln selbst sind anfassbar. */
+.orbfield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.f-orb {
+  position: absolute;
+  width: var(--d, 200px);
+  height: var(--d, 200px);
+  margin: calc(var(--d, 200px) / -2);
+  cursor: grab;
+  pointer-events: auto;
+  animation: drift var(--drift, 40s) ease-in-out var(--delay, 0s) infinite alternate;
+  touch-action: none;
+}
+.f-orb.is-held { cursor: grabbing; z-index: 3; }
+/* Auf dem Plakat sind die Kugeln Gegenstände, keine Schleier: klare Kante,
+   weiche Zeichnung nur innen. Sonst greift man nach etwas, das keinen Rand hat. */
+.f-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at var(--ox, 34%) var(--oy, 28%),
+      color-mix(in oklab, var(--c1) 85%, white) 0%,
+      var(--c1) 30%,
+      color-mix(in oklab, var(--c1) 55%, var(--c2)) 58%,
+      var(--c2) 88%);
+  box-shadow:
+    inset -8% -12% 18% -6% rgba(0, 0, 0, .45),
+    0 24px 60px -24px rgba(0, 0, 0, .65);
+  pointer-events: none;
+}
+.f-orb::after {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--c1) 26%, transparent) 0%, transparent 62%);
+  pointer-events: none;
+}
+.f-orb.is-new { animation: auftauchen .9s ease-out forwards, drift 44s ease-in-out .9s infinite alternate; }
+
+@keyframes auftauchen {
+  from { opacity: 0; transform: scale(.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f-orb, .f-orb.is-new { animation: none; }
+}
+
+/* Der Inhalt liegt dahinter — Text und Suche bleiben aber bedienbar, deshalb
+   nimmt das Kugelfeld nur dort Eingaben an, wo eine Kugel liegt. */
+.stage-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem 1.5rem 3rem;
+  max-width: 34rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+.stage-title {
+  font-family: var(--display);
+  font-size: clamp(2.8rem, 13vw, 4.6rem);
+  font-weight: 300;
+  letter-spacing: -.045em;
+  line-height: .98;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.stage-search {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  width: min(26rem, 100%);
+  background: #FFFFFF;
+  border-radius: 999px;
+  padding: .4rem .4rem .4rem 1.2rem;
+  box-shadow: 0 18px 50px -20px rgba(0, 0, 0, .7);
+}
+.stage-search input[type=text] {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: .7rem 0;
+  font: inherit;
+  font-size: 1rem;
+  color: #14171D;
+}
+.stage-search input::placeholder { color: #6B7180; }
+.stage-search input:focus { outline: none; }
+.stage-search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .55), 0 18px 50px -20px rgba(0, 0, 0, .7); }
+.stage-search button {
+  border: 0;
+  background: #1E3A63;
+  color: #FFFFFF;
+  min-height: 2.6rem;
+  padding: .65rem 1.3rem;
+}
+.stage-search button:hover { background: #14263F; border-color: transparent; }
+
+.stage-links { display: flex; gap: .7rem; margin: 0; font-size: .95rem; }
+.stage-links a { color: #DCE4F2; text-decoration-color: rgba(220, 228, 242, .5); }
+.stage-links a:hover { color: #FFFFFF; }
+.stage-links span { color: rgba(220, 228, 242, .45); }
+
+.stage-note {
+  margin: .25rem 0 0;
+  font-size: .88rem;
+  line-height: 1.6;
+  color: rgba(226, 232, 244, .72);
+  max-width: 26rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* -------------------------------------------------------------------- Himmel */
 /* Eine Fläche, die größer ist als der Bildschirm. Geschoben wird sie vom Browser
    selbst — Finger, Trackpad, Pfeiltasten. Dafür braucht es kein Skript. */

@@ -91,15 +91,18 @@ export function sendActivityJson(res, status, payload) {
  * Inline-`style="..."`-Attribute bleiben verboten; sie wären sonst still
  * wirkungslos, was schwerer zu bemerken ist als ein Fehler.
  */
-export function sendHtml(res, status, html, nonce = null) {
+export function sendHtml(res, status, html, nonce = null, { allowScript = false } = {}) {
   const styleSrc = nonce ? `'self' 'nonce-${nonce}'` : "'self'";
+  // Skript ist die Ausnahme, nicht die Regel: Nur die Startseite bekommt sie,
+  // und auch dort nur für eine Datei von diesem Server.
+  const scriptSrc = allowScript ? "'self'" : "'none'";
   res.writeHead(status, {
     'content-type': 'text/html; charset=utf-8',
     'content-length': Buffer.byteLength(html),
     'referrer-policy': 'same-origin',
     'x-content-type-options': 'nosniff',
     'content-security-policy':
-      `default-src 'self'; img-src 'self' data: https:; style-src ${styleSrc}; script-src 'none'; form-action 'self'`,
+      `default-src 'self'; img-src 'self' data: https:; style-src ${styleSrc}; script-src ${scriptSrc}; form-action 'self'`,
   });
   res.end(html);
 }

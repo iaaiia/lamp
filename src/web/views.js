@@ -12,16 +12,12 @@ import { preferencesOf } from '../domain/accounts.js';
 import { KIND_LABELS } from '../domain/circles.js';
 import { circleSigil } from './sigil.js';
 import { layoutSky } from './sky.js';
-import { orbCss, orbHtml } from './orb.js';
+import { orbCss, orbHtml, personOrbCss } from './orb.js';
 import { stageOrbs, stageOrbsCss, stageOrbsHtml } from './stage.js';
 import {
-  iconBack,
-  iconPlus,
-  iconProfile,
   iconSearch,
   iconSettings,
   iconShield,
-  iconSky,
   iconStream,
   iconSupport,
   iconWrite,
@@ -69,7 +65,9 @@ function timeTag(iso) {
   return `<time datetime="${escapeHtml(iso)}">${escapeHtml(label)}</time>`;
 }
 
-export function layout({ title, viewer, body, prefs, current = null, head = '', bar = null, stage = false }) {
+export function layout({
+  title, viewer, body, prefs, current = null, head = '', bar = null, stage = false, writebar = null,
+}) {
   const p = prefs ?? preferencesOf(viewer);
   const classes = [
     p.reducedMotion ? 'reduced-motion' : '',
@@ -78,45 +76,42 @@ export function layout({ title, viewer, body, prefs, current = null, head = '', 
   ].filter(Boolean).join(' ');
 
   /**
-   * Die Kopfzeile ist eine App-Leiste: links der Weg zurück, in der Mitte, wo
-   * man ist, rechts eine einzige Handlung. Vorher stand hier eine Linkliste,
-   * die auf dem Handy drei Zeilen fraß und trotzdem nicht sagte, wo man ist.
+   * Die Kopfzeile ist die ganze Navigation: links das Zeichen, das nach Hause
+   * führt, in der Mitte, wo man ist, rechts zwei Handlungen — Nachrichten und
+   * Einstellungen. Vorher stand hier ein Zurück-Pfeil und unten eine Leiste mit
+   * fünf Zielen; das waren zwei Navigationen für eine App mit einem Ort.
    */
-  const appbar = viewer
-    ? `<header class="appbar">
-         <div class="slot left">${
-           bar?.back
-             ? `<a class="icon-btn" href="${bar.back}" aria-label="Zurück">${iconBack()}</a>`
-             : `<span class="brandmark">${logo}</span>`
-         }</div>
-         <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
-         <div class="slot right">${
-           bar?.action ??
-           `<a class="icon-btn" href="/settings" aria-label="Einstellungen">${iconSettings()}</a>`
-         }</div>
-       </header>`
-    : `<header class="appbar">
-         <div class="slot left"><span class="brandmark">${logo}</span></div>
-         <h1 class="appbar-title">${escapeHtml(config.instanceName)}</h1>
-         <div class="slot right"></div>
-       </header>`;
+  const appbar = `<header class="appbar">
+     <div class="slot left">${
+       viewer
+         ? `<a class="brandmark" href="/" aria-label="Zum Himmel">${logo}<span>${escapeHtml(config.instanceName)}</span></a>`
+         : `<span class="brandmark">${logo}<span>${escapeHtml(config.instanceName)}</span></span>`
+     }</div>
+     <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
+     <div class="slot right">${
+       viewer
+         ? `<a class="icon-btn" href="/stream" aria-label="Nachrichten"${
+             current === 'stream' ? ' aria-current="page"' : ''
+           }>${iconStream()}</a>
+            <a class="icon-btn" href="/settings" aria-label="Einstellungen"${
+              current === 'settings' ? ' aria-current="page"' : ''
+            }>${iconSettings()}</a>`
+         : ''
+     }</div>
+   </header>`;
 
-  const tab = (href, label, icon, key) =>
-    `<a class="tab${current === key ? ' is-active' : ''}" href="${href}"${
-      current === key ? ' aria-current="page"' : ''
-    }>${icon}<span>${label}</span></a>`;
-
-  // Vier Ziele plus die eine Handlung in der Mitte. Icons stehen nie allein —
-  // unter jedem steht ein Wort.
-  const dock = viewer
-    ? `<nav class="dock" aria-label="Hauptnavigation">
-         ${tab('/', 'Himmel', iconSky({ size: 22 }), 'sky')}
-         ${tab('/discover', 'Suchen', iconSearch({ size: 22 }), 'discover')}
-         <a class="compose" href="/compose" aria-label="Etwas schreiben">${iconPlus({ size: 26 })}</a>
-         ${tab('/stream', 'Strom', iconStream({ size: 22 }), 'stream')}
-         ${tab(`/@${escapeHtml(viewer.username)}`, 'Profil', iconProfile({ size: 22 }), 'profile')}
-       </nav>`
-    : '';
+  /**
+   * Unten liegt genau eine feste Leiste: das Schreibfeld. Wer nichts eigenes
+   * mitgibt, bekommt den Weg zur Kreiswahl — schreiben ist überall die eine
+   * Handlung, und sie steht immer an derselben Stelle.
+   */
+  const writeBar = !viewer
+    ? ''
+    : writebar ??
+      `<div class="writebar">
+         <a class="write-field" href="/compose">Etwas sagen …</a>
+         <a class="icon-btn" href="/discover" aria-label="Kreise suchen">${iconSearch()}</a>
+       </div>`;
 
   return `<!doctype html>
 <html lang="de">
@@ -129,21 +124,21 @@ export function layout({ title, viewer, body, prefs, current = null, head = '', 
 <link rel="alternate" type="application/activity+json" href="${config.origin}">
 ${head}
 </head>
-<body class="${classes}${viewer ? ' has-dock' : ''}${stage ? ' on-stage' : ''}">
+<body class="${classes}${viewer ? ' has-writebar' : ''}${stage ? ' on-stage' : ''}">
 <a class="skip-link" href="#main">Zum Inhalt springen</a>
 ${appbar}
 <main id="main" tabindex="-1">
 ${body}
 </main>
-${dock}
-<footer class="site">
+${writeBar}
+${viewer ? '' : `<footer class="site">
   <div class="inner">
     <p>${escapeHtml(config.instanceName)} läuft auf ActivityPub. Dein Konto, deine Beiträge und
     deine Kontakte kannst du jederzeit <a href="/settings/export">mitnehmen</a> — auf einen
     anderen Server, ohne deinen Kreis zu verlieren.</p>
     <p>Keine Werbeprofile. Keine Rangliste. Kein Nachladen beim Scrollen.</p>
   </div>
-</footer>
+</footer>`}
 </body>
 </html>`;
 }
@@ -756,13 +751,12 @@ ${circles.length ? grid.html : '<p class="card">Du bist noch in keinem Kreis.</p
 }
 
 /**
- * Eine Nachricht im Gespräch. Chat-Blase statt Beitragskarte: Wer spricht,
- * steht neben dem Text, nicht darüber, und eigene Nachrichten stehen rechts.
- * Die Antworten hängen direkt darunter, eingerückt — so liest sich ein Verlauf
- * wie einer und nicht wie eine Liste von Einzelstücken.
+ * Eine Nachricht im Gespräch: links die Kugel der Sprecherin, rechts daneben
+ * der Text. Keine Karte, keine Blase, keine Seitenwahl für eigene Nachrichten —
+ * die Skizze zeigt eine Spalte aus Kugeln unterschiedlicher Größe mit Text
+ * daneben, und genau das ist es. Support und Antworten stehen klein darunter.
  */
-function chatMessage(post, replies, viewer) {
-  const eigen = viewer && viewer.id === post.account_id;
+function chatMessage(post, replies, viewer, orbId) {
   const v = post.view;
 
   const support = v.showMetrics && v.supportSentence
@@ -793,8 +787,10 @@ function chatMessage(post, replies, viewer) {
     )
     .join('');
 
-  return `<div class="msg${eigen ? ' is-me' : ''}">
-  ${eigen ? '' : `<a class="msg-avatar" href="/@${escapeHtml(post.username)}" aria-label="Profil von ${escapeHtml(post.display_name || post.username)}"><span class="faces"><span>${escapeHtml(initials(post))}</span></span></a>`}
+  return `<div class="msg">
+  <a class="msg-orb" href="/@${escapeHtml(post.username)}" aria-label="Profil von ${escapeHtml(
+    post.display_name || post.username,
+  )}">${orbHtml(orbId)}</a>
   <div class="bubble">
     <p class="bubble-head">
       <a href="/@${escapeHtml(post.username)}">${escapeHtml(post.display_name || post.username)}</a>
@@ -813,23 +809,19 @@ function chatMessage(post, replies, viewer) {
 </div>`;
 }
 
-/** Die Kugelleiste: jede Kugel öffnet eine Ansicht dieses Kreises. */
-function orbRail(circle, aktiv) {
-  const ansichten = [
-    ['chat', 'Gespräch', 0],
-    ['themen', 'Themen', 1],
-    ['leute', 'Leute', 2],
-    ['support', 'Rückhalt', 3],
-  ];
-  return `<nav class="orb-rail" aria-label="Ansichten in diesem Kreis">
+/**
+ * Die Ansichten dieses Kreises als eine Zeile Wörter. Vorher waren es vier
+ * bunte Kugeln mit Beschriftung — hübsch, aber sie machten aus einer Zeile
+ * einen Block und aus einer Nebensache eine Hauptsache.
+ */
+function viewSwitch(circle, aktiv) {
+  const ansichten = [['chat', 'Gespräch'], ['themen', 'Themen'], ['leute', 'Leute'], ['support', 'Rückhalt']];
+  return `<nav class="views" aria-label="Ansichten in diesem Kreis">
   ${ansichten
     .map(
-      ([id, label, i]) => `<a class="rail-orb${aktiv === id ? ' is-active' : ''}"
+      ([id, label]) => `<a class="view${aktiv === id ? ' is-active' : ''}"
       href="/c/${encodeURIComponent(circle.slug)}${id === 'chat' ? '' : `?ansicht=${id}`}"
-      ${aktiv === id ? 'aria-current="page"' : ''}>
-      <span class="rail-mark" id="rail-${i}" aria-hidden="true"><span class="orb-body"></span></span>
-      <span>${label}</span>
-    </a>`,
+      ${aktiv === id ? 'aria-current="page"' : ''}>${label}</a>`,
     )
     .join('')}
 </nav>`;
@@ -877,7 +869,7 @@ ${nextCursor
     ? `<p class="pager top"><a class="button secondary" href="/c/${escapeHtml(circle.slug)}?before=${encodeURIComponent(nextCursor)}">Ältere Nachrichten zeigen</a></p>`
     : '<p class="chat-start">Hier beginnt das Gespräch.</p>'}
 ${posts.length
-    ? posts.map((p) => chatMessage(p, p.replies ?? [], viewer)).join('')
+    ? posts.map((p, i) => chatMessage(p, p.replies ?? [], viewer, `msgorb-${i}`)).join('')
     : '<p class="chat-start">Noch nichts gesagt. Fang an.</p>'}`;
 
   const themenListe = threads.length
@@ -931,15 +923,15 @@ ${posts.length
     support: supportListe,
   }[ansicht] ?? gespraech;
 
-  // Das Schreibfeld sitzt unten wie in einem Messenger — aber nur im Gespräch.
+  // Die feste Leiste unten ist hier das Schreibfeld dieses Kreises.
   const composerBar = ansicht === 'chat' && isMember
-    ? `<div class="chat-bar">
+    ? `<div class="writebar">
          <details class="chat-compose"${error || writeOpen ? ' open' : ''}>
            <summary>Etwas sagen …</summary>
            ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}
          </details>
        </div>`
-    : '';
+    : null;
 
   const gastHinweis = !viewer
     ? `<p class="stage-hint">Mitlesen geht ohne Konto. Zum Mitreden und Support geben brauchst du eins —
@@ -950,14 +942,15 @@ ${posts.length
     title: circle.name,
     viewer,
     prefs,
-    bar: { title: circle.name, back: viewer ? '/' : '/discover' },
+    bar: { title: circle.name },
     stage: true,
-    head: `<style nonce="${escapeHtml(nonce)}">${stageOrbsCss(orbs)}</style>`,
+    writebar: composerBar,
+    head: `<style nonce="${escapeHtml(nonce)}">${stageOrbsCss(orbs)}${posts
+      .map((p, i) => personOrbCss(p.username + (p.domain ?? ''), `msgorb-${i}`))
+      .join('')}</style>`,
     body: `
 ${stageOrbsHtml(orbs)}
-<header class="space-head compact">
-  <span class="space-orb">${orbHtml('space-orb')}</span>
-  <h2 class="space-name">${escapeHtml(circle.name)}</h2>
+<header class="space-head">
   <p class="space-meta mono">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}${
     circle.place ? ` · ${escapeHtml(circle.place)}` : ''
   } · ${memberCount} ${memberCount === 1 ? 'Mitglied' : 'Mitglieder'}</p>
@@ -966,15 +959,14 @@ ${stageOrbsHtml(orbs)}
   ${gastHinweis}
 </header>
 
-${orbRail(circle, ansicht)}
+${viewSwitch(circle, ansicht)}
 ${requests}
 
 <section class="chat-window${ansicht === 'chat' ? ' is-chat' : ''}" aria-label="${escapeHtml(
       { chat: 'Gespräch', themen: 'Themen', leute: 'Leute', support: 'Rückhalt' }[ansicht] ?? 'Gespräch',
     )}">
 ${inhalt}
-</section>
-${composerBar}`,
+</section>`,
   });
 }
 

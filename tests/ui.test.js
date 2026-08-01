@@ -142,34 +142,26 @@ describe('Seiten', () => {
     assert.doesNotMatch(html, /<textarea/, 'auf dieser Seite wird noch nicht geschrieben');
   });
 
-  it('hält die Tab-Leiste bei vier Zielen plus der einen Handlung', async () => {
+  it('führt die ganze Navigation in der Kopfleiste — und sonst nirgends', async () => {
+    // Die Skizze kennt oben das Zeichen und zwei Knöpfe, unten das Schreibfeld.
+    // Zwei Navigationen für eine App mit einem Ort waren eine zu viel.
     const html = await load('/');
-    const dock = html.slice(html.indexOf('class="dock"'), html.indexOf('</nav>', html.indexOf('class="dock"')));
-
-    assert.equal((dock.match(/class="tab/g) ?? []).length, 4, 'vier Ziele');
-    assert.equal((dock.match(/class="compose"/g) ?? []).length, 1, 'eine Handlung');
+    assert.doesNotMatch(html, /class="dock"/, 'die Tab-Leiste ist weg');
+    assert.match(html, /class="brandmark" href="\/"/, 'das Zeichen führt nach Hause');
+    assert.match(html, /aria-label="Nachrichten"/);
+    assert.match(html, /aria-label="Einstellungen"/);
   });
 
-  it('stellt jedem Icon in der Leiste ein Wort zur Seite', async () => {
+  it('stellt überall dieselbe Schreibleiste unten hin', async () => {
     const html = await load('/');
-    const dock = html.slice(html.indexOf('class="dock"'), html.indexOf('</nav>', html.indexOf('class="dock"')));
-
-    for (const label of ['Himmel', 'Suchen', 'Strom', 'Profil']) {
-      assert.match(dock, new RegExp(`<span>${label}</span>`), `${label} fehlt als Wort`);
-    }
-    // Die Handlung in der Mitte trägt nur ein Zeichen — dafür ein Label.
-    assert.match(dock, /aria-label="Etwas schreiben"/);
-  });
-
-  it('markiert, auf welcher Seite man gerade ist', async () => {
-    assert.match(await load('/'), /class="tab is-active" href="\/"/);
-    assert.match(await load('/discover'), /class="tab is-active" href="\/discover"/);
+    assert.match(html, /class="writebar"/);
+    assert.match(html, /class="write-field" href="\/compose">Etwas sagen …<\/a>/);
   });
 
   it('setzt das Schreibfeld unten wie in einem Messenger — eingeklappt', async () => {
     const html = await load('/c/lebhafter-kreis');
     const nachricht = html.indexOf('Hier ist gerade etwas los');
-    const schreibfeld = html.indexOf('class="chat-bar"');
+    const schreibfeld = html.indexOf('class="writebar"');
 
     assert.ok(schreibfeld !== -1, 'es gibt eine Schreibleiste');
     assert.ok(nachricht < schreibfeld, 'sie steht unter dem Gespräch, nicht darüber');
@@ -280,9 +272,11 @@ describe('Oberfläche im neuen Zuschnitt', () => {
     assert.match(await load('/settings'), /<h1 class="appbar-title">Einstellungen<\/h1>/);
   });
 
-  it('bietet einen Weg zurück, wo man in die Tiefe gegangen ist', async () => {
-    assert.match(await load('/settings'), /class="icon-btn" href="\/" aria-label="Zurück"/);
-    assert.doesNotMatch(await load('/'), /aria-label="Zurück"/, 'die Startseite hat kein Zurück');
+  it('führt von überall mit einem Griff nach Hause', async () => {
+    // Statt eines Zurück-Pfeils, der je nach Seite woanders hinführte: das
+    // Zeichen links, immer derselbe Weg.
+    assert.match(await load('/settings'), /class="brandmark" href="\/" aria-label="Zum Himmel"/);
+    assert.match(await load('/c/kultur-leipzig'), /class="brandmark" href="\/"/);
   });
 
   it('zählt Beiträge des Kontos, nicht die der angezeigten Seite', async () => {
@@ -342,20 +336,19 @@ describe('Grundlayout', () => {
     assert.match(STYLESHEET, /main,\s*\n?footer\.site \.inner \{[^}]*padding: [^;]+;/);
   });
 
-  it('gestaltet die Fußleiste, die das Layout ausliefert', () => {
+  it('gestaltet die Schreibleiste, die das Layout ausliefert', () => {
     // Die Leiste wurde gerendert, aber nie gestaltet — fünf nackte Links
     // untereinander. Wer die Markup-Klasse ausliefert, muss sie auch kleiden.
-    assert.match(STYLESHEET, /\.dock \{[^}]*position: fixed/s);
-    assert.match(STYLESHEET, /\.dock \.tab \{/);
-    assert.match(STYLESHEET, /\.dock \.compose \{/);
+    assert.match(STYLESHEET, /\.writebar \{[^}]*position: fixed/s);
+    assert.match(STYLESHEET, /\.write-field \{/);
     // …und Platz darunter lassen, sonst endet der Inhalt hinter ihr.
-    assert.match(STYLESHEET, /body\.has-dock main \{[^}]*padding-bottom/s);
+    assert.match(STYLESHEET, /body\.has-writebar main \{[^}]*padding-bottom/s);
   });
 
   it('hält das Schreibfeld über der letzten Blase, nicht darauf', () => {
     // Sticky mit Abstand zum unteren Rand zog das Feld mitten in die letzte
     // Nachricht, sobald die Seite kürzer war als der Bildschirm.
-    assert.match(STYLESHEET, /\.chat-bar \{[^}]*position: fixed/s);
+    assert.match(STYLESHEET, /\.writebar \{[^}]*position: fixed/s);
     assert.match(STYLESHEET, /\.chat-window\.is-chat \{[^}]*padding-bottom/s);
   });
 });
@@ -468,10 +461,10 @@ describe('Der gesuchte Kreis', () => {
     }
   });
 
-  it('zeigt den Kreis oben mit Bild, Namen und Zahl', async () => {
+  it('nennt den Kreis einmal — in der Kopfleiste, nicht zweimal', async () => {
     const html = await load('/c/kultur-leipzig');
-    assert.match(html, /class="space-orb"/);
-    assert.match(html, /<h2 class="space-name">Kultur Leipzig<\/h2>/);
+    assert.match(html, /<h1 class="appbar-title">Kultur Leipzig<\/h1>/);
+    assert.doesNotMatch(html, /class="space-name"/, 'kein zweiter Name als Plakat');
     assert.match(html, /2 Mitglieder/);
   });
 
@@ -549,26 +542,29 @@ describe('Chatfenster', () => {
     );
   });
 
-  it('stellt eigene Nachrichten anders dar als fremde', async () => {
+  it('gibt jeder Nachricht die Kugel ihrer Sprecherin', async () => {
+    // Eine Spalte aus Kugeln mit Text daneben — und die Kugeln sind nicht
+    // gleich groß, sonst wären es Punkte. Größe und Farbe kommen aus dem Namen.
     const html = await load('/c/kultur');
-    // Miras eigene Nachricht trägt die Markierung, Jonas' nicht.
-    const eigene = html.slice(html.indexOf('Erste Nachricht') - 700, html.indexOf('Erste Nachricht'));
-    assert.match(eigene, /class="msg is-me"/);
+    assert.match(html, /class="msg-orb"/);
+    assert.match(html, /class="orb-mark" id="msgorb-0"/);
+    assert.match(html, /#msgorb-0\{--c1:#[0-9A-F]{6};--c2:#[0-9A-F]{6};--od:\d+px/i);
+    assert.doesNotMatch(html, /class="msg is-me"/, 'keine Seitenwahl mehr');
   });
 
-  it('gibt jeder Kugel in der Leiste eine eigene Ansicht', async () => {
+  it('gibt jedem Wort in der Ansichtszeile eine eigene Ansicht', async () => {
     const html = await load('/c/kultur');
     for (const ziel of ['?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
-      assert.ok(html.includes(ziel), `${ziel} fehlt in der Leiste`);
+      assert.ok(html.includes(ziel), `${ziel} fehlt in der Zeile`);
     }
-    assert.match(html, /class="rail-orb is-active"[^>]*href="\/c\/kultur"/, 'das Gespräch ist aktiv');
+    assert.match(html, /class="view is-active"[^>]*href="\/c\/kultur"/, 'das Gespräch ist aktiv');
   });
 
   it('zeigt unter Themen die Gesprächsanfänge mit ihrem Verlauf', async () => {
     const html = await load('/c/kultur?ansicht=themen');
     assert.match(html, /Erste Nachricht/);
     assert.match(html, /1 Antwort/);
-    assert.doesNotMatch(html, /class="chat-bar"/, 'hier wird nicht geschrieben');
+    assert.doesNotMatch(html, /<summary>Etwas sagen …<\/summary>/, 'hier wird nicht geschrieben');
   });
 
   it('zeigt unter Leute, wer hier ist — mit Moderation', async () => {
@@ -586,7 +582,7 @@ describe('Chatfenster', () => {
 
   it('bleibt eine Ansicht, wenn jemand etwas Unbekanntes anfragt', async () => {
     const html = await load('/c/kultur?ansicht=quatsch');
-    assert.match(html, /class="chat-bar"/, 'zurück ins Gespräch');
+    assert.match(html, /<summary>Etwas sagen …<\/summary>/, 'zurück ins Gespräch');
   });
 
   it('braucht für all das kein Skript', async () => {

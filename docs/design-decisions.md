@@ -286,14 +286,41 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
-## D27 — Ein Kreis ist ein Chatfenster, und die Kugeln sind seine Ansichten
+## D28 — Eine Navigation, eine Leiste, eine Spalte
+
+**Chosen:** die Skizze aus der Werkstatt gilt. Oben: das Zeichen mit dem Wort „lamb“ (führt
+nach Hause), in der Mitte, wo man ist, rechts zwei Knöpfe — Nachrichten und Einstellungen.
+Unten: **genau eine feste Leiste**, und darin steht das Schreibfeld — in einem Kreis das
+Feld dieses Kreises, sonst der Weg zur Kreiswahl plus die Suche. Dazwischen: eine Spalte
+aus Kugeln unterschiedlicher Größe mit Text daneben.
+
+**Was dafür weggefallen ist:** die fünfteilige Tab-Leiste unten (D20), der Zurück-Pfeil
+oben, das Kreis-Plakat mit Kugel und Serifen-Namen, die vier bunten Ansichtskugeln (jetzt
+eine Zeile Wörter), Chat-Blasen als Karten und die Rechts-Ausrichtung eigener Nachrichten.
+Für angemeldete Menschen fällt auch die Fußzeile weg — was dort stand, steht in den
+Einstellungen.
+
+**Why:** jedes einzelne dieser Elemente war für sich begründbar, und zusammen waren sie zu
+viel: zwei Navigationen für eine App, in der man eigentlich immer nur an einem Ort ist, und
+drei Bildsprachen (Kugel, Gesicht, Karte) für dieselbe Sache. Die Skizze hat nichts Neues
+eingeführt — sie hat entschieden, was bleibt. Der Kreisname steht jetzt einmal statt zweimal,
+der erste Bildschirm beginnt mit dem Gespräch, und die Kugel ist die einzige Bildsprache:
+sie trägt jetzt auch Menschen, mit Größe und Farbe aus dem Namen.
+
+**Enforced by:** `layout()` (Kopfleiste, `writebar`), `chatMessage()`, `viewSwitch()` in
+`src/web/views.js`, `personOrbCss()` in `src/web/orb.js`; `tests/ui.test.js` prüft, dass es
+keine Tab-Leiste mehr gibt, dass die Schreibleiste überall dieselbe ist, dass der Kreisname
+nur einmal vorkommt und dass jede Nachricht ihre eigene Kugel bekommt.
+
+## D27 — Ein Kreis ist ein Chatfenster, und die Ansichten sind eine Zeile Wörter
 
 **Chosen:** ein Kreis öffnet als Gespräch: Nachrichten laufen von alt nach neu, jede in
 einer Blase neben dem Gesicht der Sprecherin, eigene rechts. Support und Antworten stehen
 in der Blase, die ersten Antworten darunter. Das Schreibfeld liegt fest am unteren Rand
 über der Fußleiste. Über dem Gespräch liegt eine Reihe aus vier Kugeln — Gespräch, Themen,
 Leute, Rückhalt —, die dieselbe Fläche umschalten (`?ansicht=…`), serverseitig auf diese
-vier begrenzt, mit Gespräch als Rückfall.
+vier begrenzt, mit Gespräch als Rückfall. (Die Reihe war zuerst aus vier bunten Kugeln; seit
+D28 ist sie eine Zeile Wörter.)
 
 **Why:** die Zielgruppe schreibt in Chats, nicht in Feeds; ein Kreis ist ohnehin ein Raum
 mit bekannter Mitgliedschaft, also soll er sich auch so anfühlen. Die vier Ansichten machen

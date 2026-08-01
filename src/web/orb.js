@@ -46,6 +46,21 @@ export function orbHtml(id) {
   return `<span class="orb-mark" id="${id}" aria-hidden="true"><span class="orb-body"></span></span>`;
 }
 
+/**
+ * Eine Kugel für einen Menschen statt für einen Kreis: dieselbe Farbe aus
+ * derselben Streuung, aber der Durchmesser kommt aus dem Namen — im Gespräch
+ * sollen die Kugeln unterschiedlich groß liegen, wie in der Skizze, statt eine
+ * Reihe gleicher Punkte zu bilden.
+ */
+export function personOrbCss(seedText, id) {
+  const seed = hash(seedText ?? '');
+  const [light, dark] = PALETTE[seed % PALETTE.length];
+  const size = 34 + (seed % 5) * 6;
+  const shiftX = 30 + (seed % 24);
+  const shiftY = 26 + ((seed >>> 8) % 22);
+  return `#${id}{--c1:${light};--c2:${dark};--od:${size}px;--ox:${shiftX}%;--oy:${shiftY}%}`;
+}
+
 /** Die Custom Properties für eine Kugel. */
 export function orbCss(circle, id) {
   const seed = hash(circle.slug ?? '');

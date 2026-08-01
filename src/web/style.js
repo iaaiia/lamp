@@ -192,7 +192,7 @@ small, .small { font-size: .875rem; }
   top: 0;
   z-index: 12;
   display: grid;
-  grid-template-columns: 3rem 1fr 3rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: .5rem;
   padding: .55rem .75rem;
@@ -213,60 +213,58 @@ small, .small { font-size: .875rem; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.brandmark { display: inline-flex; align-items: center; padding-left: .4rem; }
-.brandmark svg { display: block; }
-
-/* ------------------------------------------------------------- Die Fußleiste */
-/* Vier Ziele plus die eine Handlung in der Mitte. Kein Icon steht allein —
-   unter jedem steht ein Wort, sonst muss man raten. */
-.dock {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 12;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+/* Zeichen und Wort, wie in der Skizze — das Wort ist der Weg nach Hause. */
+.brandmark {
+  display: inline-flex;
   align-items: center;
-  gap: .25rem;
-  padding: .4rem .5rem calc(.4rem + env(safe-area-inset-bottom));
-  background: color-mix(in oklab, var(--surface) 92%, transparent);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--line);
+  gap: .4rem;
+  padding-left: .35rem;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: var(--display);
+  font-weight: 780;
+  letter-spacing: -.02em;
 }
-/* Damit der Inhalt nicht unter der Leiste endet. */
-body.has-dock main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
-body.has-dock footer.site { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+.brandmark svg { display: block; }
+.appbar .slot.right { gap: .4rem; }
 
-.dock .tab {
-  display: grid;
-  justify-items: center;
-  gap: .15rem;
-  padding: .35rem .2rem;
-  border-radius: 14px;
+/* ------------------------------------------------------- Die Schreibleiste */
+/* Unten liegt genau eine feste Leiste, und in ihr steht das Schreibfeld.
+   Vorher waren es fünf Ziele plus eine Handlung — zwei Navigationen für eine
+   App, in der man eigentlich immer nur an einem Ort ist. */
+.writebar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(48rem, 100%);
+  bottom: 0;
+  z-index: 11;
+  display: flex;
+  align-items: flex-end;
+  gap: .6rem;
+  padding: 1.8rem 1.25rem calc(.9rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, rgba(247, 244, 238, 0) 0%, var(--paper, #F7F4EE) 45%);
+  backdrop-filter: blur(3px);
+}
+.writebar > details, .writebar > .write-field { flex: 1; }
+.writebar .icon-btn { background: #FDFCFA; box-shadow: 0 8px 26px -18px rgba(22, 26, 30, .5); }
+
+/* Damit der Inhalt nicht hinter der Leiste endet. */
+body.has-writebar main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+body.has-writebar footer.site { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+
+.write-field {
+  display: block;
+  padding: .9rem 1.25rem;
+  background: #FDFCFA;
+  border: 1px solid var(--line);
+  border-radius: 999px;
   color: var(--ink-muted);
+  font-weight: 620;
   text-decoration: none;
-  font-size: .68rem;
-  font-weight: 640;
-  letter-spacing: .01em;
+  box-shadow: 0 8px 26px -18px rgba(22, 26, 30, .5);
 }
-.dock .tab svg { display: block; }
-.dock .tab:hover { color: var(--ink); }
-.dock .tab.is-active { color: var(--blue); }
-
-/* Schreiben ist die Handlung, nicht ein Ziel — deshalb gefüllt und rund. */
-.dock .compose {
-  display: grid;
-  place-items: center;
-  justify-self: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--ink);
-  color: var(--surface);
-  text-decoration: none;
-}
-.dock .compose:hover { background: var(--blue); }
+.write-field:hover { border-color: var(--blue); color: var(--ink); }
 
 /* Runde Icon-Schaltfläche — die zweite, leisere Handlung neben der Hauptsache. */
 .icon-btn {
@@ -586,46 +584,23 @@ body.on-stage .space-actions button.secondary {
 }
 body.on-stage .space-actions button.secondary:hover { border-color: #17201F; background: transparent; color: #0C1211; }
 
-/* Der gesuchte Kreis: Kugel als Bild, Name in der Serifenschrift. */
+/* Der Kopf eines Kreises ist eine Zeile, kein Plakat: der Name steht schon in
+   der App-Leiste, also stehen hier nur noch Art, Größe, Zweck und der eine
+   Knopf. Kugel und Serifen-Überschrift sind ersatzlos weg — sie haben ein
+   Drittel des ersten Bildschirms für eine Wiederholung verbraucht. */
 .space-head {
   position: relative;
   z-index: 1;
-  text-align: center;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  gap: .4rem;
-  padding: 1.5rem 0 2rem;
+  gap: .5rem .8rem;
+  padding: .8rem 0 .9rem;
 }
-.space-orb {
-  display: grid;
-  place-items: center;
-  width: 7rem;
-  height: 7rem;
-  margin-bottom: .3rem;
-}
-.space-orb .orb-mark { --od: 7rem; width: 7rem; height: 7rem; }
-.space-name {
-  font-family: var(--serif, ui-serif, Georgia, serif);
-  color: #12191C;
-  font-size: clamp(2.2rem, 10vw, 3.4rem);
-  font-weight: 400;
-  letter-spacing: -.02em;
-  line-height: 1.05;
-  margin: 0;
-}
-/* Im Chatfenster ist der Kopf eine Zeile, kein Plakat — das Gespräch soll
-   auf dem ersten Bildschirm beginnen. */
-.space-head.compact { padding: .6rem 0 1rem; gap: .25rem; }
-.space-head.compact .space-orb { width: 3.6rem; height: 3.6rem; margin-bottom: 0; }
-.space-head.compact .space-orb .orb-mark { --od: 3.6rem; width: 3.6rem; height: 3.6rem; }
-.space-head.compact .space-name { font-size: clamp(1.5rem, 6vw, 2.1rem); }
-.space-head.compact .space-purpose { margin-top: .35rem; font-size: .94rem; }
-.space-head.compact .space-actions { margin-top: .6rem; }
-
+.space-head .space-purpose { flex-basis: 100%; }
 .space-meta { font-size: .72rem; color: #6B6D74; margin: 0; letter-spacing: .1em; text-transform: uppercase; }
-.space-purpose { margin: .5rem 0 0; color: #3A3D44; max-width: 32ch; font-size: 1.02rem; }
-.space-actions { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; justify-content: center; margin-top: .8rem; }
+.space-purpose { margin: 0; color: #3A3D44; max-width: 32ch; font-size: 1.02rem; }
+.space-actions { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-left: auto; }
 .stage-hint { font-size: .84rem; color: #6B6D74; margin: .6rem 0 0; max-width: 36ch; }
 
 /* Karten: weiß, weit gerundet, ohne Kontur — sie stehen durch ihren Schatten
@@ -670,45 +645,28 @@ body.on-stage .cluster { position: relative; z-index: 1; }
    ist — Themen, Leute, Rückhalt. Alles server-gerendert; die Leiste sind Links,
    kein Skript. */
 
-.orb-rail {
+.views {
   position: relative;
   z-index: 1;
   display: flex;
-  gap: .5rem;
+  gap: 1.1rem;
   overflow-x: auto;
-  padding: .25rem .1rem 1rem;
+  padding: .1rem .15rem .9rem;
   scrollbar-width: none;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 1rem;
 }
-.orb-rail::-webkit-scrollbar { display: none; }
-.rail-orb {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .35rem;
-  padding: .5rem .7rem .55rem;
-  border-radius: 20px;
+.views::-webkit-scrollbar { display: none; }
+.view {
+  flex: none;
   text-decoration: none;
   color: var(--ink-muted);
-  font-size: .74rem;
-  font-weight: 640;
-  flex: none;
-  min-width: 4.6rem;
-  border: 1px solid transparent;
+  font-size: .92rem;
+  font-weight: 660;
+  padding-bottom: .1rem;
 }
-.rail-orb:hover { color: var(--ink); }
-.rail-orb.is-active { background: #FDFCFA; color: var(--ink); border-color: var(--line); }
-.rail-orb:focus-visible { box-shadow: var(--focus); }
-.rail-mark {
-  position: relative;
-  display: block;
-  width: 2.4rem;
-  height: 2.4rem;
-}
-.rail-mark .orb-body { position: absolute; inset: 0; }
-#rail-0 { --c1: #7BA3F0; --c2: #1E2F5C; }
-#rail-1 { --c1: #9B97F2; --c2: #2E2B6B; }
-#rail-2 { --c1: #6FC0BE; --c2: #194848; }
-#rail-3 { --c1: #E8B45F; --c2: #6B4A16; }
+.view:hover { color: var(--ink); }
+.view.is-active { color: var(--ink); box-shadow: inset 0 -2px 0 var(--blue); }
 
 .chat-window {
   position: relative;
@@ -719,23 +677,17 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 }
 .chat-start { text-align: center; font-size: .84rem; color: var(--ink-muted); margin: .5rem 0 1rem; }
 /* Platz, damit die letzte Blase unter dem schwebenden Schreibfeld hervorkommt. */
-.chat-window.is-chat { padding-bottom: 5.5rem; }
+.chat-window.is-chat { padding-bottom: 1rem; }
 .pager.top { margin: 0 0 .5rem; }
 
-/* Nachrichten: wer spricht, steht neben dem Text. Eigene rechts. */
-.msg { display: flex; gap: .55rem; align-items: flex-end; }
-.msg.is-me { flex-direction: row-reverse; }
-.msg-avatar { flex: none; text-decoration: none; }
-.msg-avatar .faces span { width: 30px; height: 30px; font-size: .66rem; }
+/* Nachrichten: links die Kugel, rechts der Text. Keine Karte, keine Blase,
+   keine Seitenwahl — die Skizze zeigt eine Spalte, und eine Spalte liest sich
+   auf dem Handy als Gespräch. */
+.msg { display: flex; gap: .8rem; align-items: flex-start; }
+.msg-orb { flex: none; text-decoration: none; display: block; padding-top: .15rem; }
+.msg-orb .orb-mark { display: block; }
 
-.bubble {
-  background: #FDFCFA;
-  border-radius: 22px;
-  padding: .85rem 1rem .75rem;
-  max-width: min(32rem, 84%);
-  box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .06), 0 14px 32px -26px rgba(22, 26, 30, .4);
-}
-.msg.is-me .bubble { background: #E9EFFA; }
+.bubble { flex: 1; min-width: 0; }
 .bubble-head { margin: 0 0 .2rem; font-size: .82rem; display: flex; gap: .45rem; align-items: baseline; flex-wrap: wrap; }
 .bubble-head a { font-weight: 680; color: var(--ink); text-decoration: none; }
 .bubble-head a:hover { color: var(--blue); }
@@ -771,22 +723,6 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .reply-line .faces span { width: 22px; height: 22px; font-size: .58rem; }
 .reply-line p { margin: 0; font-size: .88rem; line-height: 1.5; }
 
-/* Das Schreibfeld unten, wie in einem Messenger: es liegt fest über der
-   Fußleiste, statt im Fluss mitzuwandern — sticky mit Abstand zum unteren Rand
-   hätte es mitten in die letzte Blase gezogen, sobald die Seite kurz ist. */
-.chat-bar {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(48rem, 100%);
-  bottom: calc(4.4rem + env(safe-area-inset-bottom));
-  z-index: 11;
-  /* Der Grund läuft nach oben aus, damit die Blase darunter verschwindet
-     statt vom Feld angeschnitten zu werden. */
-  padding: 1.8rem 1.25rem .4rem;
-  background: linear-gradient(to bottom, rgba(247, 244, 238, 0) 0%, var(--paper, #F7F4EE) 55%);
-  backdrop-filter: blur(3px);
-}
 .chat-compose > summary {
   cursor: pointer;
   list-style: none;

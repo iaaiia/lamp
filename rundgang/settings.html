@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Einstellungen — lamb</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="index.html" type="image/svg+xml">
+
+
+</head>
+<body class=" has-writebar">
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+<header class="appbar">
+     <div class="slot left"><a class="brandmark" href="index.html" aria-label="Zum Himmel"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+  <circle cx="12" cy="12" r="10" fill="none" stroke="var(--blue)" stroke-width="2"></circle>
+  <circle cx="12" cy="12" r="3.6" fill="var(--ember)"></circle>
+</svg><span>lamb</span></a></div>
+     <h1 class="appbar-title">Einstellungen</h1>
+     <div class="slot right"><a class="icon-btn" href="stream.html" aria-label="Nachrichten"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h9"/></svg></a>
+            <a class="icon-btn" href="settings.html" aria-label="Einstellungen"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M17.8 6.2l-1.6 1.6M7.8 16.2l-1.6 1.6M17.8 17.8l-1.6-1.6M7.8 7.8 6.2 6.2"/></svg></a></div>
+   </header>
+<div class="demo-banner" id="demo">
+  <strong>Rundgang mit Demodaten.</strong> Schieben, stöbern und lesen geht.
+  Anmelden, Schreiben und Föderation brauchen den laufenden Server —
+  <a href="https://github.com/iaaiia/lamp#selbst-starten">so startest du ihn</a>.
+</div>
+<main id="main" tabindex="-1">
+
+
+
+<form method="get" action="#demo" data-demo="inert" action="#demo">
+  <fieldset>
+    <legend>Dein Kreis</legend>
+    <label for="feed">Wie dein Start sortiert wird</label>
+    <select id="feed" name="feed"><option value="chronological" selected>Neueste zuerst</option><option value="quiet-voices">Leise Stimmen zuerst</option></select>
+    <p class="hint">Sortierungen sind austauschbar. Welche du auch wählst — sie erklärt sich oben
+    auf deiner Startseite, und keine nutzt Verweildauer oder abgeleitete Interessen.</p>
+  </fieldset>
+  <fieldset>
+    <legend>Aufmerksamkeit und Privatsphäre</legend>
+    
+  <label class="inline"><input type="checkbox" name="showMetrics" value="1">
+    <span>Zeigen, wer hinter meinen Beiträgen steht<span class="hint">Standardmäßig aus. Solange es aus ist, siehst nur du, wer dir Support gegeben hat.</span></span></label>
+    
+  <label class="inline"><input type="checkbox" name="discoverable" value="1" checked>
+    <span>Mein Konto in Vorschlägen zeigen<span class="hint">Aus heißt: Leute finden dich weiterhin über deinen genauen Namen.</span></span></label>
+    <label for="sessionLimitMinutes">Erinnerung nach (Minuten, 0 = aus)</label>
+    <input type="text" id="sessionLimitMinutes" name="sessionLimitMinutes" value="0" inputmode="numeric">
+    <p class="hint">Du bestimmst, wie lange eine Sitzung dauert. Wir stupsen dich nie, länger zu bleiben.</p>
+  </fieldset>
+  <fieldset>
+    <legend>Lesekomfort</legend>
+    
+  <label class="inline"><input type="checkbox" name="reducedMotion" value="1">
+    <span>Bewegung reduzieren<span class="hint">Schaltet alle Übergänge und Animationen ab.</span></span></label>
+    
+  <label class="inline"><input type="checkbox" name="lowStimulus" value="1">
+    <span>Reizarme Farben<span class="hint">Entsättigte Palette ohne Akzentfarben, die um Aufmerksamkeit konkurrieren.</span></span></label>
+    
+  <label class="inline"><input type="checkbox" name="plainLanguage" value="1">
+    <span>Einfache Sprache und mehr Abstand<span class="hint">Größerer Zeilenabstand und kürzere Zeilen.</span></span></label>
+  </fieldset>
+  <fieldset>
+    <legend>Antworten</legend>
+    <label for="replyPolicy">Voreinstellung für neue Beiträge</label>
+    <select id="replyPolicy" name="replyPolicy">
+      <option value="everyone">Alle können antworten</option>
+      <option value="followers" selected>Nur Leute, denen ich folge</option>
+      <option value="mentioned">Nur Leute, die ich nenne</option>
+      <option value="nobody">Keine Antworten</option>
+    </select>
+  </fieldset>
+  <p><button type="submit">Einstellungen speichern</button></p>
+</form>
+
+<h2>Kreis ruhen lassen</h2>
+<div class="card">
+  <p>Eine Pause blendet dein Profil und deine Beiträge aus und stoppt die Verbindung zu anderen
+  Servern. Nichts wird gelöscht, dein Kreis bleibt bestehen, und du kommst mit einem Klick zurück.</p>
+  <form method="get" action="#demo" data-demo="inert" action="#demo">
+    <button class="secondary" type="submit">Kreis ruhen lassen</button>
+  </form>
+</div>
+
+<h2>Konto mitnehmen</h2>
+<div class="card">
+  <p>Lade Profil, Beiträge und deinen Kreis als JSON herunter. Jeder ActivityPub-Server kann das
+  einlesen — weggehen ist hier eine unterstützte Handlung, keine Strafe.</p>
+  <p><a class="button secondary" href="index.html">Meine Daten herunterladen</a></p>
+</div>
+</main>
+<div class="writebar">
+         <a class="write-field" href="compose.html">Etwas sagen …</a>
+         <a class="icon-btn" href="discover.html" aria-label="Kreise suchen"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
+       </div>
+
+</body>
+</html>

@@ -11,6 +11,7 @@
     "start": "node --experimental-sqlite src/server.js",
     "dev": "LAMB_SEED=1 node --experimental-sqlite src/server.js",
     "test": "node --experimental-sqlite --test tests/*.test.js",
-    "build:pages": "node --experimental-sqlite tools/build-static.js site"
+    "build:pages": "node --experimental-sqlite tools/build-static.js site",
+    "publish:pages": "npm run build:pages && node tools/publish-pages.js"
   }
 }

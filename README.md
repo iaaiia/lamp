@@ -53,6 +53,13 @@ liefert Dateien aus und führt kein Node aus — es gibt dort keine Datenbank un
 Sitzungen. Der Rundgang wird mit `npm run build:pages` nach `site/` erzeugt — aus demselben Code,
 den auch der Server benutzt.
 
+**Veröffentlichen:** `npm run publish:pages` baut den Rundgang und legt ihn nach `rundgang/`,
+plus ein `index.html` in der Wurzel, das dorthin führt. Das ist nötig, solange die
+Pages-Quelle in den Repository-Einstellungen auf *Deploy from a branch* steht: dann baut
+GitHub selbst mit Jekyll aus der Branch-Wurzel und zeigt ohne `index.html` die README.
+Steht die Quelle auf **GitHub Actions**, übernimmt `.github/workflows/pages.yml` — dann
+können `rundgang/`, `index.html` und `.nojekyll` wieder aus dem Repository verschwinden.
+
 ## Selbst starten
 
 Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten, kein Build.**

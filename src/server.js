@@ -44,6 +44,9 @@ import { decideReport, openReports, triage, triageAgreementStats } from './domai
 import {
   admit,
   invite,
+  circlePeople,
+  circleSupported,
+  circleThreads,
   circleTimeline,
   circlesFor,
   createCircle,
@@ -531,8 +534,14 @@ router.get('/c/:slug', (ctx, res) => {
   if (member) markRead(circle.id, ctx.viewer.id);
 
   const before = ctx.url.searchParams.get('before');
+  const ansicht = ['chat', 'themen', 'leute', 'support'].includes(ctx.url.searchParams.get('ansicht'))
+    ? ctx.url.searchParams.get('ansicht')
+    : 'chat';
   const { posts, nextCursor } = circleTimeline(circle.id, { before });
   const nonce = randomToken(16);
+
+  // Nachrichten laufen im Gespräch von alt nach neu — wie in einem Chat.
+  const nachrichten = [...posts].reverse();
 
   sendHtml(res, 200, circlePage({
     viewer: ctx.viewer,
@@ -540,10 +549,20 @@ router.get('/c/:slug', (ctx, res) => {
     circle,
     isMember: member,
     isModerator: Boolean(ctx.viewer) && isModerator(circle.id, ctx.viewer.id),
-    posts: posts.map((p) => ({ ...decorate(p, ctx.viewer), replies: p.replies ?? [] })),
+    posts: nachrichten.map((p) => ({ ...decorate(p, ctx.viewer), replies: p.replies ?? [] })),
     nextCursor,
     people: members(circle.id, 3),
     nonce,
+    ansicht,
+    threads: ansicht === 'themen' ? circleThreads(circle.id) : [],
+    leute: ansicht === 'leute' ? circlePeople(circle.id) : [],
+    gestuetzt: ansicht === 'support'
+      ? circleSupported(circle.id).map((p) => ({
+          ...p,
+          // Auch hier: Menschen statt Zahl, und nur wenn freigegeben.
+          supportSentence: metricsVisible(p, ctx.viewer) ? supportSentence(p.id) : null,
+        }))
+      : [],
     memberCount: memberCount(circle.id),
     pending: ctx.viewer && isModerator(circle.id, ctx.viewer.id) ? pendingRequests(circle.id) : [],
     error: ctx.url.searchParams.get('error'),

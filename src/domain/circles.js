@@ -290,6 +290,62 @@ export function circleTimeline(circleId, { before = null, limit = 20 } = {}) {
   };
 }
 
+/* ------------------------------------------------ Ansichten im Chatfenster */
+
+/**
+ * Themen: die Gesprächsanfänge eines Kreises mit ihrem Verlauf.
+ * Sortiert nach letzter Regung, nicht nach Menge — wo zuletzt gesprochen wurde,
+ * steht oben. Reichweite ordnet hier nichts.
+ */
+export function circleThreads(circleId, limit = 30) {
+  return all(
+    `SELECT p.*, a.username, a.domain, a.display_name,
+            (SELECT COUNT(*) FROM posts r WHERE r.in_reply_to = p.id AND r.deleted_at IS NULL) AS reply_count,
+            COALESCE((SELECT MAX(r.created_at) FROM posts r WHERE r.in_reply_to = p.id AND r.deleted_at IS NULL),
+                     p.created_at) AS last_activity
+     FROM posts p JOIN accounts a ON a.id = p.account_id
+     WHERE p.circle_id = ? AND p.deleted_at IS NULL AND p.in_reply_to IS NULL AND a.paused_at IS NULL
+     ORDER BY last_activity DESC
+     LIMIT ?`,
+    circleId,
+    limit,
+  );
+}
+
+/** Wer hier ist — mit Rolle, damit Moderation sichtbar bleibt. */
+export function circlePeople(circleId) {
+  return all(
+    `SELECT a.*, m.role, m.created_at AS joined_at,
+            (SELECT COUNT(*) FROM posts p
+               WHERE p.circle_id = ? AND p.account_id = a.id AND p.deleted_at IS NULL) AS post_count
+     FROM memberships m JOIN accounts a ON a.id = m.account_id
+     WHERE m.circle_id = ? AND m.state = 'member'
+     ORDER BY CASE m.role WHEN 'moderator' THEN 0 ELSE 1 END, m.created_at ASC`,
+    circleId,
+    circleId,
+  );
+}
+
+/**
+ * Wo Rückhalt gegeben wurde. Bewusst nicht nach Menge sortiert, sondern nach
+ * dem jüngsten Support — sonst wäre es doch wieder eine Rangliste.
+ */
+export function circleSupported(circleId, limit = 20) {
+  return all(
+    `SELECT p.*, a.username, a.domain, a.display_name,
+            MAX(r.created_at) AS last_support
+     FROM reactions r
+     JOIN posts p ON p.id = r.post_id
+     JOIN accounts a ON a.id = p.account_id
+     WHERE p.circle_id = ? AND p.deleted_at IS NULL AND a.paused_at IS NULL
+     GROUP BY p.id
+     ORDER BY last_support DESC
+     LIMIT ?`,
+    circleId,
+    limit,
+  );
+}
+
 export const KIND_LABELS = {
   private: 'Privat',
   topic: 'Thema',

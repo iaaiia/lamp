@@ -756,44 +756,94 @@ ${circles.length ? grid.html : '<p class="card">Du bist noch in keinem Kreis.</p
 }
 
 /**
- * Ein Beitrag mit dem, was darunter steht. Anders als in der Liste zeigt der
- * Kreis die ersten Antworten gleich mit — ein Gespräch, das man erst aufklappen
- * muss, ist keins.
+ * Eine Nachricht im Gespräch. Chat-Blase statt Beitragskarte: Wer spricht,
+ * steht neben dem Text, nicht darüber, und eigene Nachrichten stehen rechts.
+ * Die Antworten hängen direkt darunter, eingerückt — so liest sich ein Verlauf
+ * wie einer und nicht wie eine Liste von Einzelstücken.
  */
-function postCard(post, replies) {
-  const kommentare = replies.length
-    ? `<div class="comments">
-         ${replies
-           .slice(0, 3)
-           .map(
-             (r) => `<div class="comment">
-    <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(r))}</span></span>
-    <div>
-      <p class="c-head"><strong>${escapeHtml(r.display_name || r.username)}</strong>
-        <span class="meta small">${timeTag(r.created_at)}</span></p>
-      <p class="c-body">${escapeHtml(r.content)}</p>
-    </div>
-  </div>`,
-           )
-           .join('')}
-         ${replies.length > 3
-           ? `<p class="more-comments"><a href="/posts/${post.id}">Alle ${replies.length} Antworten</a></p>`
-           : ''}
-       </div>`
+function chatMessage(post, replies, viewer) {
+  const eigen = viewer && viewer.id === post.account_id;
+  const v = post.view;
+
+  const support = v.showMetrics && v.supportSentence
+    ? `<span class="bubble-support">${escapeHtml(v.supportSentence)}</span>`
     : '';
 
-  return `<article class="post card-post">
-  ${postArticleInner(post, post.view)}
-  ${kommentare}
-</article>`;
+  const supportButton = viewer
+    ? `<form method="post" action="/posts/${post.id}/support">
+         <button class="support tiny" type="submit" aria-pressed="${v.supported ? 'true' : 'false'}"
+           aria-label="${v.supported ? 'Du stehst dahinter' : 'Support geben'}">
+           ${supportArc}<span>${v.supported ? 'Du stehst dahinter' : 'Support'}</span>
+         </button>
+       </form>`
+    : '';
+
+  const body = post.content_warning
+    ? `<details><summary>Inhaltshinweis: ${escapeHtml(post.content_warning)}</summary>
+         <p class="bubble-text">${escapeHtml(post.content)}</p></details>`
+    : `<p class="bubble-text">${escapeHtml(post.content)}</p>`;
+
+  const antworten = replies
+    .map(
+      (r) => `<div class="reply-line">
+    <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(r))}</span></span>
+    <p><strong>${escapeHtml(r.display_name || r.username)}</strong>
+      <span class="bubble-time">${timeTag(r.created_at)}</span><br>${escapeHtml(r.content)}</p>
+  </div>`,
+    )
+    .join('');
+
+  return `<div class="msg${eigen ? ' is-me' : ''}">
+  ${eigen ? '' : `<a class="msg-avatar" href="/@${escapeHtml(post.username)}" aria-label="Profil von ${escapeHtml(post.display_name || post.username)}"><span class="faces"><span>${escapeHtml(initials(post))}</span></span></a>`}
+  <div class="bubble">
+    <p class="bubble-head">
+      <a href="/@${escapeHtml(post.username)}">${escapeHtml(post.display_name || post.username)}</a>
+      <span class="bubble-time">${timeTag(post.created_at)}</span>
+    </p>
+    ${body}
+    <div class="bubble-actions">
+      ${supportButton}
+      ${support}
+      <a href="/posts/${post.id}" class="small">${
+        v.replyCount === 0 ? 'Antworten' : `${v.replyCount} ${v.replyCount === 1 ? 'Antwort' : 'Antworten'}`
+      }</a>
+    </div>
+    ${antworten ? `<div class="replies">${antworten}</div>` : ''}
+  </div>
+</div>`;
 }
 
-export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount, pending, error, writeOpen = false, nonce = '' }) {
-  const orbs = stageOrbs(circle.slug, 6);
+/** Die Kugelleiste: jede Kugel öffnet eine Ansicht dieses Kreises. */
+function orbRail(circle, aktiv) {
+  const ansichten = [
+    ['chat', 'Gespräch', 0],
+    ['themen', 'Themen', 1],
+    ['leute', 'Leute', 2],
+    ['support', 'Rückhalt', 3],
+  ];
+  return `<nav class="orb-rail" aria-label="Ansichten in diesem Kreis">
+  ${ansichten
+    .map(
+      ([id, label, i]) => `<a class="rail-orb${aktiv === id ? ' is-active' : ''}"
+      href="/c/${encodeURIComponent(circle.slug)}${id === 'chat' ? '' : `?ansicht=${id}`}"
+      ${aktiv === id ? 'aria-current="page"' : ''}>
+      <span class="rail-mark" id="rail-${i}" aria-hidden="true"><span class="orb-body"></span></span>
+      <span>${label}</span>
+    </a>`,
+    )
+    .join('')}
+</nav>`;
+}
+
+export function circlePage({
+  viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount,
+  pending, error, writeOpen = false, nonce = '', ansicht = 'chat', threads = [], leute = [], gestuetzt = [],
+}) {
+  const orbs = stageOrbs(circle.slug, 4);
 
   const joinControl = viewer && !isMember
     ? circle.joining === 'invite'
-      ? '<p class="stage-hint">Dieser Kreis ist nur auf Einladung offen.</p>'
+      ? '<p class="stage-hint">Nur auf Einladung.</p>'
       : `<form method="post" action="/c/${escapeHtml(circle.slug)}/join">
            <button type="submit">${circle.joining === 'open' ? 'Beitreten' : 'Beitritt anfragen'}</button>
          </form>`
@@ -805,14 +855,9 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
        </form>`
     : '';
 
-  const gastHinweis = !viewer
-    ? `<p class="stage-hint">Mitlesen geht ohne Konto. Zum Mitreden und Support geben brauchst du eins —
-       <a href="/register">anlegen</a> oder <a href="/login">anmelden</a>.</p>`
-    : '';
-
   const requests = isModerator && pending.length
     ? `<section class="card">
-         <h2 class="flush">Beitrittsanfragen</h2>
+         <h3 class="flush">Beitrittsanfragen</h3>
          ${pending
            .map(
              (person) => `<form class="request-row" method="post" action="/c/${escapeHtml(circle.slug)}/admit">
@@ -825,27 +870,81 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
        </section>`
     : '';
 
-  const privacyLine = {
-    private: 'Privater Kreis. Nur Mitglieder lesen mit, und nichts davon verlässt diesen Server.',
-    topic: 'Offener Themenkreis. Beiträge sind öffentlich und erreichen auch andere Server.',
-    local: 'Lokaler Kreis. Beiträge sind öffentlich und erreichen auch andere Server.',
-    panel: 'Youth Panel. Moderierte Debatte mit festem Ablauf; das Ergebnis wird veröffentlicht.',
-  }[circle.kind];
+  /* --------------------------------------------------------- die Ansichten */
 
-  const composeBlock = isMember
-    ? `<details class="compose-slot"${error || writeOpen ? ' open' : ''}>
-         <summary>Etwas in diesen Kreis schreiben</summary>
-         ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}
-       </details>`
+  const gespraech = `
+${nextCursor
+    ? `<p class="pager top"><a class="button secondary" href="/c/${escapeHtml(circle.slug)}?before=${encodeURIComponent(nextCursor)}">Ältere Nachrichten zeigen</a></p>`
+    : '<p class="chat-start">Hier beginnt das Gespräch.</p>'}
+${posts.length
+    ? posts.map((p) => chatMessage(p, p.replies ?? [], viewer)).join('')
+    : '<p class="chat-start">Noch nichts gesagt. Fang an.</p>'}`;
+
+  const themenListe = threads.length
+    ? `<ul class="topics">${threads
+        .map(
+          (t) => `<li><a href="/posts/${t.id}">
+      <span class="t-text">${escapeHtml(t.content.length > 90 ? `${t.content.slice(0, 90).trimEnd()}…` : t.content)}</span>
+      <span class="t-meta mono">${escapeHtml(t.display_name || t.username)} · ${t.reply_count} ${
+        Number(t.reply_count) === 1 ? 'Antwort' : 'Antworten'
+      } · ${timeTag(t.last_activity)}</span>
+    </a></li>`,
+        )
+        .join('')}</ul>`
+    : '<p class="card">Noch keine Themen.</p>';
+
+  const leuteListe = leute.length
+    ? `<ul class="people">${leute
+        .map(
+          (m) => `<li>
+      <a href="/@${escapeHtml(m.username)}">
+        <span class="faces"><span>${escapeHtml(initials(m))}</span></span>
+        <span class="p-text">
+          <strong>${escapeHtml(m.display_name || m.username)}</strong>
+          <span class="p-meta mono">${escapeHtml(handleOf(m))}${
+            m.role === 'moderator' ? ' · Moderation' : ''
+          } · ${m.post_count} ${Number(m.post_count) === 1 ? 'Beitrag' : 'Beiträge'}</span>
+        </span>
+      </a>
+    </li>`,
+        )
+        .join('')}</ul>`
+    : '<p class="card">Noch niemand hier.</p>';
+
+  const supportListe = gestuetzt.length
+    ? gestuetzt
+        .map(
+          (p) => `<article class="card support-card">
+      <p class="bubble-head"><a href="/@${escapeHtml(p.username)}">${escapeHtml(p.display_name || p.username)}</a>
+        <span class="bubble-time">${timeTag(p.created_at)}</span></p>
+      <p class="bubble-text">${escapeHtml(p.content.length > 200 ? `${p.content.slice(0, 200).trimEnd()}…` : p.content)}</p>
+      <p class="support-note">${escapeHtml(p.supportSentence ?? 'Rückhalt bleibt im Kreis')}</p>
+    </article>`,
+        )
+        .join('')
+    : '<p class="card">Hier hat noch niemand Rückhalt bekommen.</p>';
+
+  const inhalt = {
+    chat: gespraech,
+    themen: themenListe,
+    leute: leuteListe,
+    support: supportListe,
+  }[ansicht] ?? gespraech;
+
+  // Das Schreibfeld sitzt unten wie in einem Messenger — aber nur im Gespräch.
+  const composerBar = ansicht === 'chat' && isMember
+    ? `<div class="chat-bar">
+         <details class="chat-compose"${error || writeOpen ? ' open' : ''}>
+           <summary>Etwas sagen …</summary>
+           ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}
+         </details>
+       </div>`
     : '';
 
-  const list = posts.length
-    ? posts.map((p) => postCard(p, p.replies ?? [])).join('')
-    : '<p class="card">Noch nichts geschrieben.</p>';
-
-  const pager = nextCursor
-    ? `<p class="pager"><a class="button secondary" href="/c/${escapeHtml(circle.slug)}?before=${encodeURIComponent(nextCursor)}">Ältere Beiträge zeigen</a></p>`
-    : '<p class="pager end">Das war alles. Es lädt nichts von allein nach.</p>';
+  const gastHinweis = !viewer
+    ? `<p class="stage-hint">Mitlesen geht ohne Konto. Zum Mitreden und Support geben brauchst du eins —
+       <a href="/register">anlegen</a> oder <a href="/login">anmelden</a>.</p>`
+    : '';
 
   return layout({
     title: circle.name,
@@ -856,25 +955,26 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
     head: `<style nonce="${escapeHtml(nonce)}">${stageOrbsCss(orbs)}</style>`,
     body: `
 ${stageOrbsHtml(orbs)}
-<header class="space-head">
+<header class="space-head compact">
   <span class="space-orb">${orbHtml('space-orb')}</span>
   <h2 class="space-name">${escapeHtml(circle.name)}</h2>
   <p class="space-meta mono">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}${
     circle.place ? ` · ${escapeHtml(circle.place)}` : ''
   } · ${memberCount} ${memberCount === 1 ? 'Mitglied' : 'Mitglieder'}</p>
   ${circle.purpose ? `<p class="space-purpose">${escapeHtml(circle.purpose)}</p>` : ''}
-  <div class="space-actions">
-    ${faces(people, memberCount)}
-    ${joinControl}
-    ${leaveControl}
-  </div>
-  <p class="stage-hint">${escapeHtml(privacyLine)}</p>
+  <div class="space-actions">${faces(people, memberCount)}${joinControl}${leaveControl}</div>
   ${gastHinweis}
 </header>
+
+${orbRail(circle, ansicht)}
 ${requests}
-${composeBlock}
-${list}
-${pager}`,
+
+<section class="chat-window${ansicht === 'chat' ? ' is-chat' : ''}" aria-label="${escapeHtml(
+      { chat: 'Gespräch', themen: 'Themen', leute: 'Leute', support: 'Rückhalt' }[ansicht] ?? 'Gespräch',
+    )}">
+${inhalt}
+</section>
+${composerBar}`,
   });
 }
 

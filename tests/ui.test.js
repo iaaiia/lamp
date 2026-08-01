@@ -15,7 +15,7 @@ import { freshDatabase, makeAccount } from './helpers.js';
 import { createApp } from '../src/server.js';
 import { createSession } from '../src/domain/accounts.js';
 import { createCircle, join, searchCircles } from '../src/domain/circles.js';
-import { createPost } from '../src/domain/posts.js';
+import { createPost, react } from '../src/domain/posts.js';
 import { circleSigil } from '../src/web/sigil.js';
 import { layoutSky } from '../src/web/sky.js';
 import { circleTile } from '../src/web/views.js';
@@ -166,12 +166,14 @@ describe('Seiten', () => {
     assert.match(await load('/discover'), /class="tab is-active" href="\/discover"/);
   });
 
-  it('klappt das Schreibfeld im Kreis ein, statt mit einem leeren Feld zu beginnen', async () => {
+  it('setzt das Schreibfeld unten wie in einem Messenger — eingeklappt', async () => {
     const html = await load('/c/lebhafter-kreis');
-    const composer = html.indexOf('compose-slot');
-    const posts = html.indexOf('Hier ist gerade etwas los');
-    assert.ok(composer !== -1 && composer < posts);
-    assert.match(html, /<summary>Etwas in diesen Kreis schreiben<\/summary>/);
+    const nachricht = html.indexOf('Hier ist gerade etwas los');
+    const schreibfeld = html.indexOf('class="chat-bar"');
+
+    assert.ok(schreibfeld !== -1, 'es gibt eine Schreibleiste');
+    assert.ok(nachricht < schreibfeld, 'sie steht unter dem Gespräch, nicht darüber');
+    assert.match(html, /<summary>Etwas sagen …<\/summary>/, 'und ist eingeklappt');
   });
 
   it('liefert weiterhin kein Client-JavaScript aus', async () => {
@@ -339,6 +341,23 @@ describe('Grundlayout', () => {
     assert.match(STYLESHEET, /main,\s*\n?footer\.site \.inner \{[^}]*max-width: 48rem/);
     assert.match(STYLESHEET, /main,\s*\n?footer\.site \.inner \{[^}]*padding: [^;]+;/);
   });
+
+  it('gestaltet die Fußleiste, die das Layout ausliefert', () => {
+    // Die Leiste wurde gerendert, aber nie gestaltet — fünf nackte Links
+    // untereinander. Wer die Markup-Klasse ausliefert, muss sie auch kleiden.
+    assert.match(STYLESHEET, /\.dock \{[^}]*position: fixed/s);
+    assert.match(STYLESHEET, /\.dock \.tab \{/);
+    assert.match(STYLESHEET, /\.dock \.compose \{/);
+    // …und Platz darunter lassen, sonst endet der Inhalt hinter ihr.
+    assert.match(STYLESHEET, /body\.has-dock main \{[^}]*padding-bottom/s);
+  });
+
+  it('hält das Schreibfeld über der letzten Blase, nicht darauf', () => {
+    // Sticky mit Abstand zum unteren Rand zog das Feld mitten in die letzte
+    // Nachricht, sobald die Seite kürzer war als der Bildschirm.
+    assert.match(STYLESHEET, /\.chat-bar \{[^}]*position: fixed/s);
+    assert.match(STYLESHEET, /\.chat-window\.is-chat \{[^}]*padding-bottom/s);
+  });
 });
 
 describe('Startseite', () => {
@@ -456,15 +475,14 @@ describe('Der gesuchte Kreis', () => {
     assert.match(html, /2 Mitglieder/);
   });
 
-  it('zeigt Beiträge, Kommentare und Support zusammen in einer Karte', async () => {
+  it('zeigt Nachricht, Support und Antworten zusammen in einer Blase', async () => {
     const html = await load('/c/kultur-leipzig');
-    const karte = html.slice(html.indexOf('<article class="post card-post">'));
-    const ende = karte.indexOf('</article>');
+    const blase = html.slice(html.indexOf('<div class="bubble">'));
+    const inhalt = blase.slice(0, blase.indexOf('</div>\n</div>'));
 
-    const inhalt = karte.slice(0, ende);
-    assert.match(inhalt, /Samstag jemand Zeit\?/, 'der Beitrag');
-    assert.match(inhalt, /class="support"/, 'der Support-Button');
-    assert.match(inhalt, /Ich bin dabei\./, 'und der Kommentar — in derselben Karte');
+    assert.match(inhalt, /Samstag jemand Zeit\?/, 'die Nachricht');
+    assert.match(inhalt, /class="support tiny"/, 'der Support-Knopf');
+    assert.match(inhalt, /Ich bin dabei\./, 'und die Antwort — in derselben Blase');
   });
 
   it('lässt Gäste mitlesen und sagt, wofür sie ein Konto brauchen', async () => {
@@ -490,6 +508,90 @@ describe('Farbwelt', () => {
     for (const datei of ['src/web/landing.js', 'src/web/stage.js', 'src/web/orb.js', 'src/web/sky.js']) {
       const quelle = await readFile(datei, 'utf8');
       assert.doesNotMatch(quelle, /DC6B45|F08A5E/i, `${datei} benutzt Ember`);
+    }
+  });
+});
+
+describe('Chatfenster', () => {
+  let server;
+  let base;
+  let cookie;
+
+  before(async () => {
+    freshDatabase();
+    const mira = makeAccount('wirtin', { displayName: 'Mira' });
+    const jonas = makeAccount('gast7', { displayName: 'Jonas' });
+    cookie = `lamb_session=${createSession(mira.id).id}`;
+
+    const kreis = createCircle(mira, { name: 'Kultur', kind: 'topic', purpose: 'Was läuft.' });
+    join(kreis, jonas);
+
+    const erste = createPost(mira, { content: 'Erste Nachricht', circleId: kreis.id, replyPolicy: 'everyone' });
+    createPost(jonas, { content: 'Antwort darauf', inReplyTo: erste.id });
+    react(jonas.id, erste.id);
+    await new Promise((r) => setTimeout(r, 1100));
+    createPost(jonas, { content: 'Zweite Nachricht', circleId: kreis.id, replyPolicy: 'everyone' });
+
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  const load = async (pfad) => (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
+
+  it('lässt die Nachrichten von alt nach neu laufen, wie in einem Chat', async () => {
+    const html = await load('/c/kultur');
+    assert.ok(
+      html.indexOf('Erste Nachricht') < html.indexOf('Zweite Nachricht'),
+      'die ältere steht oben',
+    );
+  });
+
+  it('stellt eigene Nachrichten anders dar als fremde', async () => {
+    const html = await load('/c/kultur');
+    // Miras eigene Nachricht trägt die Markierung, Jonas' nicht.
+    const eigene = html.slice(html.indexOf('Erste Nachricht') - 700, html.indexOf('Erste Nachricht'));
+    assert.match(eigene, /class="msg is-me"/);
+  });
+
+  it('gibt jeder Kugel in der Leiste eine eigene Ansicht', async () => {
+    const html = await load('/c/kultur');
+    for (const ziel of ['?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
+      assert.ok(html.includes(ziel), `${ziel} fehlt in der Leiste`);
+    }
+    assert.match(html, /class="rail-orb is-active"[^>]*href="\/c\/kultur"/, 'das Gespräch ist aktiv');
+  });
+
+  it('zeigt unter Themen die Gesprächsanfänge mit ihrem Verlauf', async () => {
+    const html = await load('/c/kultur?ansicht=themen');
+    assert.match(html, /Erste Nachricht/);
+    assert.match(html, /1 Antwort/);
+    assert.doesNotMatch(html, /class="chat-bar"/, 'hier wird nicht geschrieben');
+  });
+
+  it('zeigt unter Leute, wer hier ist — mit Moderation', async () => {
+    const html = await load('/c/kultur?ansicht=leute');
+    assert.match(html, /Mira/);
+    assert.match(html, /Moderation/);
+    assert.match(html, /href="\/@gast7"/, 'und führt zu den Profilen');
+  });
+
+  it('zeigt unter Rückhalt, wo Support gegeben wurde — als Menschen', async () => {
+    const html = await load('/c/kultur?ansicht=support');
+    assert.match(html, /Erste Nachricht/);
+    assert.match(html, /Jonas steht dahinter/);
+  });
+
+  it('bleibt eine Ansicht, wenn jemand etwas Unbekanntes anfragt', async () => {
+    const html = await load('/c/kultur?ansicht=quatsch');
+    assert.match(html, /class="chat-bar"/, 'zurück ins Gespräch');
+  });
+
+  it('braucht für all das kein Skript', async () => {
+    for (const p of ['', '?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
+      assert.doesNotMatch(await load(`/c/kultur${p}`), /<script/i, p);
     }
   });
 });

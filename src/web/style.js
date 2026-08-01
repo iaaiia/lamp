@@ -216,6 +216,58 @@ small, .small { font-size: .875rem; }
 .brandmark { display: inline-flex; align-items: center; padding-left: .4rem; }
 .brandmark svg { display: block; }
 
+/* ------------------------------------------------------------- Die Fußleiste */
+/* Vier Ziele plus die eine Handlung in der Mitte. Kein Icon steht allein —
+   unter jedem steht ein Wort, sonst muss man raten. */
+.dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  gap: .25rem;
+  padding: .4rem .5rem calc(.4rem + env(safe-area-inset-bottom));
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+}
+/* Damit der Inhalt nicht unter der Leiste endet. */
+body.has-dock main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+body.has-dock footer.site { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+
+.dock .tab {
+  display: grid;
+  justify-items: center;
+  gap: .15rem;
+  padding: .35rem .2rem;
+  border-radius: 14px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-size: .68rem;
+  font-weight: 640;
+  letter-spacing: .01em;
+}
+.dock .tab svg { display: block; }
+.dock .tab:hover { color: var(--ink); }
+.dock .tab.is-active { color: var(--blue); }
+
+/* Schreiben ist die Handlung, nicht ein Ziel — deshalb gefüllt und rund. */
+.dock .compose {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  text-decoration: none;
+}
+.dock .compose:hover { background: var(--blue); }
+
 /* Runde Icon-Schaltfläche — die zweite, leisere Handlung neben der Hauptsache. */
 .icon-btn {
   display: inline-grid;
@@ -562,6 +614,15 @@ body.on-stage .space-actions button.secondary:hover { border-color: #17201F; bac
   line-height: 1.05;
   margin: 0;
 }
+/* Im Chatfenster ist der Kopf eine Zeile, kein Plakat — das Gespräch soll
+   auf dem ersten Bildschirm beginnen. */
+.space-head.compact { padding: .6rem 0 1rem; gap: .25rem; }
+.space-head.compact .space-orb { width: 3.6rem; height: 3.6rem; margin-bottom: 0; }
+.space-head.compact .space-orb .orb-mark { --od: 3.6rem; width: 3.6rem; height: 3.6rem; }
+.space-head.compact .space-name { font-size: clamp(1.5rem, 6vw, 2.1rem); }
+.space-head.compact .space-purpose { margin-top: .35rem; font-size: .94rem; }
+.space-head.compact .space-actions { margin-top: .6rem; }
+
 .space-meta { font-size: .72rem; color: #6B6D74; margin: 0; letter-spacing: .1em; text-transform: uppercase; }
 .space-purpose { margin: .5rem 0 0; color: #3A3D44; max-width: 32ch; font-size: 1.02rem; }
 .space-actions { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; justify-content: center; margin-top: .8rem; }
@@ -602,6 +663,165 @@ h2.on-sky {
 .stage-hint.centered { margin-left: auto; margin-right: auto; text-align: center; max-width: none; }
 body.on-stage .tile .sub, body.on-stage .tile .kind, body.on-stage .tile .why { color: #5F6169; }
 body.on-stage .cluster { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------------ Chatfenster */
+/* Ein Kreis ist ein Ort, kein Archiv: Nachrichten laufen von alt nach neu, das
+   Schreibfeld sitzt unten, und die Kugelleiste öffnet, was der Kreis sonst noch
+   ist — Themen, Leute, Rückhalt. Alles server-gerendert; die Leiste sind Links,
+   kein Skript. */
+
+.orb-rail {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding: .25rem .1rem 1rem;
+  scrollbar-width: none;
+}
+.orb-rail::-webkit-scrollbar { display: none; }
+.rail-orb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: .5rem .7rem .55rem;
+  border-radius: 20px;
+  text-decoration: none;
+  color: var(--ink-muted);
+  font-size: .74rem;
+  font-weight: 640;
+  flex: none;
+  min-width: 4.6rem;
+  border: 1px solid transparent;
+}
+.rail-orb:hover { color: var(--ink); }
+.rail-orb.is-active { background: #FDFCFA; color: var(--ink); border-color: var(--line); }
+.rail-orb:focus-visible { box-shadow: var(--focus); }
+.rail-mark {
+  position: relative;
+  display: block;
+  width: 2.4rem;
+  height: 2.4rem;
+}
+.rail-mark .orb-body { position: absolute; inset: 0; }
+#rail-0 { --c1: #7BA3F0; --c2: #1E2F5C; }
+#rail-1 { --c1: #9B97F2; --c2: #2E2B6B; }
+#rail-2 { --c1: #6FC0BE; --c2: #194848; }
+#rail-3 { --c1: #E8B45F; --c2: #6B4A16; }
+
+.chat-window {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+.chat-start { text-align: center; font-size: .84rem; color: var(--ink-muted); margin: .5rem 0 1rem; }
+/* Platz, damit die letzte Blase unter dem schwebenden Schreibfeld hervorkommt. */
+.chat-window.is-chat { padding-bottom: 5.5rem; }
+.pager.top { margin: 0 0 .5rem; }
+
+/* Nachrichten: wer spricht, steht neben dem Text. Eigene rechts. */
+.msg { display: flex; gap: .55rem; align-items: flex-end; }
+.msg.is-me { flex-direction: row-reverse; }
+.msg-avatar { flex: none; text-decoration: none; }
+.msg-avatar .faces span { width: 30px; height: 30px; font-size: .66rem; }
+
+.bubble {
+  background: #FDFCFA;
+  border-radius: 22px;
+  padding: .85rem 1rem .75rem;
+  max-width: min(32rem, 84%);
+  box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .06), 0 14px 32px -26px rgba(22, 26, 30, .4);
+}
+.msg.is-me .bubble { background: #E9EFFA; }
+.bubble-head { margin: 0 0 .2rem; font-size: .82rem; display: flex; gap: .45rem; align-items: baseline; flex-wrap: wrap; }
+.bubble-head a { font-weight: 680; color: var(--ink); text-decoration: none; }
+.bubble-head a:hover { color: var(--blue); }
+.bubble-time { color: var(--ink-muted); font-size: .74rem; font-family: var(--mono); }
+.bubble-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.bubble-actions {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .6rem;
+  flex-wrap: wrap;
+}
+.bubble-support { font-size: .78rem; color: var(--ink-muted); }
+
+/* Der Support-Knopf in der Blase ist klein, aber bleibt Ember. */
+.support.tiny {
+  min-height: 0;
+  padding: .35rem .8rem .35rem .65rem;
+  font-size: .8rem;
+  gap: .35rem;
+}
+.support.tiny svg { width: 14px; height: 14px; }
+
+.replies {
+  margin-top: .7rem;
+  padding-top: .6rem;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+.reply-line { display: flex; gap: .5rem; align-items: flex-start; }
+.reply-line .faces span { width: 22px; height: 22px; font-size: .58rem; }
+.reply-line p { margin: 0; font-size: .88rem; line-height: 1.5; }
+
+/* Das Schreibfeld unten, wie in einem Messenger: es liegt fest über der
+   Fußleiste, statt im Fluss mitzuwandern — sticky mit Abstand zum unteren Rand
+   hätte es mitten in die letzte Blase gezogen, sobald die Seite kurz ist. */
+.chat-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(48rem, 100%);
+  bottom: calc(4.4rem + env(safe-area-inset-bottom));
+  z-index: 11;
+  /* Der Grund läuft nach oben aus, damit die Blase darunter verschwindet
+     statt vom Feld angeschnitten zu werden. */
+  padding: 1.8rem 1.25rem .4rem;
+  background: linear-gradient(to bottom, rgba(247, 244, 238, 0) 0%, var(--paper, #F7F4EE) 55%);
+  backdrop-filter: blur(3px);
+}
+.chat-compose > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: .9rem 1.25rem;
+  background: #FDFCFA;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-muted);
+  font-weight: 620;
+  box-shadow: 0 8px 26px -18px rgba(22, 26, 30, .5);
+}
+.chat-compose > summary::-webkit-details-marker { display: none; }
+.chat-compose > summary:hover { border-color: var(--blue); color: var(--ink); }
+.chat-compose > summary:focus-visible { box-shadow: var(--focus); }
+.chat-compose[open] > summary { margin-bottom: .6rem; border-radius: var(--radius-m); }
+
+/* Themen, Leute, Rückhalt */
+.topics, .people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+.topics a, .people a {
+  display: flex;
+  gap: .7rem;
+  align-items: center;
+  padding: .95rem 1.1rem;
+  background: #FDFCFA;
+  border-radius: 20px;
+  text-decoration: none;
+  color: var(--ink);
+  box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .06), 0 14px 32px -28px rgba(22, 26, 30, .4);
+}
+.topics a { flex-direction: column; align-items: flex-start; gap: .3rem; }
+.topics a:hover, .people a:hover { color: var(--blue-deep); }
+.t-text { font-weight: 620; line-height: 1.45; }
+.t-meta, .p-meta { font-size: .74rem; color: var(--ink-muted); letter-spacing: .02em; }
+.p-text { display: flex; flex-direction: column; gap: .1rem; }
+.support-card { display: flex; flex-direction: column; gap: .35rem; }
 
 /* Kommentare unter dem Beitrag: leicht abgesetzt, nicht als eigene Karte. */
 .comments {

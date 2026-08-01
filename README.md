@@ -18,6 +18,7 @@ Eigenschaften darunter:
 | --- | --- |
 | **Kreise statt globaler Timeline** | Private Kreise, Themen- und lokale Kreise sind echte Räume mit Mitgliedschaft. Die Art des Kreises bestimmt die Sichtbarkeit — wer in einem privaten Kreis schreibt, kann das nicht versehentlich öffentlich tun. Private Kreise verlassen diesen Server nie und existieren für Nichtmitglieder nicht einmal als Seite. |
 | **Ein Himmel statt eines Stroms** | Die Startseite ist eine Fläche, die größer ist als der Bildschirm. Kreise liegen darin als Wolken; man schiebt sie hin und her und entdeckt dabei welche, die man nicht gesucht hat. Eigene liegen links, unbekannte rechts jenseits des Randes. Positionen sind fest — ein Kreis liegt morgen dort, wo er heute lag. |
+| **Der Kreis ist ein Chatfenster** | Ein Kreis öffnet als Gespräch — Nachrichten von alt nach neu, in Blasen neben dem Gesicht, eigene rechts, Support und Antworten in der Blase, das Schreibfeld fest am unteren Rand. Über dem Gespräch liegen vier Kugeln: **Gespräch, Themen, Leute, Rückhalt**. Sie schalten dieselbe Fläche um, ohne dass man den Raum verlässt. „Rückhalt" sortiert nach zuletzt getragen, nicht nach Menge — sonst wäre es wieder eine Rangliste. |
 | **Auskunft ohne Klick** | Jede Wolke nennt Art, Größe und Zustand von sich aus; bei Zeiger oder Tastaturfokus klappt Zweck und letzter Beitrag auf. Aus der Wolke führt ein Weg direkt ins Schreibfeld — nicht über zwei Seiten. |
 | **Zeichen, die etwas aussagen** | Jeder Kreis trägt ein aus seiner Adresse erzeugtes Presence-Ring-Zeichen: Punkte wachsen mit der Mitgliederzahl, private Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, wie groß und wie offen ein Kreis ist, bevor man liest. |
 | **„Wo willst du das sagen?"** | Das „+" führt nicht zu einem Textfeld, sondern zur Frage nach dem Kreis. Wer schreibt, weiß, wer mitliest, bevor die ersten Worte da sind. |
@@ -55,7 +56,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 119 Tests
+npm test        # 129 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -86,7 +87,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   119 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   129 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)
@@ -99,7 +100,7 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 | --- | --- |
 | `/` | Abgemeldet das Plakat mit den Kugeln, angemeldet dein Himmel |
 | `/stream` | Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben |
-| `/c/:slug` | ein Kreis; `/circles/new` legt einen an |
+| `/c/:slug` | ein Kreis als Chatfenster; `?ansicht=chat\|themen\|leute\|support` schaltet die Fläche um, `/circles/new` legt einen an |
 | `/compose` | „Wo willst du das sagen?" — Kreiswahl vor dem Schreiben |
 | `/discover` | Kreise suchen und finden (private nie) |
 | `/@name` | Profil als HTML — oder das Actor-Dokument bei `Accept: application/activity+json` |

@@ -286,6 +286,32 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D27 — Ein Kreis ist ein Chatfenster, und die Kugeln sind seine Ansichten
+
+**Chosen:** ein Kreis öffnet als Gespräch: Nachrichten laufen von alt nach neu, jede in
+einer Blase neben dem Gesicht der Sprecherin, eigene rechts. Support und Antworten stehen
+in der Blase, die ersten Antworten darunter. Das Schreibfeld liegt fest am unteren Rand
+über der Fußleiste. Über dem Gespräch liegt eine Reihe aus vier Kugeln — Gespräch, Themen,
+Leute, Rückhalt —, die dieselbe Fläche umschalten (`?ansicht=…`), serverseitig auf diese
+vier begrenzt, mit Gespräch als Rückfall.
+
+**Why:** die Zielgruppe schreibt in Chats, nicht in Feeds; ein Kreis ist ohnehin ein Raum
+mit bekannter Mitgliedschaft, also soll er sich auch so anfühlen. Die vier Ansichten machen
+aus derselben Unterhaltung vier Fragen — worüber wird geredet, wer ist hier, was wird
+getragen —, ohne dass man den Raum verlässt. „Rückhalt“ sortiert bewusst nach letzter
+Unterstützung, nicht nach Menge: eine Liste nach Menge wäre wieder eine Rangliste, und die
+gibt es hier nicht (D6).
+
+**Enforced by:** `circleThreads`/`circlePeople`/`circleSupported` in `src/domain/circles.js`,
+`circlePage()`/`orbRail()` in `src/web/views.js`, die Ansichts-Whitelist in `src/server.js`;
+`tests/ui.test.js`, Block „Chatfenster“.
+
+**Zwei Fallen, die dabei zugeschnappt sind:** die Fußleiste wurde ausgeliefert, aber nie
+gestaltet — fünf nackte Links untereinander, im Code unsichtbar, im Bild sofort. Und ein
+`position: sticky` mit Abstand zum unteren Rand zieht das Schreibfeld *nach oben in den
+Inhalt*, sobald die Seite kürzer ist als der Bildschirm; es liegt jetzt fest. Beides prüft
+`tests/ui.test.js` gegen das Stylesheet.
+
 ## D22 — Die Startseite ist die eine Ausnahme von der Skriptfreiheit
 
 **Chosen:** die abgemeldete Startseite ist ein Plakat: „lamb ist hier“, darunter ein

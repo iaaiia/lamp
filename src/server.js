@@ -29,7 +29,7 @@ import {
   supportSentence,
   unreact,
 } from './domain/posts.js';
-import { accountTimeline, listFeeds, timeline } from './domain/feeds.js';
+import { accountPostCount, accountTimeline, listFeeds, timeline } from './domain/feeds.js';
 import {
   canReply,
   countFollowers,
@@ -385,7 +385,11 @@ router.get('/@:username', async (ctx, res) => {
     paused: isPaused(account) && ctx.viewer?.id !== account.id,
     posts: posts.filter((p) => isVisibleTo(p, ctx.viewer)).map((p) => decorate(p, ctx.viewer)),
     nextCursor,
-    counts: { followers: countFollowers(account.id), following: countFollowing(account.id) },
+    counts: {
+      followers: countFollowers(account.id),
+      following: countFollowing(account.id),
+      posts: accountPostCount(account.id),
+    },
     isSelf: ctx.viewer?.id === account.id,
     following: ctx.viewer ? isFollowing(ctx.viewer.id, account.id) : false,
   }));

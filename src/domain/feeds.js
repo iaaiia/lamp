@@ -12,7 +12,7 @@
  */
 
 import config from '../config.js';
-import { all } from '../db.js';
+import { all, get } from '../db.js';
 import { hiddenAccountIds, followingIds } from './safety.js';
 
 /**
@@ -128,6 +128,19 @@ export function timeline(viewer, { feedId, before = null, limit = config.limits.
     posts: page,
     nextCursor: posts.length > limit ? encodeCursor(page.at(-1)) : null,
   };
+}
+
+/**
+ * Wie viele Beiträge dieses Konto unter eigenem Namen veröffentlicht hat.
+ * Bewusst aus der Datenbank und nicht aus der gerade gezeigten Seite — sonst
+ * behauptet die Zahl etwas über das Konto, meint aber nur diese Ansicht.
+ */
+export function accountPostCount(accountId) {
+  return get(
+    `SELECT COUNT(*) AS n FROM posts
+     WHERE account_id = ? AND deleted_at IS NULL AND in_reply_to IS NULL AND circle_id IS NULL`,
+    accountId,
+  ).n;
 }
 
 /** A single account's public posts, chronological. */

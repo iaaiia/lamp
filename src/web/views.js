@@ -12,6 +12,18 @@ import { preferencesOf } from '../domain/accounts.js';
 import { KIND_LABELS } from '../domain/circles.js';
 import { circleSigil } from './sigil.js';
 import { layoutSky } from './sky.js';
+import {
+  iconBack,
+  iconPlus,
+  iconProfile,
+  iconSearch,
+  iconSettings,
+  iconShield,
+  iconSky,
+  iconStream,
+  iconSupport,
+  iconWrite,
+} from './icons.js';
 
 export const escapeHtml = (value) =>
   String(value ?? '')
@@ -55,7 +67,7 @@ function timeTag(iso) {
   return `<time datetime="${escapeHtml(iso)}">${escapeHtml(label)}</time>`;
 }
 
-export function layout({ title, viewer, body, prefs, current = null, head = '' }) {
+export function layout({ title, viewer, body, prefs, current = null, head = '', bar = null }) {
   const p = prefs ?? preferencesOf(viewer);
   const classes = [
     p.reducedMotion ? 'reduced-motion' : '',
@@ -63,20 +75,44 @@ export function layout({ title, viewer, body, prefs, current = null, head = '' }
     p.plainLanguage ? 'plain-language' : '',
   ].filter(Boolean).join(' ');
 
-  const nav = viewer
-    ? `<li><a href="/stream">Strom</a></li>
-       <li><a href="/settings">Einstellungen</a></li>
-       <li><a href="/moderation">Moderation</a></li>
-       <li><form method="post" action="/logout"><button class="quiet" type="submit">Abmelden</button></form></li>`
-    : `<li><a href="/login">Anmelden</a></li><li><a href="/register">Konto anlegen</a></li>`;
+  /**
+   * Die Kopfzeile ist eine App-Leiste: links der Weg zurück, in der Mitte, wo
+   * man ist, rechts eine einzige Handlung. Vorher stand hier eine Linkliste,
+   * die auf dem Handy drei Zeilen fraß und trotzdem nicht sagte, wo man ist.
+   */
+  const appbar = viewer
+    ? `<header class="appbar">
+         <div class="slot left">${
+           bar?.back
+             ? `<a class="icon-btn" href="${bar.back}" aria-label="Zurück">${iconBack()}</a>`
+             : `<span class="brandmark">${logo}</span>`
+         }</div>
+         <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
+         <div class="slot right">${
+           bar?.action ??
+           `<a class="icon-btn" href="/settings" aria-label="Einstellungen">${iconSettings()}</a>`
+         }</div>
+       </header>`
+    : `<header class="appbar">
+         <div class="slot left"><span class="brandmark">${logo}</span></div>
+         <h1 class="appbar-title">${escapeHtml(config.instanceName)}</h1>
+         <div class="slot right"></div>
+       </header>`;
 
-  // Drei Ziele in Daumenreichweite. Die Leiste ist reines HTML — sie kann
-  // nichts einblenden, nachladen oder sich merken.
+  const tab = (href, label, icon, key) =>
+    `<a class="tab${current === key ? ' is-active' : ''}" href="${href}"${
+      current === key ? ' aria-current="page"' : ''
+    }>${icon}<span>${label}</span></a>`;
+
+  // Vier Ziele plus die eine Handlung in der Mitte. Icons stehen nie allein —
+  // unter jedem steht ein Wort.
   const dock = viewer
-    ? `<nav class="dock" aria-label="Schnellzugriff">
-         <a href="/"${current === 'sky' ? ' aria-current="page"' : ''}>Himmel</a>
-         <a class="compose" href="/compose" aria-label="Neuer Beitrag">+</a>
-         <a href="/discover"${current === 'discover' ? ' aria-current="page"' : ''}>Suchen</a>
+    ? `<nav class="dock" aria-label="Hauptnavigation">
+         ${tab('/', 'Himmel', iconSky({ size: 22 }), 'sky')}
+         ${tab('/discover', 'Suchen', iconSearch({ size: 22 }), 'discover')}
+         <a class="compose" href="/compose" aria-label="Etwas schreiben">${iconPlus({ size: 26 })}</a>
+         ${tab('/stream', 'Strom', iconStream({ size: 22 }), 'stream')}
+         ${tab(`/@${escapeHtml(viewer.username)}`, 'Profil', iconProfile({ size: 22 }), 'profile')}
        </nav>`
     : '';
 
@@ -92,12 +128,7 @@ ${head}
 </head>
 <body class="${classes}${viewer ? ' has-dock' : ''}">
 <a class="skip-link" href="#main">Zum Inhalt springen</a>
-<header class="site">
-  <div class="inner">
-    <a class="brandmark" href="/">${logo}${escapeHtml(config.instanceName)}</a>
-    <nav class="site" aria-label="Hauptnavigation"><ul>${nav}</ul></nav>
-  </div>
-</header>
+${appbar}
 <main id="main" tabindex="-1">
 ${body}
 </main>
@@ -224,8 +255,9 @@ export function timelinePage({ viewer, prefs, feed, feeds, posts, nextCursor, er
     title: 'Strom',
     viewer,
     prefs,
+    current: 'stream',
+    bar: { title: 'Strom' },
     body: `
-<h1>Strom</h1>
 <p class="muted">Was Menschen, denen du folgst, öffentlich unter eigenem Namen schreiben.
 Beiträge aus Kreisen stehen in ihrem Kreis.</p>
 <div class="feed-explainer">
@@ -248,8 +280,8 @@ export function threadPage({ viewer, prefs, post, replies, replyState, error }) 
     title: 'Beitrag',
     viewer,
     prefs,
+    bar: { title: 'Beitrag', back: '/' },
     body: `
-<h1>Beitrag</h1>
 ${postArticle(post, post.view)}
 <h2>Antworten</h2>
 ${replies.length ? replies.map((r) => postArticle(r, r.view)).join('') : '<p class="card">Noch keine Antworten.</p>'}
@@ -264,43 +296,68 @@ ${
 }
 
 export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextCursor, counts, isSelf, following, paused }) {
-  const followForm = viewer && !isSelf
-    ? `<form method="post" action="/@${escapeHtml(account.username)}/${following ? 'unfollow' : 'follow'}">
-         <button type="submit" class="${following ? 'secondary' : ''}">${following ? 'Nicht mehr folgen' : 'In meinen Kreis holen'}</button>
-       </form>`
-    : '';
-
-  const countsBlock = accountPrefs.showMetrics || isSelf
-    ? `<p class="meta small mono">${counts.followers} im Kreis · folgt ${counts.following}</p>`
-    : `<p class="meta small">Dieses Konto hält seinen Kreis privat.</p>`;
-
   if (paused) {
     return layout({
       title: `@${account.username}`,
       viewer,
       prefs,
-      body: `<h1>@${escapeHtml(account.username)}</h1>
-      <p class="notice">Dieses Konto lässt seinen Kreis gerade ruhen. Die Beiträge sind nicht
+      bar: { title: `@${account.username}`, back: '/' },
+      body: `<p class="notice">Dieses Konto lässt seinen Kreis gerade ruhen. Die Beiträge sind nicht
       gelöscht — sie werden nur nicht gezeigt, solange die Pause läuft.</p>`,
     });
   }
+
+  const primary = isSelf
+    ? `<a class="button grow" href="/compose">${iconWrite({ size: 20 })}Etwas schreiben</a>`
+    : `<form method="post" action="/@${escapeHtml(account.username)}/${following ? 'unfollow' : 'follow'}" class="grow">
+         <button type="submit" class="${following ? 'secondary' : ''}">${
+           following ? 'Folgst du' : 'In meinen Kreis holen'
+         }</button>
+       </form>`;
+
+  const secondary = isSelf
+    ? `<a class="icon-btn" href="/settings" aria-label="Einstellungen">${iconSettings()}</a>`
+    : '';
+
+  /**
+   * Die Zahlenzeile zeigt, was dieses Konto freigegeben hat — und sonst sagt sie
+   * das offen, statt eine Null zu behaupten. Rückhalt und Kreisgröße sind
+   * standardmäßig privat; daran ändert ein hübsches Layout nichts.
+   */
+  const stat = (value, label) => `<div class="stat"><span class="num">${value}</span><span class="lbl">${label}</span></div>`;
+  const statsRow = accountPrefs.showMetrics || isSelf
+    ? `<div class="stats">
+         ${stat(counts.followers, 'im Kreis')}
+         ${stat(counts.following, 'folgt')}
+         ${stat(counts.posts, counts.posts === 1 ? 'Beitrag' : 'Beiträge')}
+       </div>`
+    : `<p class="meta small stats-private">Dieses Konto hält seinen Kreis privat.</p>`;
 
   return layout({
     title: `@${account.username}`,
     viewer,
     prefs,
+    current: isSelf ? 'profile' : null,
+    bar: {
+      title: escapeHtml(account.display_name || account.username),
+      back: '/',
+      action: secondary,
+    },
     body: `
-<div class="card">
-  <div class="who profile-head">
-    <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(account))}</span></span>
-    <h1 class="flush">${escapeHtml(account.display_name || account.username)}</h1>
-  </div>
-  <p class="meta mono small">${escapeHtml(handleOf(account))}</p>
-  ${account.bio ? `<p>${escapeHtml(account.bio)}</p>` : ''}
-  ${countsBlock}
-  ${followForm}
+<section class="profile">
+  <span class="avatar">${circleSigil({ slug: account.username, kind: 'topic', member_count: counts.followers + 1 }, { size: 96, id: 'me' })}</span>
+  <h2 class="profile-name">${escapeHtml(account.display_name || account.username)}</h2>
+  <p class="profile-handle mono">${escapeHtml(handleOf(account))}</p>
+  ${account.bio ? `<p class="profile-bio">${escapeHtml(account.bio)}</p>` : ''}
+  ${statsRow}
+  <div class="actions-row profile-actions">${primary}</div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Was von diesem Konto">
+  <span class="tab-item is-active" role="tab" aria-selected="true">Beiträge</span>
+  <a class="tab-item" role="tab" aria-selected="false" href="/stream">Strom</a>
 </div>
-<h2>Beiträge</h2>
+
 ${posts.length ? posts.map((p) => postArticle(p, p.view)).join('') : '<p class="card">Noch keine Beiträge.</p>'}
 ${
   nextCursor
@@ -323,8 +380,8 @@ export function settingsPage({ viewer, prefs, feeds, saved }) {
     title: 'Einstellungen',
     viewer,
     prefs,
+    bar: { title: 'Einstellungen', back: '/' },
     body: `
-<h1>Einstellungen</h1>
 ${saved ? '<p class="notice" role="status">Gespeichert.</p>' : ''}
 ${viewer.is_minor ? `<p class="notice">Dieses Konto ist als unter 18 angemeldet. Ein paar Schutzeinstellungen
 lassen sich deshalb nicht abschalten: Antworten bleiben auf Leute beschränkt, denen du folgst,
@@ -413,8 +470,8 @@ export function moderationPage({ viewer, prefs, reports, stats }) {
     title: 'Moderation',
     viewer,
     prefs,
+    bar: { title: 'Moderation', back: '/' },
     body: `
-<h1>Moderation</h1>
 <p class="notice">Die automatische Erkennung sortiert diese Liste nur. Sie kann nichts entfernen
 oder ausblenden — jede Entscheidung hier trifft ein Mensch, und sie wird mit Namen festgehalten.</p>
 <div class="table-scroll">
@@ -437,14 +494,14 @@ niedriger oder fehlender Wert heißt: Der Erkennung ist in dieser Sprache nicht 
   });
 }
 
-export function formPage({ viewer, prefs, title, intro, action, fields, submitLabel, error, footer = '' }) {
+export function formPage({ viewer, prefs, title, intro, action, fields, submitLabel, error, footer = '', back = null }) {
   return layout({
     title,
     viewer,
     prefs,
+    bar: { title, back },
     body: `
-<h1>${escapeHtml(title)}</h1>
-${intro ? `<p class="muted">${escapeHtml(intro)}</p>` : ''}
+${intro ? `<p class="muted lede">${escapeHtml(intro)}</p>` : ''}
 ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
 <form class="card" method="post" action="${action}">
   ${fields}
@@ -459,7 +516,8 @@ export function errorPage({ viewer, prefs, status, message }) {
     title: `Fehler ${status}`,
     viewer,
     prefs,
-    body: `<h1>${status}</h1><p class="notice">${escapeHtml(message)}</p><p><a href="/">Zurück zum Start</a></p>`,
+    bar: { title: `Fehler ${status}`, back: '/' },
+    body: `<p class="notice">${escapeHtml(message)}</p><p><a href="/">Zurück zum Start</a></p>`,
   });
 }
 
@@ -596,10 +654,10 @@ export function skyPage({ viewer, prefs, near, far, nonce }) {
     viewer,
     prefs,
     current: 'sky',
+    bar: { title: 'Dein Himmel' },
     head: `<style nonce="${escapeHtml(nonce)}">${css}</style>`,
     body: `
 <div class="sky-intro">
-  <h1>Dein Himmel</h1>
   <p class="muted">Schieb ihn hin und her. Innen liegen deine Kreise, weiter außen
   welche, die du noch nicht kennst.</p>
 </div>
@@ -627,8 +685,8 @@ export function discoverPage({ viewer, prefs, query, results }) {
     viewer,
     prefs,
     current: 'discover',
+    bar: { title: 'Kreise finden' },
     body: `
-<h1>Kreise finden</h1>
 <form method="get" action="/discover" role="search" class="card">
   <label for="q">Wonach suchst du?</label>
   <input type="text" id="q" name="q" value="${escapeHtml(query ?? '')}" placeholder="Schule, Leipzig, Gaming …">
@@ -663,8 +721,8 @@ export function composePage({ viewer, prefs, circles }) {
     title: 'Neuer Beitrag',
     viewer,
     prefs,
+    bar: { title: 'Wo willst du das sagen?', back: '/' },
     body: `
-<h1>Wo willst du das sagen?</h1>
 <p class="muted">Bei lamb schreibt man immer in einen bestimmten Kreis. Deshalb steht diese
 Frage vor dem Textfeld und nicht danach — du weißt, wer mitliest, bevor du anfängst.</p>
 ${targets ? `<div class="cluster">${targets}</div>` : ''}
@@ -734,11 +792,11 @@ export function circlePage({ viewer, prefs, circle, isMember, isModerator, posts
     title: circle.name,
     viewer,
     prefs,
+    bar: { title: circle.name, back: '/' },
     body: `
 <div class="circle-head">
   ${circleSigil(circle, { size: 60, id: 'head' })}
   <div class="circle-head-text">
-    <h1>${escapeHtml(circle.name)}</h1>
     <p class="meta small mono">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}${
       circle.place ? ` · ${escapeHtml(circle.place)}` : ''
     } · ${memberCount} ${memberCount === 1 ? 'Mitglied' : 'Mitglieder'}</p>
@@ -764,8 +822,8 @@ export function newCirclePage({ viewer, prefs, error }) {
     title: 'Kreis öffnen',
     viewer,
     prefs,
+    bar: { title: 'Kreis öffnen', back: '/discover' },
     body: `
-<h1>Kreis öffnen</h1>
 <p class="muted">Du moderierst den Kreis, den du öffnest. Moderation ist bei lamb immer benannt.</p>
 ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
 <form class="card" method="post" action="/circles">

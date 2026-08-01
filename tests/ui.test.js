@@ -141,10 +141,28 @@ describe('Seiten', () => {
     assert.doesNotMatch(html, /<textarea/, 'auf dieser Seite wird noch nicht geschrieben');
   });
 
-  it('hält die Aktionsleiste auf drei Ziele begrenzt', async () => {
+  it('hält die Tab-Leiste bei vier Zielen plus der einen Handlung', async () => {
     const html = await load('/');
     const dock = html.slice(html.indexOf('class="dock"'), html.indexOf('</nav>', html.indexOf('class="dock"')));
-    assert.equal((dock.match(/<a /g) ?? []).length, 3);
+
+    assert.equal((dock.match(/class="tab/g) ?? []).length, 4, 'vier Ziele');
+    assert.equal((dock.match(/class="compose"/g) ?? []).length, 1, 'eine Handlung');
+  });
+
+  it('stellt jedem Icon in der Leiste ein Wort zur Seite', async () => {
+    const html = await load('/');
+    const dock = html.slice(html.indexOf('class="dock"'), html.indexOf('</nav>', html.indexOf('class="dock"')));
+
+    for (const label of ['Himmel', 'Suchen', 'Strom', 'Profil']) {
+      assert.match(dock, new RegExp(`<span>${label}</span>`), `${label} fehlt als Wort`);
+    }
+    // Die Handlung in der Mitte trägt nur ein Zeichen — dafür ein Label.
+    assert.match(dock, /aria-label="Etwas schreiben"/);
+  });
+
+  it('markiert, auf welcher Seite man gerade ist', async () => {
+    assert.match(await load('/'), /class="tab is-active" href="\/"/);
+    assert.match(await load('/discover'), /class="tab is-active" href="\/discover"/);
   });
 
   it('klappt das Schreibfeld im Kreis ein, statt mit einem leeren Feld zu beginnen', async () => {
@@ -228,6 +246,87 @@ describe('Himmel im Browser', () => {
     assert.ok(clouds.length > 0);
     for (const cloud of clouds) {
       assert.doesNotMatch(cloud, /<a[^>]*>(?:(?!<\/a>)[\s\S])*<a /, 'ein Link im Link');
+    }
+  });
+});
+
+describe('Oberfläche im neuen Zuschnitt', () => {
+  let server;
+  let base;
+  let cookie;
+
+  before(async () => {
+    freshDatabase();
+    const mira = makeAccount('mira2', { displayName: 'Mira' });
+    cookie = `lamb_session=${createSession(mira.id).id}`;
+    const kreis = createCircle(mira, { name: 'Ein Kreis', kind: 'topic' });
+    for (let i = 0; i < 3; i += 1) createPost(mira, { content: `Beitrag ${i}`, visibility: 'public' });
+    createPost(mira, { content: 'Im Kreis', circleId: kreis.id });
+
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  const load = async (path) => (await fetch(`${base}${path}`, { headers: { cookie }, redirect: 'manual' })).text();
+
+  it('sagt in der Kopfleiste, wo man ist', async () => {
+    assert.match(await load('/'), /<h1 class="appbar-title">Dein Himmel<\/h1>/);
+    assert.match(await load('/settings'), /<h1 class="appbar-title">Einstellungen<\/h1>/);
+  });
+
+  it('bietet einen Weg zurück, wo man in die Tiefe gegangen ist', async () => {
+    assert.match(await load('/settings'), /class="icon-btn" href="\/" aria-label="Zurück"/);
+    assert.doesNotMatch(await load('/'), /aria-label="Zurück"/, 'die Startseite hat kein Zurück');
+  });
+
+  it('zählt Beiträge des Kontos, nicht die der angezeigten Seite', async () => {
+    const html = await load('/@mira2');
+    // Drei unter eigenem Namen; der Kreisbeitrag gehört seinem Kreis.
+    assert.match(html, /<span class="num">3<\/span><span class="lbl">Beiträge<\/span>/);
+  });
+
+  it('behauptet keine Zahlen, wo nichts freigegeben ist', async () => {
+    const fremde = makeAccount('fremde2', { displayName: 'Fremde' });
+    createPost(fremde, { content: 'hallo', visibility: 'public' });
+    const html = await load('/@fremde2');
+    assert.match(html, /hält seinen Kreis privat/);
+    assert.doesNotMatch(html, /class="stats"/);
+  });
+});
+
+describe('Überschriften', () => {
+  let server;
+  let base;
+  let cookie;
+
+  before(async () => {
+    freshDatabase();
+    const mira = makeAccount('mira3', { displayName: 'Mira' });
+    cookie = `lamb_session=${createSession(mira.id).id}`;
+    createCircle(mira, { name: 'Ein Kreis', kind: 'topic' });
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  it('gibt jeder Seite genau eine Überschrift erster Ordnung', async () => {
+    const seiten = ['/', '/stream', '/discover', '/compose', '/settings', '/moderation', '/@mira3', '/c/ein-kreis', '/circles/new'];
+    for (const pfad of seiten) {
+      const html = await (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
+      const anzahl = (html.match(/<h1/g) ?? []).length;
+      assert.equal(anzahl, 1, `${pfad} hat ${anzahl} h1`);
+    }
+  });
+
+  it('gibt auch abgemeldeten Seiten genau eine', async () => {
+    for (const pfad of ['/', '/login', '/register']) {
+      const html = await (await fetch(`${base}${pfad}`)).text();
+      assert.equal((html.match(/<h1/g) ?? []).length, 1, `${pfad}`);
     }
   });
 });

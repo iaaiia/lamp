@@ -10,18 +10,13 @@
 </head>
 <body class=" has-dock">
 <a class="skip-link" href="#main">Zum Inhalt springen</a>
-<header class="site">
-  <div class="inner">
-    <a class="brandmark" href="index.html"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-  <circle cx="12" cy="12" r="10" fill="none" stroke="var(--blue)" stroke-width="2"></circle>
-  <circle cx="12" cy="12" r="3.6" fill="var(--ember)"></circle>
-</svg>lamb</a>
-    <nav class="site" aria-label="Hauptnavigation"><ul><li><a href="stream.html">Strom</a></li>
-       <li><a href="settings.html">Einstellungen</a></li>
-       <li><a href="moderation.html">Moderation</a></li>
-       <li><form method="get" action="#demo" data-demo="inert" action="#demo"><button class="quiet" type="submit">Abmelden</button></form></li></ul></nav>
-  </div>
-</header>
+<header class="appbar">
+         <div class="slot left"><a class="icon-btn" href="index.html" aria-label="Zurück"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5 8 12l6.5 7"/></svg></a></div>
+         <h1 class="appbar-title">Mira</h1>
+         <div class="slot right"><a class="icon-btn" href="settings.html" aria-label="Einstellungen"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M17.8 6.2l-1.6 1.6M7.8 16.2l-1.6 1.6M17.8 17.8l-1.6-1.6M7.8 7.8 6.2 6.2"/></svg></a></div>
+       </header>
 <div class="demo-banner" id="demo">
   <strong>Rundgang mit Demodaten.</strong> Schieben, stöbern und lesen geht.
   Anmelden, Schreiben und Föderation brauchen den laufenden Server —
@@ -29,23 +24,41 @@
 </div>
 <main id="main" tabindex="-1">
 
-<div class="card">
-  <div class="who profile-head">
-    <span class="faces" aria-hidden="true"><span>M</span></span>
-    <h1 class="flush">Mira</h1>
-  </div>
-  <p class="meta mono small">@mira</p>
+<section class="profile">
+  <span class="avatar"><svg class="sigil" width="96" height="96" viewBox="0 0 100 100" role="img" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="me-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4E90AE"></stop>
+      <stop offset="100%" stop-color="#2E6280"></stop>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="34" fill="none" stroke="url(#me-g)" stroke-width="1.5" opacity=".28"></circle>
   
-  <p class="meta small mono">1 im Kreis · folgt 2</p>
+  <circle cx="19.4" cy="64.9" r="7" fill="url(#me-g)"></circle><circle cx="21.8" cy="31.0" r="5" fill="url(#me-g)"></circle><circle cx="52.4" cy="16.1" r="5" fill="url(#me-g)"></circle><circle cx="80.6" cy="35.1" r="5" fill="url(#me-g)"></circle><circle cx="78.2" cy="69.0" r="5" fill="url(#me-g)"></circle><circle cx="47.6" cy="83.9" r="5" fill="url(#me-g)"></circle>
+</svg></span>
+  <h2 class="profile-name">Mira</h2>
+  <p class="profile-handle mono">@mira</p>
   
+  <div class="stats">
+         <div class="stat"><span class="num">1</span><span class="lbl">im Kreis</span></div>
+         <div class="stat"><span class="num">2</span><span class="lbl">folgt</span></div>
+         <div class="stat"><span class="num">1</span><span class="lbl">Beitrag</span></div>
+       </div>
+  <div class="actions-row profile-actions"><a class="button grow" href="compose.html"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5h15M6 15.4 15.6 5.8a1.7 1.7 0 0 1 2.4 0l.2.2a1.7 1.7 0 0 1 0 2.4L8.6 18H6Z"/></svg>Etwas schreiben</a></div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Was von diesem Konto">
+  <span class="tab-item is-active" role="tab" aria-selected="true">Beiträge</span>
+  <a class="tab-item" role="tab" aria-selected="false" href="stream.html">Strom</a>
 </div>
-<h2>Beiträge</h2>
+
 <article class="post">
   <div class="who">
     <span class="faces" aria-hidden="true"><span>M</span></span>
     <span class="name">Mira</span>
     <span class="handle">@mira</span>
-    <time datetime="2026-08-01T10:38:33.800Z">gerade eben</time>
+    <time datetime="2026-08-01T10:52:14.364Z">gerade eben</time>
   </div>
   <div class="body">lamb läuft jetzt föderiert. Wer von einem anderen Server folgen will: @mira@lamb.example</div>
   <div class="actions">
@@ -64,10 +77,17 @@
 </article>
 
 </main>
-<nav class="dock" aria-label="Schnellzugriff">
-         <a href="index.html">Himmel</a>
-         <a class="compose" href="compose.html" aria-label="Neuer Beitrag">+</a>
-         <a href="discover.html">Suchen</a>
+<nav class="dock" aria-label="Hauptnavigation">
+         <a class="tab" href="index.html"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg><span>Himmel</span></a>
+         <a class="tab" href="discover.html"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>Suchen</span></a>
+         <a class="compose" href="compose.html" aria-label="Etwas schreiben"><svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.5v13M5.5 12h13"/></svg></a>
+         <a class="tab" href="stream.html"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h9"/></svg><span>Strom</span></a>
+         <a class="tab is-active" href="profil-mira.html" aria-current="page"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg><span>Profil</span></a>
        </nav>
 <footer class="site">
   <div class="inner">

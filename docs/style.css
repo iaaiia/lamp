@@ -113,10 +113,17 @@ h1, h2, h3 {
   text-wrap: balance;
   letter-spacing: -0.024em;
 }
-h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.032em; }
-h2 { font-size: 1.2rem; font-weight: 750; margin-top: 2rem; }
+h1 { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.034em; }
+h2 {
+  font-size: 1.22rem;
+  font-weight: 780;
+  letter-spacing: -.022em;
+  margin-top: 2rem;
+  margin-bottom: .75rem;
+}
 h3 { font-size: 1.02rem; font-weight: 700; }
 p, li, label { max-width: var(--measure); }
+.lede { font-size: 1.02rem; }
 p { margin: 0 0 .75rem; }
 
 a { color: var(--blue); text-underline-offset: 2px; }
@@ -153,58 +160,56 @@ small, .small { font-size: .875rem; }
 
 :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
 
-header.site {
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-header.site .inner,
-main,
-footer.site .inner {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 1.1rem 1.25rem;
-}
-header.site .inner {
-  display: flex;
-  gap: .75rem;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: .7rem 1rem;
-}
-@media (min-width: 40rem) { header.site .inner { padding: 1.1rem 1.25rem; gap: 1rem; } }
-.brandmark {
-  display: inline-flex;
+/* ---------------------------------------------------------------- App-Leiste */
+/* Links zurück, in der Mitte wo man ist, rechts eine Handlung. */
+
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 3rem 1fr 3rem;
   align-items: center;
   gap: .5rem;
-  font-family: var(--display);
-  font-weight: 800;
-  letter-spacing: -.03em;
-  font-size: 1.1rem;
-  color: var(--ink);
-  text-decoration: none;
+  padding: .55rem .75rem;
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
 }
+.appbar .slot { display: flex; align-items: center; }
+.appbar .slot.right { justify-content: flex-end; }
+.appbar-title {
+  font-family: var(--display);
+  font-size: 1.02rem;
+  font-weight: 750;
+  letter-spacing: -.02em;
+  text-align: center;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brandmark { display: inline-flex; align-items: center; padding-left: .4rem; }
 .brandmark svg { display: block; }
 
-nav.site { margin-left: auto; }
-nav.site ul {
-  list-style: none;
-  display: flex;
-  gap: .15rem;
-  margin: 0;
-  padding: 0;
-  align-items: center;
-  flex-wrap: wrap;
-}
-nav.site a, nav.site button {
+/* Runde Icon-Schaltfläche — die zweite, leisere Handlung neben der Hauptsache. */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
   text-decoration: none;
-  color: var(--ink-muted);
-  font-weight: 620;
-  font-size: .82rem;
-  padding: .3rem .5rem;
-  border-radius: 999px;
+  flex: none;
+  cursor: pointer;
+  padding: 0;
 }
-@media (min-width: 40rem) { nav.site a, nav.site button { font-size: .92rem; padding: .4rem .7rem; } }
-nav.site a:hover { background: var(--blue-tint); color: var(--blue-deep); }
+.icon-btn:hover { border-color: var(--blue); color: var(--blue-deep); }
+.icon-btn:focus-visible { box-shadow: var(--focus); }
+.icon { display: block; }
 
 main { padding-bottom: 4rem; }
 
@@ -422,6 +427,89 @@ body.low-stimulus .cloud { animation: none; }
 .sky-list ul { list-style: none; padding: 0; margin: .5rem 0 0; display: flex; flex-direction: column; gap: .5rem; }
 .sky-list li { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
 
+/* -------------------------------------------------------------------- Profil */
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .35rem;
+  padding: 1.5rem 1.25rem 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  margin-bottom: 1rem;
+}
+.profile .avatar {
+  display: grid;
+  place-items: center;
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  margin-bottom: .4rem;
+}
+.profile-name { font-family: var(--display); font-size: 1.4rem; font-weight: 780; letter-spacing: -.025em; margin: 0; }
+.profile-handle { font-size: .82rem; color: var(--ink-muted); margin: 0; }
+.profile-bio { margin: .5rem 0 0; max-width: 30ch; }
+.profile-actions { width: 100%; max-width: 22rem; margin-top: 1rem; justify-content: center; }
+.profile-actions form { display: contents; }
+.profile-actions .grow button, .profile-actions .grow { width: 100%; }
+
+/* Zahlen groß, Bezeichnung leise darunter — und wo nichts freigegeben ist,
+   steht das da, statt eine Null zu behaupten. */
+.stats {
+  display: flex;
+  gap: 1.75rem;
+  margin-top: .9rem;
+  justify-content: center;
+}
+.stat { display: flex; flex-direction: column; align-items: center; gap: .1rem; }
+.stat .num {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+.stat .lbl { font-size: .72rem; color: var(--ink-muted); }
+.stats-private { margin-top: .9rem; }
+
+/* Reiter: der aktive kräftig, die anderen leise. */
+.tabs {
+  display: flex;
+  gap: 1.2rem;
+  align-items: baseline;
+  padding: 0 .25rem .75rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1rem;
+}
+.tab-item {
+  font-family: var(--display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  color: var(--ink-muted);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: .75rem;
+  margin-bottom: -.75rem;
+}
+.tab-item.is-active { color: var(--ink); }
+.tab-item.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue);
+}
+.tab-item:hover { color: var(--ink); }
+
 /* --------------------------------------------------------- Hilfsklassen */
 .flush { margin: 0; }
 .tight { margin: .7rem 0 0; }
@@ -569,7 +657,7 @@ body.low-stimulus .cloud { animation: none; }
 }
 .circle-head .sigil { flex: none; margin-top: -.15rem; }
 .circle-head-text { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
-.circle-head h1 { font-size: 1.4rem; }
+
 .circle-head p { margin: 0; }
 .circle-actions { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-top: .5rem; }
 
@@ -607,50 +695,60 @@ body.low-stimulus .cloud { animation: none; }
 .dock {
   position: fixed;
   left: 50%;
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  bottom: max(.75rem, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: 14;
   display: flex;
   align-items: center;
-  gap: .4rem;
-  padding: .4rem;
-  background: var(--surface);
+  gap: .1rem;
+  padding: .4rem .5rem;
+  width: min(24rem, calc(100vw - 1.5rem));
+  justify-content: space-between;
+  background: color-mix(in oklab, var(--surface) 94%, transparent);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--line);
   border-radius: 999px;
-  box-shadow: 0 6px 28px -8px rgba(20, 23, 29, .28);
+  box-shadow: 0 8px 30px -10px rgba(20, 23, 29, .3);
 }
-@media (prefers-color-scheme: dark) { .dock { box-shadow: 0 8px 30px -8px rgba(0, 0, 0, .8); } }
+@media (prefers-color-scheme: dark) { .dock { box-shadow: 0 10px 34px -10px rgba(0, 0, 0, .85); } }
 
-.dock a, .dock button {
-  display: inline-flex;
+/* Ein Ziel: Icon und Wort. Icons stehen nie allein. */
+.dock .tab {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: .4rem;
-  padding: .55rem .9rem;
-  border-radius: 999px;
-  border: 0;
-  background: transparent;
+  gap: .1rem;
+  padding: .4rem .55rem;
+  border-radius: 1.1rem;
   color: var(--ink-muted);
-  font-weight: 640;
-  font-size: .86rem;
   text-decoration: none;
+  font-size: .66rem;
+  font-weight: 640;
+  letter-spacing: .01em;
+  min-width: 3.4rem;
 }
-.dock a:hover { background: var(--blue-tint); color: var(--blue-deep); }
-.dock a[aria-current="page"] { color: var(--ink); }
+.dock .tab.is-active { background: var(--blue-tint); color: var(--blue-deep); }
+.dock .tab:hover { color: var(--ink); }
+.dock .tab:focus-visible { box-shadow: var(--focus); }
+
+/* Die Handlung in der Mitte, erhöht — sie ist keine Seite, sondern ein Tun. */
 .dock .compose {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  flex: none;
+  border-radius: 50%;
   background: var(--blue);
   color: var(--blue-ink);
-  width: 3rem;
-  height: 3rem;
-  padding: 0;
-  justify-content: center;
-  font-size: 1.4rem;
-  line-height: 1;
+  box-shadow: 0 6px 16px -6px color-mix(in oklab, var(--blue) 70%, transparent);
+  margin-top: -1.1rem;
 }
-.dock .compose:hover { background: var(--blue-deep); color: var(--blue-ink); }
-.dock a:focus-visible { box-shadow: var(--focus); }
+.dock .compose:hover { background: var(--blue-deep); }
+.dock .compose:focus-visible { box-shadow: var(--focus); }
 
 /* Platz, damit die Leiste nie den letzten Beitrag verdeckt. */
-body.has-dock main { padding-bottom: 6.5rem; }
+body.has-dock main { padding-bottom: 7.5rem; }
 
 /* -------------------------------------------------------------------- Chips */
 
@@ -730,19 +828,22 @@ article.post .actions {
 .support {
   display: inline-flex;
   align-items: center;
-  gap: .55rem;
+  justify-content: center;
+  gap: .5rem;
   font: inherit;
-  font-weight: 650;
-  font-size: .92rem;
-  padding: .5rem 1rem .5rem .8rem;
+  font-weight: 680;
+  font-size: .95rem;
+  line-height: 1.2;
+  min-height: 2.9rem;
+  padding: .8rem 1.4rem .8rem 1.15rem;
   border-radius: 999px;
   border: 1.5px solid var(--ember);
-  background: transparent;
+  background: var(--ember-tint);
   color: var(--ember-deep);
   cursor: pointer;
   transition: background .18s ease, transform .18s ease;
 }
-.support:hover { background: var(--ember-tint); }
+.support:hover { background: color-mix(in oklab, var(--ember) 22%, var(--surface)); }
 .support:active { transform: scale(.97); }
 .support:focus-visible { box-shadow: 0 0 0 3px var(--ember-tint); }
 .support[aria-pressed="true"] {
@@ -755,31 +856,51 @@ article.post .actions {
 
 /* ----------------------------------------------------------------- Buttons */
 
+/* Schaltflächen sind volle Pillen: groß genug für den Daumen, mit klarer
+   Rangfolge — eine gefüllte Hauptsache, alles andere umrandet oder leise. */
 button, .button {
   font: inherit;
-  font-weight: 650;
-  font-size: .92rem;
-  padding: .5rem 1rem;
+  font-weight: 680;
+  font-size: .95rem;
+  line-height: 1.2;
+  padding: .8rem 1.5rem;
   border-radius: 999px;
-  border: 1px solid var(--blue);
+  border: 1.5px solid var(--blue);
   background: var(--blue);
   color: var(--blue-ink);
   cursor: pointer;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 2.9rem;
+  transition: transform .15s ease, background .2s ease;
 }
+button:hover, .button:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
+button:active, .button:active { transform: scale(.97); }
 button.secondary, .button.secondary {
   background: var(--surface);
   border-color: var(--line);
   color: var(--ink);
 }
-button.secondary:hover, .button.secondary:hover { border-color: var(--blue); color: var(--blue-deep); }
-button.quiet {
+button.secondary:hover, .button.secondary:hover {
+  background: var(--surface);
+  border-color: var(--blue);
+  color: var(--blue-deep);
+}
+button.quiet, .button.quiet {
   background: transparent;
   border-color: transparent;
   color: var(--ink-muted);
-  padding: .4rem .6rem;
+  padding: .5rem .8rem;
+  min-height: 0;
+  font-weight: 640;
 }
+button.quiet:hover { background: var(--blue-tint); color: var(--blue-deep); }
+/* Eine Hauptsache soll auf dem Handy die Breite bekommen, die ihr zusteht. */
+.actions-row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.actions-row .grow { flex: 1 1 10rem; }
 
 /* ----------------------------------------------------------------- Formulare */
 

@@ -286,6 +286,36 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D31 — Rückhalt ist ein Ort, kein Gefühl: der geschützte Raum
+
+**Chosen:** wenn zwei Menschen im selben Kreis jeweils hinter einem Beitrag der anderen
+stehen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in
+dem beide moderieren. Er ist die letzte Stufe des Wegs (D30). Er entsteht nie einseitig, und
+er entsteht nie durch eine Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar
+waren. Zweimal Öffnen führt in denselben Raum; die Adresse ist aus den beiden Konten
+gebildet.
+
+**Warum ein privater Kreis und keine neue Sache:** für private Kreise gilt schon alles, was
+hier gelten muss — sie verlassen diesen Server nie, existieren für Nichtmitglieder nicht
+einmal als Seite, und ihre Sichtbarkeit hängt an der Art des Kreises statt an einer
+Einstellung, die man versehentlich umstellt. Ein zweiter Mechanismus daneben wäre ein
+zweiter Ort, an dem dieselben Zusicherungen neu bewiesen werden müssten.
+
+**Warum das den Schutzboden für Minderjährige (D9) nicht aushebelt:** `dmFrom` schützt davor,
+dass Fremde privat anschreiben können. Hier gibt es keine Fremden — beide Seiten haben
+vorher, im Kreis und sichtbar, etwas füreinander getan. Ohne die zweite Handlung entsteht
+der Raum für niemanden, auch nicht für Erwachsene, auch nicht für die Moderation.
+
+**Grenze:** Rückhalt aus einem anderen Kreis öffnet hier keine Tür. Sonst wäre der Kreis
+nicht mehr die Grenze, die er sein soll.
+
+**Enforced by:** `src/domain/rueckhalt.js` (`mutualSupporters`, `openRaum`), die Route
+`POST /c/:slug/rueckhalt` in `src/server.js`; `tests/circles.test.js` prüft, dass einseitiger
+Rückhalt keinen Raum öffnet, dass beide Seiten im selben Raum landen, dass Dritte den Raum
+weder sehen noch seine Beiträge irgendwo sonst zu Gesicht bekommen, dass er nicht föderiert
+und dass Rückhalt aus anderen Kreisen nicht zählt. `tests/ui.test.js` prüft die Absage über
+HTTP.
+
 ## D30 — Die vier Ansichten sind ein Weg, kein Menü
 
 **Chosen:** ein Kreis hat vier Ansichten, und sie stehen in dieser Reihenfolge:

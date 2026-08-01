@@ -19,6 +19,7 @@ Eigenschaften darunter:
 | **Kreise statt globaler Timeline** | Private Kreise, Themen- und lokale Kreise sind echte Räume mit Mitgliedschaft. Die Art des Kreises bestimmt die Sichtbarkeit — wer in einem privaten Kreis schreibt, kann das nicht versehentlich öffentlich tun. Private Kreise verlassen diesen Server nie und existieren für Nichtmitglieder nicht einmal als Seite. |
 | **Ein Himmel statt eines Stroms** | Die Startseite ist eine Fläche, die größer ist als der Bildschirm. Kreise liegen darin als Wolken; man schiebt sie hin und her und entdeckt dabei welche, die man nicht gesucht hat. Eigene liegen links, unbekannte rechts jenseits des Randes. Positionen sind fest — ein Kreis liegt morgen dort, wo er heute lag. |
 | **Vier Ansichten als Weg** | **Leute → Gespräch → Themen → Rückhalt.** Man verbindet sich mit Menschen, fängt an zu reden, aus Zuwendung werden Themen, daraus wird Rückhalt. Ein Klick tauscht nur die Kugeln im Inhaltsfenster; nach rechts wird es dichter und persönlicher — die Kugeln wachsen und rücken zusammen. Wie persönlich, entscheidet die Interaktion: ein Beitrag wird erst zum Thema, wenn jemand geantwortet hat oder dahintersteht. |
+| **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
 | **Der Kreis ist ein Chatfenster** | Ein Kreis öffnet als Gespräch: jede Nachricht ist eine Kugel mit Text daneben. Die Kugeln liegen versetzt und in wechselnder Größe — die Streuung kommt aus dem Beitrag, sieht zufällig aus und ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
 | **Die Kugel ist das Bedienelement** | Antippen öffnet, wer da spricht, wie der Rückhalt steht und wie man antwortet. Keine Knopfreihe unter jedem Text — und trotzdem kein Skript: Aufklappen ist ein `<details>`. Kugeln zur Zierde gibt es nicht: jede steht für einen Menschen, ein Thema, eine Nachricht oder einen Rückhalt. |
 | **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause) und zwei Knöpfe: Nachrichten, Einstellungen. Unten genau eine feste Leiste, und darin steht das Schreibfeld — in einem Kreis das des Kreises, sonst der Weg zur Kreiswahl. Die fünfteilige Tab-Leiste ist weg. |
@@ -63,7 +64,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 134 Tests
+npm test        # 141 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -94,7 +95,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   134 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   141 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)
@@ -115,14 +116,15 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 | `/@name/outbox`, `/followers`, `/following` | AS2-Collections |
 | `/.well-known/webfinger`, `/nodeinfo/2.1` | Discovery; NodeInfo veröffentlicht die Wellbeing-Haltung |
 | `/posts/:id/support` | Support geben oder zurücknehmen |
+| `/c/:slug/rueckhalt` | den geschützten Raum öffnen — nur bei gegenseitigem Rückhalt |
 | `/settings`, `/settings/export` | Einstellungen, Pause, Datenexport |
 | `/moderation` | Menschliche Moderationsliste mit Trefferquote je Sprache |
 
 ## Was noch fehlt
 
 Youth Panels mit Phasenlogik und Protokoll (der Kreistyp `panel` steht im Datenmodell, das
-Verfahren fehlt), die Onboarding-Strecke, Medien-Upload, Direktnachrichten, AT-Protocol-
-Brücke, Mehrsprachigkeit. Reihenfolge und Aufwand in `docs/lamb/produkt.md`, Abschnitt 8.
+Verfahren fehlt), die Onboarding-Strecke, Medien-Upload, allgemeine Direktnachrichten (den
+Rückhalt-Raum gibt es, den freien DM nicht), AT-Protocol-Brücke, Mehrsprachigkeit. Reihenfolge und Aufwand in `docs/lamb/produkt.md`, Abschnitt 8.
 
 ## Lizenz
 

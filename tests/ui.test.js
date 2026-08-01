@@ -14,7 +14,7 @@ import { createServer } from 'node:http';
 import { freshDatabase, makeAccount } from './helpers.js';
 import { createApp } from '../src/server.js';
 import { createSession } from '../src/domain/accounts.js';
-import { createCircle, join, searchCircles } from '../src/domain/circles.js';
+import { createCircle, findBySlug, join, searchCircles } from '../src/domain/circles.js';
 import { createPost, react } from '../src/domain/posts.js';
 import { circleSigil } from '../src/web/sigil.js';
 import { layoutSky } from '../src/web/sky.js';
@@ -536,19 +536,23 @@ describe('Chatfenster', () => {
   let server;
   let base;
   let cookie;
+  let mitglied;
 
   before(async () => {
     freshDatabase();
     const mira = makeAccount('wirtin', { displayName: 'Mira' });
     const jonas = makeAccount('gast7', { displayName: 'Jonas' });
+    mitglied = mira;
     cookie = `lamb_session=${createSession(mira.id).id}`;
 
     const kreis = createCircle(mira, { name: 'Kultur', kind: 'topic', purpose: 'Was läuft.' });
     join(kreis, jonas);
 
     const erste = createPost(mira, { content: 'Erste Nachricht', circleId: kreis.id, replyPolicy: 'everyone' });
-    createPost(jonas, { content: 'Antwort darauf', inReplyTo: erste.id });
+    const antwort = createPost(jonas, { content: 'Antwort darauf', inReplyTo: erste.id });
+    // Rückhalt in beide Richtungen — daraus entsteht der geschützte Raum.
     react(jonas.id, erste.id);
+    react(mira.id, antwort.id);
     await new Promise((r) => setTimeout(r, 1100));
     createPost(jonas, { content: 'Zweite Nachricht', circleId: kreis.id, replyPolicy: 'everyone' });
 
@@ -643,6 +647,31 @@ describe('Chatfenster', () => {
     assert.match(html, /Mira/);
     assert.match(html, /Moderation/);
     assert.match(html, /href="\/@gast7"/, 'und führt zu den Profilen');
+  });
+
+  it('bietet unter Rückhalt den geschützten Raum an — nur bei Gegenseitigkeit', async () => {
+    // Mira und Jonas stehen beide hintereinander (siehe Aufbau), also gibt es
+    // die Tür. Bei einseitigem Rückhalt gäbe es sie nicht.
+    const html = await load('/c/kultur?ansicht=support');
+    assert.match(html, /Ihr steht beide hintereinander/);
+    assert.match(html, /action="\/c\/kultur\/rueckhalt"/, 'und ein Weg, ihn zu öffnen');
+    assert.match(html, /Er verlässt diesen Server nie|verlässt diesen Server nie/);
+  });
+
+  it('öffnet den Raum nur mit gegenseitigem Rückhalt — auch über HTTP', async () => {
+    // Die Tür ist nicht nur in der Oberfläche zu: wer sie direkt anfragt, ohne
+    // dass der Rückhalt gegenseitig ist, kommt mit einer Absage zurück.
+    const fremd = makeAccount('fremde7', { displayName: 'Fremde' });
+    join(findBySlug('kultur'), fremd);
+    const fremdCookie = `lamb_session=${createSession(fremd.id).id}`;
+    const antwort = await fetch(`${base}/c/kultur/rueckhalt`, {
+      method: 'POST',
+      headers: { cookie: fremdCookie, 'content-type': 'application/x-www-form-urlencoded' },
+      body: `account_id=${mitglied.id}`,
+      redirect: 'manual',
+    });
+    assert.equal(antwort.status, 303);
+    assert.match(decodeURIComponent(antwort.headers.get('location')), /beide hinter etwas vom anderen steht/);
   });
 
   it('zeigt unter Rückhalt, wo Support gegeben wurde — als Menschen', async () => {

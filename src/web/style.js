@@ -794,6 +794,18 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .orb-row-text .p-meta { display: block; font-size: .74rem; color: var(--ink-muted); margin-top: .15rem; }
 .orb-row-note { display: block; font-size: .8rem; color: var(--ember-deep); margin-top: .3rem; }
 
+/* Der geschützte Raum steht über dem, was öffentlich getragen wurde. */
+.raum-row { align-items: center; gap: .8rem; }
+.raum-row .orb-row-text { flex: 1; }
+.raum-row form { margin: 0; }
+.raum-hinweis {
+  font-size: .82rem;
+  color: var(--ink-muted);
+  margin: .8rem 0 1.4rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--line-soft);
+}
+
 /* Der Weg: Leute — Gespräch — Themen — Rückhalt. Nach rechts wird es
    persönlicher, und das sieht man: die Kugeln rücken näher zusammen, werden
    voller und stehen ruhiger. Vier Stufen, kein Rauschen dazwischen. */

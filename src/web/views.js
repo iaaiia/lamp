@@ -864,6 +864,7 @@ function orbRow(href, orbId, titel, meta, notiz = '') {
 export function circlePage({
   viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount,
   pending, error, writeOpen = false, nonce = '', ansicht = 'chat', threads = [], leute = [], gestuetzt = [],
+  gegenseitig = [],
 }) {
 
   const joinControl = viewer && !isMember
@@ -935,6 +936,36 @@ ${posts.length
         .join('')}</div>`
     : '<p class="chat-start">Noch niemand hier.</p>';
 
+  /**
+   * Der geschützte Raum. Er entsteht nicht durch eine Einladung, sondern durch
+   * zwei Handlungen: beide standen hintereinander. Deshalb steht hier kein
+   * „Einladen“, sondern „Raum öffnen“ — und nur bei denen, bei denen es
+   * gegenseitig ist.
+   */
+  const raeume = gegenseitig.length
+    ? `<div class="orb-list rueckhalt">${gegenseitig
+        .map((person, i) => `<div class="orb-row raum-row">
+    <span class="orb-row-mark">${orbHtml(`raumorb-${i}`)}</span>
+    <span class="orb-row-text">
+      <strong>${escapeHtml(person.display_name || person.username)}</strong>
+      <span class="p-meta mono">Ihr steht beide hintereinander</span>
+    </span>
+    ${person.raum
+      ? `<a class="button secondary small" href="/c/${escapeHtml(person.raum.slug)}">Raum betreten</a>`
+      : `<form method="post" action="/c/${escapeHtml(circle.slug)}/rueckhalt">
+           <input type="hidden" name="account_id" value="${person.id}">
+           <button class="support tiny" type="submit">${supportArc}<span>Raum öffnen</span></button>
+         </form>`}
+  </div>`)
+        .join('')}</div>`
+    : '';
+
+  const raumHinweis = viewer && isMember
+    ? `<p class="raum-hinweis">Ein Rückhalt-Raum ist ein privater Kreis für genau zwei. Er entsteht,
+       wenn ihr beide hinter etwas vom anderen steht — er verlässt diesen Server nie, und für alle
+       anderen gibt es ihn nicht.</p>`
+    : '';
+
   const supportListe = gestuetzt.length
     ? `<div class="orb-list">${gestuetzt
         .map((p, i) =>
@@ -954,14 +985,17 @@ ${posts.length
     chat: posts.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `msgorb-${i}`, i)),
     themen: threads.map((t, i) => personOrbCss(`${t.username}${t.domain ?? ''}`, String(t.id), `themaorb-${i}`, i)),
     leute: leute.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `p${m.id}`, `leuteorb-${i}`, i)),
-    support: gestuetzt.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `stuetzorb-${i}`, i)),
+    support: [
+      ...gegenseitig.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `r${m.id}`, `raumorb-${i}`, i)),
+      ...gestuetzt.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `stuetzorb-${i}`, i)),
+    ],
   }[ansicht]?.join('') ?? '';
 
   const inhalt = {
     chat: gespraech,
     themen: themenListe,
     leute: leuteListe,
-    support: supportListe,
+    support: `${raeume}${raumHinweis}${supportListe}`,
   }[ansicht] ?? gespraech;
 
   // Die feste Leiste unten ist hier das Schreibfeld dieses Kreises.

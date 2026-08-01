@@ -65,6 +65,7 @@ import {
   members,
   pendingRequests,
 } from './domain/circles.js';
+import { findRaum, mutualSupporters, openRaum } from './domain/rueckhalt.js';
 import {
   actorDocument,
   collection,
@@ -563,12 +564,38 @@ router.get('/c/:slug', (ctx, res) => {
           supportSentence: metricsVisible(p, ctx.viewer) ? supportSentence(p.id) : null,
         }))
       : [],
+    // Der geschützte Raum: nur für die eigene Sicht, nie für andere berechnet.
+    gegenseitig: ansicht === 'support' && ctx.viewer && member
+      ? mutualSupporters(circle.id, ctx.viewer.id).map((person) => ({
+          ...person,
+          raum: findRaum(circle, ctx.viewer.id, person.id),
+        }))
+      : [],
     memberCount: memberCount(circle.id),
     pending: ctx.viewer && isModerator(circle.id, ctx.viewer.id) ? pendingRequests(circle.id) : [],
     error: ctx.url.searchParams.get('error'),
     // Aus dem Himmel führt ein Weg direkt ins Schreibfeld, statt über zwei Seiten.
     writeOpen: ctx.url.searchParams.get('write') === '1',
   }), nonce);
+});
+
+/**
+ * Den Rückhalt-Raum öffnen. Die Prüfung, ob der Rückhalt gegenseitig ist, liegt
+ * in der Domäne — hier steht sie nicht noch einmal, damit es nicht zwei Wahrheiten
+ * gibt.
+ */
+router.post('/c/:slug/rueckhalt', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const circle = findBySlug(ctx.params.slug);
+  if (!circle || !isReadable(circle, ctx.viewer)) return notFound(ctx, res);
+  if (!isMember(circle.id, ctx.viewer.id)) return notFound(ctx, res);
+  try {
+    const raum = openRaum(circle, ctx.viewer, Number(ctx.form.account_id));
+    redirect(res, `/c/${encodeURIComponent(raum.slug)}`);
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+    redirect(res, `/c/${encodeURIComponent(circle.slug)}?ansicht=support&error=${encodeURIComponent(error.message)}`);
+  }
 });
 
 router.post('/c/:slug/posts', (ctx, res) => {

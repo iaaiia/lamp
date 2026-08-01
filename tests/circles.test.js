@@ -28,9 +28,10 @@ import {
   memberCount,
   slugify,
 } from '../src/domain/circles.js';
-import { createPost, isVisibleTo } from '../src/domain/posts.js';
+import { createPost, isVisibleTo, react } from '../src/domain/posts.js';
 import { accountTimeline, timeline } from '../src/domain/feeds.js';
 import { requestFollow } from '../src/domain/safety.js';
+import { mutualSupporters, openRaum } from '../src/domain/rueckhalt.js';
 
 beforeEach(freshDatabase);
 
@@ -216,5 +217,83 @@ describe('Übersicht', () => {
 
     assert.equal(discoverable(seeker.id).length, 0);
     assert.equal(circlesFor(seeker.id).length, 1);
+  });
+});
+
+describe('Rückhalt-Raum', () => {
+  const aufbau = () => {
+    const mira = makeAccount('mira');
+    const jonas = makeAccount('jonas');
+    const kim = makeAccount('kim');
+    const kreis = createCircle(mira, { name: 'Kultur Leipzig', kind: 'topic', joining: 'open' });
+    join(kreis, jonas);
+    join(kreis, kim);
+    const vonMira = createPost(mira, { content: 'Mir gehts gerade nicht gut.', circleId: kreis.id });
+    const vonJonas = createPost(jonas, { content: 'Bei mir auch nicht.', circleId: kreis.id });
+    return { mira, jonas, kim, kreis, vonMira, vonJonas };
+  };
+
+  it('entsteht nur, wenn beide hintereinander stehen', () => {
+    const { mira, jonas, kreis, vonMira, vonJonas } = aufbau();
+
+    // Einseitig: noch kein Raum.
+    react(jonas.id, vonMira.id);
+    assert.equal(mutualSupporters(kreis.id, mira.id).length, 0);
+    assert.throws(() => openRaum(kreis, mira, jonas.id), DomainError);
+
+    // Und jetzt von beiden Seiten.
+    react(mira.id, vonJonas.id);
+    assert.deepEqual(mutualSupporters(kreis.id, mira.id).map((p) => p.username), ['jonas']);
+    const raum = openRaum(kreis, mira, jonas.id);
+    assert.equal(raum.kind, 'private');
+    assert.equal(memberCount(raum.id), 2);
+  });
+
+  it('führt zweimal Öffnen in denselben Raum, nicht in zwei', () => {
+    const { mira, jonas, kreis, vonMira, vonJonas } = aufbau();
+    react(jonas.id, vonMira.id);
+    react(mira.id, vonJonas.id);
+
+    const erster = openRaum(kreis, mira, jonas.id);
+    const zweiter = openRaum(kreis, jonas, mira.id);
+    assert.equal(erster.id, zweiter.id, 'beide Seiten landen im selben Raum');
+  });
+
+  it('existiert für Dritte nicht — auch nicht als verschlossene Tür', () => {
+    const { mira, jonas, kim, kreis, vonMira, vonJonas } = aufbau();
+    react(jonas.id, vonMira.id);
+    react(mira.id, vonJonas.id);
+    const raum = openRaum(kreis, mira, jonas.id);
+
+    assert.equal(isReadable(raum, kim), false, 'ein Dritter sieht den Raum nicht');
+    assert.equal(federates(raum), false, 'und er verlässt diesen Server nie');
+
+    createPost(mira, { content: 'Magst du reden?', circleId: raum.id });
+    assert.equal(circleTimeline(raum.id).posts.length, 1);
+    assert.equal(
+      timeline(kim).posts.some((p) => p.content === 'Magst du reden?'),
+      false,
+      'und nichts davon taucht anderswo auf',
+    );
+  });
+
+  it('lässt sich nicht mit sich selbst öffnen', () => {
+    const { mira, kreis } = aufbau();
+    assert.throws(() => openRaum(kreis, mira, mira.id), DomainError);
+  });
+
+  it('zählt nur Rückhalt aus diesem Kreis', () => {
+    // Sonst wäre der Kreis nicht mehr die Grenze: was woanders passiert ist,
+    // öffnet hier keine Tür.
+    const { mira, jonas, kreis } = aufbau();
+    const anderer = createCircle(mira, { name: 'Ganz woanders', kind: 'topic', joining: 'open' });
+    join(anderer, jonas);
+    const a = createPost(mira, { content: 'dort', circleId: anderer.id });
+    const b = createPost(jonas, { content: 'auch dort', circleId: anderer.id });
+    react(jonas.id, a.id);
+    react(mira.id, b.id);
+
+    assert.equal(mutualSupporters(kreis.id, mira.id).length, 0, 'im anderen Kreis, nicht in diesem');
+    assert.equal(mutualSupporters(anderer.id, mira.id).length, 1);
   });
 });

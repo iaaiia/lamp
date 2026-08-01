@@ -45,6 +45,11 @@ export const STYLESHEET = `
   --radius-m: 16px;
   --radius-l: 24px;
 
+  /* Korn für alle Kugeln — als Daten-URI, also ohne eine einzige Anfrage.
+     Erzeugt mit feTurbulence, damit die Flächen nach Farbe auf Papier aussehen
+     statt nach gerendertem Glas. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.95'/%3E%3C/svg%3E");
+
   --display: ui-sans-serif, "Inter Tight", "Segoe UI", Roboto, sans-serif;
   --body: system-ui, -apple-system, "Inter", "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -261,6 +266,13 @@ body.landing {
   background: linear-gradient(178deg, #0E1A33 0%, #16294B 42%, #1E3A63 100%);
   color: #F3F5F9;
   overflow-x: hidden;
+
+  /* Eine Serifenschrift für die eine große Zeile — wie im Vorbild. Keine
+     Webschrift: die CSP lädt nichts von fremden Servern, und eine eingebettete
+     Datei wöge mehr als die halbe Seite. Der Systemstapel trifft die Anmutung
+     nah genug. */
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Times New Roman", serif;
 }
 
 /* Die Fläche ist höher als der Bildschirm: erst der Inhalt, darunter offener
@@ -311,30 +323,40 @@ body.landing {
   touch-action: none;
 }
 .f-orb.is-held { cursor: grabbing; z-index: 3; }
-/* Auf dem Plakat sind die Kugeln Gegenstände, keine Schleier: klare Kante,
-   weiche Zeichnung nur innen. Sonst greift man nach etwas, das keinen Rand hat. */
+/* Die Kugeln sind körnig und zum Rand hin verblassend — wie Farbe auf Papier,
+   nicht wie gerendertes Glas. Zwei Schichten: der Farbverlauf, darüber ein
+   Rauschen aus feTurbulence als Daten-URI (kein Bild vom Server, keine Anfrage).
+   Die weiche Maske nimmt der Kugel die harte Kante zurück. */
 .f-body {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  overflow: hidden;
-  background:
+  background-image:
+    var(--grain),
     radial-gradient(circle at var(--ox, 34%) var(--oy, 28%),
-      color-mix(in oklab, var(--c1) 85%, white) 0%,
-      var(--c1) 30%,
-      color-mix(in oklab, var(--c1) 55%, var(--c2)) 58%,
-      var(--c2) 88%);
-  box-shadow:
-    inset -8% -12% 18% -6% rgba(0, 0, 0, .45),
-    0 24px 60px -24px rgba(0, 0, 0, .65);
+      color-mix(in oklab, var(--c1) 82%, white) 0%,
+      var(--c1) 26%,
+      color-mix(in oklab, var(--c1) 58%, var(--c2)) 56%,
+      var(--c2) 92%);
+  /* Feste Korngröße, unabhängig vom Durchmesser: sonst wird das Rauschen auf
+     großen Kugeln zu Flecken und auf kleinen zu Staub. */
+  background-size: 160px 160px, cover;
+  background-blend-mode: overlay, normal;
+  /* Kein Weichzeichner mehr — er bügelt genau das Korn weg, um das es geht.
+     Die weiche Kante macht die Maske. */
+  filter: saturate(.9) contrast(1.02);
+  opacity: .86;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 38%, rgba(0, 0, 0, .58) 64%, rgba(0, 0, 0, .18) 84%, transparent 97%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 38%, rgba(0, 0, 0, .58) 64%, rgba(0, 0, 0, .18) 84%, transparent 97%);
   pointer-events: none;
 }
+/* Ein blasser Hof, der die Kugel in den Himmel einbettet. */
 .f-orb::after {
   content: "";
   position: absolute;
-  inset: -14%;
+  inset: -18%;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in oklab, var(--c1) 26%, transparent) 0%, transparent 62%);
+  background: radial-gradient(circle, color-mix(in oklab, var(--c1) 20%, transparent) 0%, transparent 64%);
   pointer-events: none;
 }
 .f-orb.is-new { animation: auftauchen .9s ease-out forwards, drift 44s ease-in-out .9s infinite alternate; }
@@ -348,25 +370,27 @@ body.landing {
 }
 
 /* Der Inhalt liegt dahinter — Text und Suche bleiben aber bedienbar, deshalb
-   nimmt das Kugelfeld nur dort Eingaben an, wo eine Kugel liegt. */
+   nimmt das Kugelfeld nur dort Eingaben an, wo eine Kugel liegt.
+   Der Satz sitzt tiefer als die Mitte, wie im Vorbild: oben bleibt Himmel. */
 .stage-content {
   position: relative;
   z-index: 1;
   text-align: center;
-  padding: 2rem 1.5rem 3rem;
+  padding: 0 1.5rem 2rem;
   max-width: 34rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.1rem;
+  margin-top: 22svh;
 }
 .stage-title {
-  font-family: var(--display);
-  font-size: clamp(2.8rem, 13vw, 4.6rem);
-  font-weight: 300;
-  letter-spacing: -.045em;
-  line-height: .98;
-  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(3.4rem, 17vw, 6.5rem);
+  font-weight: 400;
+  letter-spacing: -.02em;
+  line-height: .96;
+  margin: 0 0 .3rem;
   text-wrap: balance;
 }
 
@@ -374,11 +398,12 @@ body.landing {
   display: flex;
   align-items: center;
   gap: .4rem;
-  width: min(26rem, 100%);
+  width: min(27rem, 100%);
   background: #FFFFFF;
   border-radius: 999px;
-  padding: .4rem .4rem .4rem 1.2rem;
-  box-shadow: 0 18px 50px -20px rgba(0, 0, 0, .7);
+  padding: .45rem .45rem .45rem 1.4rem;
+  box-shadow: 0 20px 60px -22px rgba(0, 0, 0, .75);
+  margin-top: .5rem;
 }
 .stage-search input[type=text] {
   flex: 1;
@@ -387,9 +412,9 @@ body.landing {
   border: 0;
   border-radius: 0;
   background: transparent;
-  padding: .7rem 0;
+  padding: .85rem 0;
   font: inherit;
-  font-size: 1rem;
+  font-size: 1.02rem;
   color: #14171D;
 }
 .stage-search input::placeholder { color: #6B7180; }
@@ -397,14 +422,15 @@ body.landing {
 .stage-search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .55), 0 18px 50px -20px rgba(0, 0, 0, .7); }
 .stage-search button {
   border: 0;
-  background: #1E3A63;
+  background: #16294B;
   color: #FFFFFF;
-  min-height: 2.6rem;
-  padding: .65rem 1.3rem;
+  min-height: 3rem;
+  padding: .75rem 1.5rem;
+  font-size: .98rem;
 }
 .stage-search button:hover { background: #14263F; border-color: transparent; }
 
-.stage-links { display: flex; gap: .7rem; margin: 0; font-size: .95rem; }
+.stage-links { display: flex; gap: .7rem; margin: .2rem 0 0; font-size: .9rem; }
 .stage-links a { color: #DCE4F2; text-decoration-color: rgba(220, 228, 242, .5); }
 .stage-links a:hover { color: #FFFFFF; }
 .stage-links span { color: rgba(220, 228, 242, .45); }
@@ -502,7 +528,10 @@ body.landing {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background:
+  background-size: 160px 160px, cover, cover;
+  background-blend-mode: overlay, normal, normal;
+  background-image:
+    var(--grain),
     radial-gradient(circle at 38% 32%, var(--c2) 0%, transparent 48%),
     radial-gradient(circle at 52% 55%, var(--c1) 0%, color-mix(in oklab, var(--c1) 50%, transparent) 54%, transparent 76%);
   filter: blur(5px);
@@ -767,7 +796,10 @@ body.low-stimulus .cloud { animation: none; }
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background:
+  background-size: 160px 160px, cover;
+  background-blend-mode: overlay, normal;
+  background-image:
+    var(--grain),
     radial-gradient(circle at var(--ox, 36%) var(--oy, 30%),
       var(--c2) 0%,
       color-mix(in oklab, var(--c2) 70%, transparent) 22%,
@@ -777,10 +809,13 @@ body.low-stimulus .cloud { animation: none; }
       var(--c1) 38%,
       color-mix(in oklab, var(--c1) 45%, transparent) 62%,
       transparent 78%);
-  filter: blur(3px);
-  transition: transform .25s ease, filter .25s ease;
+  filter: saturate(.94);
+  opacity: .92;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 42%, rgba(0, 0, 0, .6) 68%, transparent 94%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 42%, rgba(0, 0, 0, .6) 68%, transparent 94%);
+  transition: transform .25s ease, opacity .25s ease;
 }
-.tile:hover .orb-body { transform: scale(1.08); filter: blur(3px); }
+.tile:hover .orb-body { transform: scale(1.06); opacity: 1; }
 
 /* Private Kreise tragen die geschlossene zweite Schale — wie überall sonst. */
 .tile.closed .orb-mark::after {

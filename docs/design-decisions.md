@@ -197,6 +197,41 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D23 — Körnig und verblassend, nicht glatt
+
+**Chosen:** alle Kugeln — auf dem Plakat, auf den Kacheln, am Himmel — tragen dieselbe
+Körnung und verblassen zum Rand hin. Das Korn ist ein `feTurbulence`-Rauschen als
+Daten-URI in einer einzigen CSS-Variablen.
+
+**Why:** glatt gerenderte Verläufe sehen nach Glas aus. Körnig und mit weicher Kante sehen
+sie nach Farbe auf Papier aus, und genau das war gemeint. Die weiche Kante macht dabei
+mehr als hübsch zu sein: Eine Kugel mit harter Kante liegt *auf* dem Himmel, eine
+verblassende liegt *in* ihm.
+
+**Zwei Dinge, die beim Bauen zu lernen waren:** Ein Weichzeichner auf der Kugel bügelt
+genau das Korn weg, um das es geht — die Weichheit muss aus der Maske kommen, nicht aus
+`blur`. Und die Korngröße muss fest sein (`background-size`), sonst wird das Rauschen auf
+großen Kugeln zu Flecken und auf kleinen zu Staub.
+
+**Als Daten-URI**, also ohne eine einzige Anfrage: kein Bild vom Server, nichts, was ein
+Zählpixel sein könnte.
+
+**Enforced by:** `--grain` in `src/web/style.js`; `tests/ui.test.js` prüft, dass alle drei
+Stellen dieselbe Variable benutzen und dass die Kugeln eine Maske tragen.
+
+## D24 — Eine Serifenschrift für die eine große Zeile
+
+**Chosen:** die Überschrift der Startseite steht in einer Serifenschrift aus dem
+Systemstapel, groß, zweizeilig, tiefer als die Bildmitte. Die Anwendung selbst bleibt bei
+der Sans.
+
+**Why:** so sieht die Vorlage aus, und der Kontrast trägt: eine ruhige, klassische Zeile
+über einer Oberfläche, die sonst nüchtern gesetzt ist. Keine Webschrift — die CSP lädt
+nichts von fremden Servern, und eine eingebettete Schriftdatei wöge mehr als die halbe
+Seite.
+
+**Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
+
 ## D22 — Die Startseite ist die eine Ausnahme von der Skriptfreiheit
 
 **Chosen:** die abgemeldete Startseite ist ein Plakat: „lamb ist hier“, darunter ein

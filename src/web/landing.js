@@ -72,7 +72,7 @@ export function landingPage({ query = '' }) {
   <div class="orbfield" data-orbs aria-hidden="true">${orbs}</div>
 
   <main id="main" tabindex="-1" class="stage-content">
-    <h1 class="stage-title">${config.instanceName} ist hier</h1>
+    <h1 class="stage-title">${config.instanceName}<br>ist hier</h1>
 
     <form class="stage-search" method="get" action="/discover" role="search">
       <label for="q" class="visually-hidden">Kreis suchen</label>

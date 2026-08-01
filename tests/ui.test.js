@@ -358,7 +358,7 @@ describe('Startseite', () => {
 
   it('sagt in einem Satz, worum es geht, und bietet genau eine Handlung', async () => {
     const html = await load();
-    assert.match(html, /<h1 class="stage-title">lamb ist hier<\/h1>/);
+    assert.match(html, /<h1 class="stage-title">lamb<br>ist hier<\/h1>/);
     assert.match(html, /<form class="stage-search" method="get" action="\/discover"/);
     assert.equal((html.match(/<button/g) ?? []).length, 1, 'genau eine Schaltfläche');
   });
@@ -394,5 +394,23 @@ describe('Startseite', () => {
     for (const verboten of ['fetch(', 'XMLHttpRequest', 'localStorage', 'sessionStorage', 'document.cookie', 'navigator.send']) {
       assert.ok(!skript.includes(verboten), `Skript enthält ${verboten}`);
     }
+  });
+});
+
+describe('Körnung', () => {
+  it('benutzt dieselbe Körnung für alle Kugeln — und lädt sie nicht nach', () => {
+    // Ein Daten-URI: keine Anfrage, kein Bild vom Server, kein Zählpixel.
+    assert.match(STYLESHEET, /--grain: url\("data:image\/svg\+xml/);
+    assert.match(STYLESHEET, /feTurbulence/);
+
+    const stellen = (STYLESHEET.match(/var\(--grain\)/g) ?? []).length;
+    assert.equal(stellen, 3, 'Plakat, Kacheln und Wolken tragen dieselbe Körnung');
+  });
+
+  it('zeichnet die Kugeln zum Rand hin verblassend', () => {
+    // Ohne Maske hätte die Kugel eine harte Kante und läge auf dem Himmel,
+    // statt in ihm zu liegen.
+    assert.match(STYLESHEET, /\.f-body \{[^}]*mask-image: radial-gradient/s);
+    assert.match(STYLESHEET, /\.orb-body \{[^}]*mask-image: radial-gradient/s);
   });
 });

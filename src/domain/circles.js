@@ -293,7 +293,12 @@ export function circleTimeline(circleId, { before = null, limit = 20 } = {}) {
 /* ------------------------------------------------ Ansichten im Chatfenster */
 
 /**
- * Themen: die Gesprächsanfänge eines Kreises mit ihrem Verlauf.
+ * Themen: nicht alles, was gesagt wurde, sondern woraus etwas geworden ist.
+ * Ein Beitrag wird zum Thema, wenn jemand geantwortet hat oder jemand
+ * dahintersteht — Themen definieren sich über die Zuwendung des Kreises, nicht
+ * über die Absicht der Schreibenden. Sonst wäre „Themen“ nur das Gespräch
+ * zweimal.
+ *
  * Sortiert nach letzter Regung, nicht nach Menge — wo zuletzt gesprochen wurde,
  * steht oben. Reichweite ordnet hier nichts.
  */
@@ -301,10 +306,12 @@ export function circleThreads(circleId, limit = 30) {
   return all(
     `SELECT p.*, a.username, a.domain, a.display_name,
             (SELECT COUNT(*) FROM posts r WHERE r.in_reply_to = p.id AND r.deleted_at IS NULL) AS reply_count,
+            (SELECT COUNT(*) FROM reactions x WHERE x.post_id = p.id) AS support_count,
             COALESCE((SELECT MAX(r.created_at) FROM posts r WHERE r.in_reply_to = p.id AND r.deleted_at IS NULL),
                      p.created_at) AS last_activity
      FROM posts p JOIN accounts a ON a.id = p.account_id
      WHERE p.circle_id = ? AND p.deleted_at IS NULL AND p.in_reply_to IS NULL AND a.paused_at IS NULL
+       AND (reply_count > 0 OR support_count > 0)
      ORDER BY last_activity DESC
      LIMIT ?`,
     circleId,

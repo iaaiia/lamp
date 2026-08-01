@@ -13,7 +13,6 @@ import { KIND_LABELS } from '../domain/circles.js';
 import { circleSigil } from './sigil.js';
 import { layoutSky } from './sky.js';
 import { orbCss, orbHtml, personOrbCss } from './orb.js';
-import { stageOrbs, stageOrbsCss, stageOrbsHtml } from './stage.js';
 import {
   iconSearch,
   iconSettings,
@@ -694,7 +693,6 @@ export function tileGrid(circles, { heroFirst = false, offset = 0 } = {}) {
 }
 
 export function discoverPage({ viewer, prefs, query, results, nonce }) {
-  const orbs = stageOrbs(query || 'entdecken', 5);
   const grid = tileGrid(results, { heroFirst: Boolean(results[0]?.last_post_content) });
 
   const list = results.length
@@ -712,9 +710,8 @@ export function discoverPage({ viewer, prefs, query, results, nonce }) {
     // Dieselbe Welt wie auf der Startseite: Wer sucht, fällt nicht in ein
     // anderes Produkt.
     stage: true,
-    head: `<style nonce="${escapeHtml(nonce)}">${stageOrbsCss(orbs)}\n${grid.css}</style>`,
+    head: `<style nonce="${escapeHtml(nonce)}">${grid.css}</style>`,
     body: `
-${stageOrbsHtml(orbs)}
 <form method="get" action="/discover" role="search" class="stage-search find">
   <label for="q" class="visually-hidden">Kreis suchen</label>
   <input type="text" id="q" name="q" value="${escapeHtml(query ?? '')}" placeholder="Wonach suchst du?" autocomplete="off">
@@ -821,14 +818,25 @@ function chatMessage(post, replies, viewer, orbId) {
 }
 
 /**
- * Die Ansichten dieses Kreises als eine Zeile Wörter. Vorher waren es vier
- * bunte Kugeln mit Beschriftung — hübsch, aber sie machten aus einer Zeile
- * einen Block und aus einer Nebensache eine Hauptsache.
+ * Die vier Ansichten sind kein Menü, sondern ein Weg: **Leute — Gespräch —
+ * Themen — Rückhalt**. Man verbindet sich mit Menschen, fängt Gespräche an,
+ * findet darin Themen, und aus Themen wird Rückhalt. Nach rechts wird es
+ * persönlicher, und man sieht es: die Kugeln werden größer und dichter.
  */
+const ANSICHTEN = [
+  ['leute', 'Leute', 1, 'Wen du hier triffst. Von hier aus verbindest du dich.'],
+  ['chat', 'Gespräch', 2, 'Was gesagt wird. Antworten macht aus Mitlesen ein Gespräch.'],
+  ['themen', 'Themen', 3, 'Woraus etwas geworden ist — Themen entstehen, wo Rückhalt hingeht.'],
+  ['support', 'Rückhalt', 4, 'Wer hier von wem getragen wird. Der persönlichste Ort im Kreis.'],
+];
+
+const TIEFE = Object.fromEntries(ANSICHTEN.map(([id, , stufe]) => [id, stufe]));
+const LABEL = Object.fromEntries(ANSICHTEN.map(([id, label]) => [id, label]));
+const SATZ = Object.fromEntries(ANSICHTEN.map(([id, , , satz]) => [id, satz]));
+
 function viewSwitch(circle, aktiv) {
-  const ansichten = [['chat', 'Gespräch'], ['themen', 'Themen'], ['leute', 'Leute'], ['support', 'Rückhalt']];
   return `<nav class="views" aria-label="Ansichten in diesem Kreis">
-  ${ansichten
+  ${ANSICHTEN
     .map(
       ([id, label]) => `<a class="view${aktiv === id ? ' is-active' : ''}"
       href="/c/${encodeURIComponent(circle.slug)}${id === 'chat' ? '' : `?ansicht=${id}`}"
@@ -838,11 +846,25 @@ function viewSwitch(circle, aktiv) {
 </nav>`;
 }
 
+/**
+ * Eine Zeile im Inhaltsfenster: Kugel links, Text rechts. Dasselbe Bild wie im
+ * Gespräch — in jeder Ansicht trägt die Kugel etwas, keine liegt zur Zierde da.
+ */
+function orbRow(href, orbId, titel, meta, notiz = '') {
+  return `<a class="orb-row" href="${href}">
+  <span class="orb-row-mark">${orbHtml(orbId)}</span>
+  <span class="orb-row-text">
+    <strong>${titel}</strong>
+    <span class="p-meta mono">${meta}</span>
+    ${notiz ? `<span class="orb-row-note">${notiz}</span>` : ''}
+  </span>
+</a>`;
+}
+
 export function circlePage({
   viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount,
   pending, error, writeOpen = false, nonce = '', ansicht = 'chat', threads = [], leute = [], gestuetzt = [],
 }) {
-  const orbs = stageOrbs(circle.slug, 4);
 
   const joinControl = viewer && !isMember
     ? circle.joining === 'invite'
@@ -883,49 +905,57 @@ ${posts.length
     ? posts.map((p, i) => chatMessage(p, p.replies ?? [], viewer, `msgorb-${i}`)).join('')
     : '<p class="chat-start">Noch nichts gesagt. Fang an.</p>'}`;
 
+  // Themen: jeder Gesprächsanfang eine Kugel. Größe und Versatz kommen aus dem
+  // Beitrag, die Farbe von der Person, die ihn angefangen hat.
   const themenListe = threads.length
-    ? `<ul class="topics">${threads
-        .map(
-          (t) => `<li><a href="/posts/${t.id}">
-      <span class="t-text">${escapeHtml(t.content.length > 90 ? `${t.content.slice(0, 90).trimEnd()}…` : t.content)}</span>
-      <span class="t-meta mono">${escapeHtml(t.display_name || t.username)} · ${t.reply_count} ${
-        Number(t.reply_count) === 1 ? 'Antwort' : 'Antworten'
-      } · ${timeTag(t.last_activity)}</span>
-    </a></li>`,
-        )
-        .join('')}</ul>`
-    : '<p class="card">Noch keine Themen.</p>';
+    ? `<div class="orb-list">${threads
+        .map((t, i) =>
+          orbRow(
+            `/posts/${t.id}`,
+            `themaorb-${i}`,
+            escapeHtml(t.content.length > 90 ? `${t.content.slice(0, 90).trimEnd()}…` : t.content),
+            `${escapeHtml(t.display_name || t.username)} · ${t.reply_count} ${
+              Number(t.reply_count) === 1 ? 'Antwort' : 'Antworten'
+            } · ${timeTag(t.last_activity)}`,
+          ))
+        .join('')}</div>`
+    : '<p class="chat-start">Noch keine Themen. Sie entstehen im Gespräch.</p>';
 
   const leuteListe = leute.length
-    ? `<ul class="people">${leute
-        .map(
-          (m) => `<li>
-      <a href="/@${escapeHtml(m.username)}">
-        <span class="faces"><span>${escapeHtml(initials(m))}</span></span>
-        <span class="p-text">
-          <strong>${escapeHtml(m.display_name || m.username)}</strong>
-          <span class="p-meta mono">${escapeHtml(handleOf(m))}${
-            m.role === 'moderator' ? ' · Moderation' : ''
-          } · ${m.post_count} ${Number(m.post_count) === 1 ? 'Beitrag' : 'Beiträge'}</span>
-        </span>
-      </a>
-    </li>`,
-        )
-        .join('')}</ul>`
-    : '<p class="card">Noch niemand hier.</p>';
+    ? `<div class="orb-list">${leute
+        .map((m, i) =>
+          orbRow(
+            `/@${escapeHtml(m.username)}`,
+            `leuteorb-${i}`,
+            escapeHtml(m.display_name || m.username),
+            `${escapeHtml(handleOf(m))}${m.role === 'moderator' ? ' · Moderation' : ''} · ${
+              m.post_count
+            } ${Number(m.post_count) === 1 ? 'Beitrag' : 'Beiträge'}`,
+          ))
+        .join('')}</div>`
+    : '<p class="chat-start">Noch niemand hier.</p>';
 
   const supportListe = gestuetzt.length
-    ? gestuetzt
-        .map(
-          (p) => `<article class="card support-card">
-      <p class="bubble-head"><a href="/@${escapeHtml(p.username)}">${escapeHtml(p.display_name || p.username)}</a>
-        <span class="bubble-time">${timeTag(p.created_at)}</span></p>
-      <p class="bubble-text">${escapeHtml(p.content.length > 200 ? `${p.content.slice(0, 200).trimEnd()}…` : p.content)}</p>
-      <p class="support-note">${escapeHtml(p.supportSentence ?? 'Rückhalt bleibt im Kreis')}</p>
-    </article>`,
-        )
-        .join('')
-    : '<p class="card">Hier hat noch niemand Rückhalt bekommen.</p>';
+    ? `<div class="orb-list">${gestuetzt
+        .map((p, i) =>
+          orbRow(
+            `/posts/${p.id}`,
+            `stuetzorb-${i}`,
+            escapeHtml(p.content.length > 120 ? `${p.content.slice(0, 120).trimEnd()}…` : p.content),
+            `${escapeHtml(p.display_name || p.username)} · ${timeTag(p.created_at)}`,
+            escapeHtml(p.supportSentence ?? 'Rückhalt bleibt im Kreis'),
+          ))
+        .join('')}</div>`
+    : '<p class="chat-start">Hier hat noch niemand Rückhalt bekommen.</p>';
+
+  // Die Kugeln jeder Ansicht: Farbe von der Person, Größe und Versatz von der
+  // Sache. Erzeugt statt gewürfelt — verspielt, aber jedes Mal gleich.
+  const orbStyles = {
+    chat: posts.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `msgorb-${i}`, i)),
+    themen: threads.map((t, i) => personOrbCss(`${t.username}${t.domain ?? ''}`, String(t.id), `themaorb-${i}`, i)),
+    leute: leute.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `p${m.id}`, `leuteorb-${i}`, i)),
+    support: gestuetzt.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `stuetzorb-${i}`, i)),
+  }[ansicht]?.join('') ?? '';
 
   const inhalt = {
     chat: gespraech,
@@ -956,11 +986,11 @@ ${posts.length
     bar: { title: circle.name },
     stage: true,
     writebar: composerBar,
-    head: `<style nonce="${escapeHtml(nonce)}">${stageOrbsCss(orbs)}${posts
-      .map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `msgorb-${i}`, i))
-      .join('')}</style>`,
+    // Nur Kugeln, die etwas tragen: die des Gesprächs, der Themen, der Leute,
+    // des Rückhalts. Die Deko-Kugeln im Hintergrund sind weg — sie standen vor
+    // den Inhalten und sagten nichts.
+    head: `<style nonce="${escapeHtml(nonce)}">${orbStyles}</style>`,
     body: `
-${stageOrbsHtml(orbs)}
 <header class="space-head">
   <p class="space-meta mono">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}${
     circle.place ? ` · ${escapeHtml(circle.place)}` : ''
@@ -973,9 +1003,9 @@ ${stageOrbsHtml(orbs)}
 ${viewSwitch(circle, ansicht)}
 ${requests}
 
-<section class="chat-window${ansicht === 'chat' ? ' is-chat' : ''}" aria-label="${escapeHtml(
-      { chat: 'Gespräch', themen: 'Themen', leute: 'Leute', support: 'Rückhalt' }[ansicht] ?? 'Gespräch',
-    )}">
+<section class="chat-window${ansicht === 'chat' ? ' is-chat' : ''} tiefe-${TIEFE[ansicht] ?? 2}"
+  aria-label="${escapeHtml(LABEL[ansicht] ?? 'Gespräch')}">
+<p class="tiefe-satz">${escapeHtml(SATZ[ansicht] ?? SATZ.chat)}</p>
 ${inhalt}
 </section>`,
   });

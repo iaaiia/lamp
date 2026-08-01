@@ -286,6 +286,35 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D30 — Die vier Ansichten sind ein Weg, kein Menü
+
+**Chosen:** ein Kreis hat vier Ansichten, und sie stehen in dieser Reihenfolge:
+**Leute — Gespräch — Themen — Rückhalt**. Das ist der Weg durch die Plattform: man
+verbindet sich mit Menschen (Leute), fängt an zu reden (Gespräch), aus Zuwendung werden
+Themen (ein Beitrag wird erst zum Thema, wenn jemand geantwortet hat oder dahintersteht),
+und daraus wird Rückhalt — der persönlichste Ort im Kreis. Ein Klick tauscht **nur die
+Kugeln im Inhaltsfenster**; Kopfleiste, Kreiskopf, Ansichtszeile und Schreibfeld bleiben
+stehen. Nach rechts wird es sichtbar dichter: die Kugeln wachsen (`--od-scale` 0,82 → 1,24)
+und rücken zusammen. Jede Stufe sagt in einem Satz, wofür sie da ist.
+
+**Und:** die Kugeln, die nur zur Zierde im Hintergrund lagen, sind weg — auf der Kreisseite
+wie auf der Suche. Eine Kugel steht jetzt für einen Menschen, ein Thema, eine Nachricht oder
+einen Rückhalt. Für nichts sonst. Auf dem abgemeldeten Plakat bleiben sie, dort *sind* sie
+das Bedienelement.
+
+**Why:** die Reihenfolge ist die Produktthese. Wenn sie nur in der Dokumentation steht und
+die Oberfläche vier gleichrangige Reiter zeigt, ist sie nicht gebaut. Die Tiefe entsteht
+nicht durch mehr Fläche, sondern durch mehr Nähe — deshalb wächst die Kugel, statt dass eine
+Ebene mehr Ornament bekommt. Wie persönlich es wird, entscheidet ohnehin niemand im Design,
+sondern die Interaktion: Themen und Rückhalt existieren nur, soweit Menschen sie erzeugt
+haben.
+
+**Enforced by:** `ANSICHTEN`/`TIEFE` und `orbRow()` in `src/web/views.js`, `circleThreads()`
+in `src/domain/circles.js` (die Bedingung „Antwort oder Rückhalt“), `.tiefe-1…4` in
+`src/web/style.js`; `tests/ui.test.js` prüft die Reihenfolge der vier Wörter, die Stufe je
+Ansicht, dass jede Ansicht eigene Kugeln trägt, dass Unbeantwortetes kein Thema ist — und
+dass keine Deko-Kugeln mehr ausgeliefert werden.
+
 ## D29 — Die Kugel ist der Inhalt, nicht die Verzierung
 
 **Chosen:** im Gespräch ist jede Nachricht eine Kugel mit Text daneben — und die Kugel ist

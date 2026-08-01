@@ -472,11 +472,14 @@ describe('Der gesuchte Kreis', () => {
   const load = async (pfad, mit = true) =>
     (await fetch(`${base}${pfad}`, mit ? { headers: { cookie } } : {})).text();
 
-  it('führt die Welt der Startseite fort, statt in ein anderes Produkt zu fallen', async () => {
+  it('führt die Welt der Startseite fort — aber ohne Deko-Kugeln', async () => {
+    // Derselbe Grund wie auf der Startseite, dieselbe Bildsprache. Was weg ist:
+    // die Kugeln, die nur im Hintergrund lagen und nichts trugen. Eine Kugel
+    // steht hier für einen Menschen, ein Thema, eine Nachricht — oder gar nicht.
     for (const pfad of ['/discover', '/c/kultur-leipzig']) {
       const html = await load(pfad);
       assert.match(html, /class="[^"]*on-stage/, `${pfad} steht nicht auf der Bühne`);
-      assert.match(html, /class="orbfield stage-orbs"/, `${pfad} hat keine Kugeln`);
+      assert.doesNotMatch(html, /class="orbfield stage-orbs"/, `${pfad} hat noch Deko-Kugeln`);
     }
   });
 
@@ -591,6 +594,32 @@ describe('Chatfenster', () => {
     assert.equal((await load('/c/kultur')).match(/#msgorb-0\{[^}]*\}/)[0], `#msgorb-0{${regeln[0]}}`);
   });
 
+  it('stellt die vier Ansichten als Weg auf: Leute, Gespräch, Themen, Rückhalt', async () => {
+    // Kein Menü, sondern eine Reihenfolge: man verbindet sich mit Menschen,
+    // fängt Gespräche an, daraus werden Themen, daraus wird Rückhalt.
+    const html = await load('/c/kultur');
+    const zeile = html.slice(html.indexOf('class="views"'), html.indexOf('</nav>'));
+    const worte = [...zeile.matchAll(/>(Leute|Gespräch|Themen|Rückhalt)</g)].map((m) => m[1]);
+    assert.deepEqual(worte, ['Leute', 'Gespräch', 'Themen', 'Rückhalt']);
+  });
+
+  it('wird nach rechts tiefer — und sagt in jeder Stufe, wofür sie da ist', async () => {
+    const stufen = { leute: 1, chat: 2, themen: 3, support: 4 };
+    for (const [ansicht, stufe] of Object.entries(stufen)) {
+      const html = await load(`/c/kultur${ansicht === 'chat' ? '' : `?ansicht=${ansicht}`}`);
+      assert.match(html, new RegExp(`class="chat-window[^"]*tiefe-${stufe}"`), `${ansicht} liegt falsch`);
+      assert.match(html, /class="tiefe-satz"/, `${ansicht} sagt nicht, wofür es da ist`);
+    }
+  });
+
+  it('trägt in jeder Ansicht Kugeln, die etwas bedeuten', async () => {
+    for (const [ansicht, praefix] of [['leute', 'leuteorb'], ['themen', 'themaorb'], ['support', 'stuetzorb']]) {
+      const html = await load(`/c/kultur?ansicht=${ansicht}`);
+      assert.match(html, new RegExp(`class="orb-mark" id="${praefix}-0"`), `${ansicht} ohne Kugeln`);
+      assert.match(html, new RegExp(`#${praefix}-0\\{[^}]*--od:`), `${ansicht} ohne eigene Größe`);
+    }
+  });
+
   it('gibt jedem Wort in der Ansichtszeile eine eigene Ansicht', async () => {
     const html = await load('/c/kultur');
     for (const ziel of ['?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
@@ -599,10 +628,13 @@ describe('Chatfenster', () => {
     assert.match(html, /class="view is-active"[^>]*href="\/c\/kultur"/, 'das Gespräch ist aktiv');
   });
 
-  it('zeigt unter Themen die Gesprächsanfänge mit ihrem Verlauf', async () => {
+  it('zeigt unter Themen nur, woraus etwas geworden ist', async () => {
+    // Ein Thema entsteht durch Zuwendung: eine Antwort oder Rückhalt. Ohne das
+    // wäre „Themen“ nur das Gespräch ein zweites Mal.
     const html = await load('/c/kultur?ansicht=themen');
-    assert.match(html, /Erste Nachricht/);
+    assert.match(html, /Erste Nachricht/, 'hat Antwort und Rückhalt');
     assert.match(html, /1 Antwort/);
+    assert.doesNotMatch(html, /Zweite Nachricht/, 'unbeantwortet, also noch kein Thema');
     assert.doesNotMatch(html, /<summary>Etwas sagen …<\/summary>/, 'hier wird nicht geschrieben');
   });
 

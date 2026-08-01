@@ -774,25 +774,37 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .chat-compose > summary:focus-visible { box-shadow: var(--focus); }
 .chat-compose[open] > summary { margin-bottom: .6rem; border-radius: var(--radius-m); }
 
-/* Themen, Leute, Rückhalt */
-.topics, .people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
-.topics a, .people a {
+/* ------------------------------------------------- Leute, Themen, Rückhalt */
+/* Dieselbe Zeile wie im Gespräch: Kugel links, Text rechts. In jeder Ansicht
+   trägt die Kugel etwas — Deko-Kugeln gibt es nicht mehr. */
+.orb-list { display: flex; flex-direction: column; gap: .3rem; }
+.orb-row {
   display: flex;
-  gap: .7rem;
-  align-items: center;
-  padding: .95rem 1.1rem;
-  background: #FDFCFA;
-  border-radius: 20px;
+  gap: .9rem;
+  align-items: flex-start;
+  padding: .5rem 0;
   text-decoration: none;
   color: var(--ink);
-  box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .06), 0 14px 32px -28px rgba(22, 26, 30, .4);
 }
-.topics a { flex-direction: column; align-items: flex-start; gap: .3rem; }
-.topics a:hover, .people a:hover { color: var(--blue-deep); }
-.t-text { font-weight: 620; line-height: 1.45; }
-.t-meta, .p-meta { font-size: .74rem; color: var(--ink-muted); letter-spacing: .02em; }
-.p-text { display: flex; flex-direction: column; gap: .1rem; }
-.support-card { display: flex; flex-direction: column; gap: .35rem; }
+.orb-row-mark { flex: none; margin: var(--my, 0) 0 0 var(--mx, 0); }
+.orb-row-mark .orb-mark { display: block; transition: transform .18s ease; }
+.orb-row:hover .orb-mark { transform: scale(1.06); }
+.orb-row-text { display: block; min-width: 0; padding-top: .2rem; }
+.orb-row-text strong { display: block; font-weight: 640; line-height: 1.45; }
+.orb-row-text .p-meta { display: block; font-size: .74rem; color: var(--ink-muted); margin-top: .15rem; }
+.orb-row-note { display: block; font-size: .8rem; color: var(--ember-deep); margin-top: .3rem; }
+
+/* Der Weg: Leute — Gespräch — Themen — Rückhalt. Nach rechts wird es
+   persönlicher, und das sieht man: die Kugeln rücken näher zusammen, werden
+   voller und stehen ruhiger. Vier Stufen, kein Rauschen dazwischen. */
+.tiefe-satz { font-size: .82rem; color: var(--ink-muted); margin: 0 0 1rem; }
+.tiefe-1 .orb-mark { --od-scale: .82; opacity: .82; }
+.tiefe-2 .orb-mark { --od-scale: 1; opacity: .92; }
+.tiefe-3 .orb-mark { --od-scale: 1.1; opacity: 1; }
+.tiefe-4 .orb-mark { --od-scale: 1.24; opacity: 1; }
+.tiefe-3 .orb-list { gap: .15rem; }
+.tiefe-4 .orb-list { gap: 0; }
+
 
 /* Kommentare unter dem Beitrag: leicht abgesetzt, nicht als eigene Karte. */
 .comments {
@@ -1144,8 +1156,8 @@ body.low-stimulus .cloud { animation: none; }
 .orb-mark {
   position: relative;
   display: block;
-  width: var(--od, 64px);
-  height: var(--od, 64px);
+  width: calc(var(--od, 64px) * var(--od-scale, 1));
+  height: calc(var(--od, 64px) * var(--od-scale, 1));
 }
 /* Aufbau wie im Vorbild: ein leuchtender Hof, darin ein versetzter dunkler
    Kern, beides weich auslaufend. Zwei Verläufe genügen — mehr wird Matsch. */

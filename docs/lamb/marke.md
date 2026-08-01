@@ -56,12 +56,15 @@ Eine laute Farbe, und die gehört dem Support.
 | Ember | `#DC6B45` | **ausschließlich** Support-Elemente |
 | Forum | `#5B57C4` | **ausschließlich** Youth-Panel-Kontexte |
 | Slate Ink | `#14171D` | Text |
-| Fog | `#F2F3F5` | Grundfläche (kühl, blaustichig — kein Creme) |
+| Papier | `#F7F4EE` | Grundfläche (warm gebrochen, nach der Referenz — siehe D26) |
 | Muted | `#5E636E` | Sekundärtext |
 | Hinweis / Meldung | `#A96613` / `#A8322A` | semantisch, nie Akzent |
 
-Die Neutralen sind bewusst blaustichig gewählt, damit sie unter dem Primärblau „gewählt“
-und nicht geerbt wirken. Ein reines Mittelgrau würde die Palette zufällig aussehen lassen.
+Der Grundton ist warm gebrochenes Papier. Ursprünglich stand hier ein kühles, blaustichiges
+Grau mit der Begründung, warmes Creme sei ein Klischee; die Referenz des Auftraggebers hat
+das überstimmt (D26). Der Abstand zum Klischee liegt bei lamb ohnehin woanders: nicht
+Terrakotta als Akzent, sondern körnige blau-violette Kugeln, und Ember ausschließlich für
+Support.
 
 Weil Ember nur an genau einer Stelle im Produkt vorkommt, bekommt die Support-Geste
 visuelles Gewicht im gesamten Interface, ohne dass irgendwo geschrien wird. Das ist der

@@ -197,8 +197,8 @@ const BANNER = `<div class="demo-banner" id="demo">
 
 const DEMO_CSS = `
 .demo-banner {
-  background: var(--blue-tint);
-  border-bottom: 1px solid var(--line);
+  background: #F0EAE0;
+  border-bottom: 1px solid rgba(22, 26, 30, .1);
   color: var(--ink);
   padding: .7rem 1.25rem;
   font-size: .88rem;

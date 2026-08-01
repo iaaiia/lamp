@@ -19,13 +19,15 @@ export const STYLESHEET = `
 :root {
   color-scheme: light dark;
 
-  --fog:        #F2F3F5;
+  /* Warmes Papier statt kühlem Grau — nach der Referenz. Der Ton ist leicht
+     gelblich gebrochen, damit die Karten darauf sichtbar heller stehen. */
+  --fog:        #F5F2EC;
   --surface:    #FFFFFF;
-  --surface-2:  #FAFAFC;
-  --ink:        #14171D;
-  --ink-muted:  #5E636E;
-  --line:       #DCDDE1;
-  --line-soft:  #E9EAEE;
+  --surface-2:  #FBF9F5;
+  --ink:        #161A1E;
+  --ink-muted:  #5F6169;
+  --line:       #E2DED6;
+  --line-soft:  #EDEAE3;
 
   --blue:       #2B4C9B;
   --blue-deep:  #1C3468;
@@ -255,6 +257,24 @@ main { padding-bottom: 4rem; }
 }
 .card.flat, article.post { box-shadow: none; }
 
+/* Feine Bogenlinien im Hintergrund — das leise Ornament der Referenz. Sie
+   liegen ganz hinten, kreuzen die Fläche und geben dem Papier Bewegung, ohne
+   irgendetwas zu behaupten. Als Daten-URI, also ohne Anfrage. */
+body.landing::before,
+body.on-stage::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1400' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-width='1.1'%3E%3Cpath d='M-60 210 C 220 90 560 150 880 40' stroke='%23E3C4A6' opacity='0.75'/%3E%3Cpath d='M-40 470 C 300 620 620 380 880 520' stroke='%23AFC9E2' opacity='0.7'/%3E%3Cpath d='M-60 980 C 260 860 540 1120 880 1000' stroke='%23E0B9B4' opacity='0.55'/%3E%3Cpath d='M-40 1290 C 300 1200 600 1340 880 1230' stroke='%23B7CFC6' opacity='0.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+@media (prefers-color-scheme: dark) {
+  body.landing::before, body.on-stage::before { opacity: .35; }
+}
+
 /* ------------------------------------------------------------------- Plakat */
 /* Die abgemeldete Startseite. Bewusst einfarbig gedacht: Diese eine Seite folgt
    nicht dem hell/dunkel-Wechsel, sondern bleibt der abendliche Himmel. Eine
@@ -263,8 +283,13 @@ main { padding-bottom: 4rem; }
 body.landing {
   margin: 0;
   min-height: 100svh;
-  background: linear-gradient(178deg, #0E1A33 0%, #16294B 42%, #1E3A63 100%);
-  color: #F3F5F9;
+  /* Warmes Papier mit einem kaum sichtbaren Verlauf — der Grund der Referenz.
+     Die Farbe kommt von den Kugeln, nicht vom Hintergrund. */
+  background:
+    radial-gradient(120% 80% at 78% 4%, #FBF6EE 0%, transparent 60%),
+    radial-gradient(100% 70% at 8% 96%, #F2F4F7 0%, transparent 62%),
+    #F7F4EE;
+  color: #161A1E;
   overflow-x: hidden;
 
   /* Eine Serifenschrift für die eine große Zeile — wie im Vorbild. Keine
@@ -297,7 +322,7 @@ body.landing {
   padding: 0 1.5rem 3rem;
   text-align: center;
   font-size: .85rem;
-  color: rgba(226, 232, 244, .6);
+  color: #6B6D74;
 }
 
 /* Die Kugeln liegen davor. Ohne Skript treiben sie nur; mit Skript kann man
@@ -386,11 +411,12 @@ body.landing {
 }
 .stage-title {
   font-family: var(--serif);
-  font-size: clamp(3.4rem, 17vw, 6.5rem);
+  font-size: clamp(3.6rem, 18vw, 7rem);
   font-weight: 400;
-  letter-spacing: -.02em;
-  line-height: .96;
-  margin: 0 0 .3rem;
+  letter-spacing: -.025em;
+  line-height: .92;
+  margin: 0 0 .4rem;
+  color: #12191C;
   text-wrap: balance;
 }
 
@@ -402,7 +428,7 @@ body.landing {
   background: #FFFFFF;
   border-radius: 999px;
   padding: .45rem .45rem .45rem 1.4rem;
-  box-shadow: 0 20px 60px -22px rgba(0, 0, 0, .75);
+  box-shadow: 0 14px 40px -18px rgba(22, 26, 30, .28);
   margin-top: .5rem;
 }
 .stage-search input[type=text] {
@@ -420,26 +446,27 @@ body.landing {
 .stage-search input::placeholder { color: #6B7180; }
 .stage-search input:focus { outline: none; }
 .stage-search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .55), 0 18px 50px -20px rgba(0, 0, 0, .7); }
+/* Die eine Handlung: dunkel gefüllt, wie in der Referenz. */
 .stage-search button {
   border: 0;
-  background: #16294B;
-  color: #FFFFFF;
+  background: #17201F;
+  color: #FBFAF7;
   min-height: 3rem;
   padding: .75rem 1.5rem;
   font-size: .98rem;
 }
-.stage-search button:hover { background: #14263F; border-color: transparent; }
+.stage-search button:hover { background: #0C1211; border-color: transparent; }
 
 .stage-links { display: flex; gap: .7rem; margin: .2rem 0 0; font-size: .9rem; }
-.stage-links a { color: #DCE4F2; text-decoration-color: rgba(220, 228, 242, .5); }
-.stage-links a:hover { color: #FFFFFF; }
-.stage-links span { color: rgba(220, 228, 242, .45); }
+.stage-links a { color: #2C3A38; text-decoration-color: rgba(44, 58, 56, .4); }
+.stage-links a:hover { color: #0C1211; }
+.stage-links span { color: rgba(44, 58, 56, .35); }
 
 .stage-note {
   margin: .25rem 0 0;
   font-size: .88rem;
   line-height: 1.6;
-  color: rgba(226, 232, 244, .72);
+  color: #5F6169;
   max-width: 26rem;
 }
 
@@ -458,31 +485,26 @@ body.landing {
    nichts zu schieben; sie liegen hinter den Karten und schauen durch. */
 
 body.on-stage {
-  background: linear-gradient(178deg, #0E1A33 0%, #16294B 46%, #1E3A63 100%);
+  background:
+    radial-gradient(120% 60% at 80% 0%, #FBF6EE 0%, transparent 62%),
+    radial-gradient(90% 50% at 4% 100%, #F1F4F7 0%, transparent 60%),
+    #F7F4EE;
   background-attachment: fixed;
-  color: #EEF2F8;
+  color: #161A1E;
 }
 body.on-stage .appbar {
-  background: color-mix(in oklab, #0E1A33 78%, transparent);
-  border-bottom-color: rgba(255, 255, 255, .1);
-  color: #EEF2F8;
-}
-body.on-stage .appbar .icon-btn {
-  background: rgba(255, 255, 255, .08);
-  border-color: rgba(255, 255, 255, .16);
-  color: #EEF2F8;
+  background: color-mix(in oklab, #F7F4EE 82%, transparent);
+  border-bottom-color: rgba(22, 26, 30, .1);
 }
 body.on-stage main { position: relative; z-index: 1; }
-body.on-stage footer.site { background: transparent; border-top-color: rgba(255, 255, 255, .1); }
-body.on-stage footer.site .inner { color: rgba(226, 232, 244, .6); }
-body.on-stage footer.site a { color: #C9D8F2; }
+body.on-stage footer.site { background: transparent; border-top-color: rgba(22, 26, 30, .1); }
 
 /* Hinter den Karten, nicht davor. Ein positioniertes Element malt über
    statischen Inhalt, auch bei z-index 0 — deshalb bekommen die Karten auf der
    Bühne ausdrücklich eine eigene Ebene. */
 .orbfield.stage-orbs { position: fixed; z-index: 0; }
 .stage-orbs .f-orb { cursor: default; }
-.stage-orbs .f-body { opacity: .62; }
+.stage-orbs .f-body { opacity: .55; }
 
 body.on-stage main > *,
 body.on-stage .space-head,
@@ -498,13 +520,19 @@ body.on-stage h2 {
 body.on-stage .orbfield.stage-orbs { z-index: 0; }
 
 /* Die leise Handlung auf dunklem Grund: umrandet statt grau gefüllt. */
-body.on-stage .space-actions button.secondary,
-body.on-stage .space-actions .button.secondary {
-  background: transparent;
-  border-color: rgba(255, 255, 255, .35);
-  color: #EEF2F8;
+/* Die Hauptsache auf der Bühne ist dunkel gefüllt wie in der Referenz. */
+body.on-stage .space-actions button {
+  background: #17201F;
+  border-color: #17201F;
+  color: #FBFAF7;
 }
-body.on-stage .space-actions button.secondary:hover { border-color: #FFFFFF; color: #FFFFFF; background: rgba(255, 255, 255, .08); }
+body.on-stage .space-actions button:hover { background: #0C1211; border-color: #0C1211; }
+body.on-stage .space-actions button.secondary {
+  background: transparent;
+  border: 1.5px solid rgba(22, 26, 30, .22);
+  color: #161A1E;
+}
+body.on-stage .space-actions button.secondary:hover { border-color: #17201F; background: transparent; color: #0C1211; }
 
 /* Der gesuchte Kreis: Kugel als Bild, Name in der Serifenschrift. */
 .space-head {
@@ -527,44 +555,52 @@ body.on-stage .space-actions button.secondary:hover { border-color: #FFFFFF; col
 .space-orb .orb-mark { --od: 7rem; width: 7rem; height: 7rem; }
 .space-name {
   font-family: var(--serif, ui-serif, Georgia, serif);
-  font-size: clamp(2rem, 9vw, 3rem);
+  color: #12191C;
+  font-size: clamp(2.2rem, 10vw, 3.4rem);
   font-weight: 400;
   letter-spacing: -.02em;
   line-height: 1.05;
   margin: 0;
 }
-.space-meta { font-size: .74rem; color: rgba(226, 232, 244, .66); margin: 0; letter-spacing: .08em; text-transform: uppercase; }
-.space-purpose { margin: .4rem 0 0; color: rgba(232, 238, 248, .86); max-width: 30ch; }
+.space-meta { font-size: .72rem; color: #6B6D74; margin: 0; letter-spacing: .1em; text-transform: uppercase; }
+.space-purpose { margin: .5rem 0 0; color: #3A3D44; max-width: 32ch; font-size: 1.02rem; }
 .space-actions { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; justify-content: center; margin-top: .8rem; }
-.stage-hint { font-size: .84rem; color: rgba(226, 232, 244, .6); margin: .6rem 0 0; max-width: 34ch; }
-.stage-hint a { color: #C9D8F2; }
+.stage-hint { font-size: .84rem; color: #6B6D74; margin: .6rem 0 0; max-width: 36ch; }
 
-/* Karten liegen hell auf dem Himmel. */
+/* Karten: weiß, weit gerundet, ohne Kontur — sie stehen durch ihren Schatten
+   auf dem Papier, nicht durch einen Strich. So macht es die Referenz. */
 body.on-stage .card,
 body.on-stage article.post,
+body.on-stage .tile,
 body.on-stage .compose-slot > summary {
-  background: rgba(255, 255, 255, .96);
-  color: #14171D;
-  border-color: rgba(255, 255, 255, .5);
-  box-shadow: 0 20px 48px -26px rgba(0, 0, 0, .8);
+  background: #FDFCFA;
+  color: #161A1E;
+  border: 0;
+  border-radius: 26px;
+  box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .06), 0 18px 40px -28px rgba(22, 26, 30, .35);
 }
-body.on-stage article.post { border-radius: var(--radius-l); padding: 1.15rem; }
-body.on-stage .card a, body.on-stage article.post a { color: var(--blue); }
-body.on-stage .meta, body.on-stage .muted, body.on-stage .support-note { color: #5E636E; }
-body.on-stage .pager .end { color: rgba(226, 232, 244, .6); }
-body.on-stage .compose-slot > summary { border-style: dashed; color: #5E636E; }
+body.on-stage article.post { padding: 1.35rem 1.25rem; }
+body.on-stage .compose-slot > summary {
+  border: 1px dashed var(--line);
+  color: #5F6169;
+  padding: 1rem 1.25rem;
+}
+body.on-stage .pager .end { color: #6B6D74; }
 
 /* Das Suchfeld wandert vom Plakat mit — dieselbe weiße Pille. */
 .stage-search.find { margin: .5rem auto 1.5rem; position: relative; z-index: 1; }
-h2.on-sky { color: #EEF2F8; position: relative; z-index: 1; margin-top: 1.5rem; }
-.stage-hint.centered { margin-left: auto; margin-right: auto; text-align: center; max-width: none; }
-body.on-stage .tile {
-  background: rgba(255, 255, 255, .96);
-  color: #14171D;
-  border-color: rgba(255, 255, 255, .5);
-  box-shadow: 0 18px 44px -26px rgba(0, 0, 0, .8);
+h2.on-sky {
+  font-family: var(--serif, ui-serif, Georgia, serif);
+  font-weight: 400;
+  font-size: 1.7rem;
+  letter-spacing: -.02em;
+  color: #12191C;
+  position: relative;
+  z-index: 1;
+  margin-top: 1.75rem;
 }
-body.on-stage .tile .sub, body.on-stage .tile .kind, body.on-stage .tile .why { color: #5E636E; }
+.stage-hint.centered { margin-left: auto; margin-right: auto; text-align: center; max-width: none; }
+body.on-stage .tile .sub, body.on-stage .tile .kind, body.on-stage .tile .why { color: #5F6169; }
 body.on-stage .cluster { position: relative; z-index: 1; }
 
 /* Kommentare unter dem Beitrag: leicht abgesetzt, nicht als eigene Karte. */

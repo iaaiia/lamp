@@ -481,3 +481,15 @@ describe('Der gesuchte Kreis', () => {
     }
   });
 });
+
+describe('Farbwelt', () => {
+  it('hält Ember aus den Kugeln heraus — auch in der erweiterten Palette', async () => {
+    const { readFile } = await import('node:fs/promises');
+    // Warme Kugeln gibt es jetzt (Gold, Türkis), aber Ember bleibt der Farbton
+    // des Supports und darf nirgends als Dekoration auftauchen.
+    for (const datei of ['src/web/landing.js', 'src/web/stage.js', 'src/web/orb.js', 'src/web/sky.js']) {
+      const quelle = await readFile(datei, 'utf8');
+      assert.doesNotMatch(quelle, /DC6B45|F08A5E/i, `${datei} benutzt Ember`);
+    }
+  });
+});

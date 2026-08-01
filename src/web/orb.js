@@ -32,6 +32,8 @@ const PALETTE = [
   ['#7377C4', '#2E3170'],
   ['#4E90AE', '#1E4356'],
   ['#8778B4', '#3A2F63'],
+  ['#D9A250', '#5C3E13'],
+  ['#5FAFAD', '#153E3E'],
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));

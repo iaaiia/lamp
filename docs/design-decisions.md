@@ -197,6 +197,31 @@ eigenen Seiten. Ohne diese Trennung wäre die Startseite wieder ein Fluss.
 dazukam, und eigene Beiträge zählen nie mit. Ein Badge, das nie auf null geht, ist ein
 Zugmechanismus, kein Informationsdienst.
 
+## D26 — Warmes Papier statt nächtlichem Blau
+
+**Chosen:** Plakat, Suche und Kreisseiten stehen auf warmem, hellem Papier (`#F7F4EE`) mit
+dunkler Serifenschrift, weißen Karten ohne Kontur und feinen Bogenlinien im Hintergrund.
+Die eine Handlung ist dunkel gefüllt. Die Farbe kommt von den Kugeln, nicht vom Grund.
+Auch der App-Grund ist von kühlem Grau auf denselben warmen Ton gewechselt.
+
+**Why:** Angleichung an die Referenz, auf ausdrücklichen Wunsch. Das kehrt zwei frühere
+Entscheidungen um, und das gehört gesagt: D18/D22 hatten das Plakat als nächtlichen Himmel
+festgelegt, und die Markendoku hatte warmes Creme ausdrücklich ausgeschlossen, weil es als
+Klischee gilt. Die Referenz des Auftraggebers schlägt meine Vorsichtsregel — und der
+Unterschied zum Klischee liegt ohnehin woanders: nicht Terrakotta als Akzent, sondern
+körnige blau-violette Kugeln.
+
+**Was dabei nicht aufgeweicht wurde:** Ember bleibt die Farbe des Supports. Die Palette der
+Kugeln ist um Gold und Türkis erweitert, damit die Referenzkomposition aus warm und kühl
+aufgeht — beide sind deutlich von Ember abgesetzt, und ein Test prüft, dass Ember in keiner
+Kugeldatei vorkommt.
+
+**Die Bogenlinien** sind ein Daten-URI, also ohne Anfrage, liegen ganz hinten und behaupten
+nichts — sie geben dem Papier nur Bewegung.
+
+**Enforced by:** `src/web/style.js`, die Paletten in `landing.js`, `stage.js`, `orb.js`,
+`sky.js`; `tests/ui.test.js`.
+
 ## D25 — Die Bühne: eine Welt vom Plakat bis in den Kreis
 
 **Chosen:** wer auf der Startseite sucht, bleibt in derselben Welt. Suchergebnisse und

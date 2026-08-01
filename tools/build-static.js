@@ -29,7 +29,9 @@ import { createPost, react } from '../src/domain/posts.js';
 import { requestFollow } from '../src/domain/safety.js';
 import { createApp } from '../src/server.js';
 
-const OUT = path.resolve(process.argv[2] ?? 'docs');
+// Bewusst nicht 'docs': dort liegt die Projektdokumentation, und dieses Skript
+// leert sein Ausgabeverzeichnis vor jedem Lauf.
+const OUT = path.resolve(process.argv[2] ?? 'site');
 
 config.federation.enabled = false;
 config.seed = false;
@@ -200,6 +202,13 @@ const DEMO_CSS = `
 `;
 
 async function main() {
+  // Sicherung gegen genau den Fehler, der hier einmal passiert ist: Das
+  // Ausgabeverzeichnis wird geleert, also darf es nichts enthalten, was nicht
+  // von diesem Skript stammt.
+  if (/(^|[\\/])(src|docs|tests|tools|proposal|design|\.git)$/.test(OUT)) {
+    throw new Error(`${OUT} ist kein Ausgabeverzeichnis — es würde gelöscht.`);
+  }
+
   const { session } = seed();
   const app = createApp();
   const server = createServer(app);

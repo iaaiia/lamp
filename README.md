@@ -46,8 +46,8 @@ Seiten sind verlinkt.
 
 Was dort **nicht** geht: anmelden, schreiben, Support geben, föderieren. GitHub Pages
 liefert Dateien aus und führt kein Node aus — es gibt dort keine Datenbank und keine
-Sitzungen. Der Rundgang wird mit `npm run build:pages` aus demselben Code erzeugt, den auch
-der Server benutzt.
+Sitzungen. Der Rundgang wird mit `npm run build:pages` nach `site/` erzeugt — aus demselben Code,
+den auch der Server benutzt.
 
 ## Selbst starten
 
@@ -55,7 +55,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 96 Tests
+npm test        # 104 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -86,9 +86,10 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   96 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   104 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
+site/                    erzeugter Rundgang für Pages (nicht eingecheckt)
 proposal/                der Antrag, zu dem der Prototyp gehört
 ```
 

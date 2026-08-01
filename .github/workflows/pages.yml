@@ -30,10 +30,10 @@ jobs:
       - name: Tests
         run: npm test
       - name: Rundgang bauen
-        run: node --experimental-sqlite tools/build-static.js docs
+        run: npm run build:pages
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: site
 
   veroeffentlichen:
     needs: bauen

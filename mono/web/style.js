@@ -1,127 +1,190 @@
 /**
  * Das Aussehen von mono, als eine Datei ausgeliefert.
  *
- * Aus mononote uebernommen: heller Grund, eine weisse Flaeche in der Mitte,
- * ein schwarzer Knopf darunter, sonst nichts. Keine Farbe, die etwas bewerben
- * will, keine Zahl, die etwas belohnen will.
+ * Vorbild ist die Referenz: iOS-Standard, sehr zurueckhaltend. Ein Titel oben,
+ * eine Flaeche in der Mitte, ein schwarzer Knopf unten. Was schwebt, ist Glas —
+ * unscharfer Hintergrund, duenne Kante, weicher Schatten; der Inhalt zieht
+ * darunter durch. Kein Kasten um Dinge, die auch ohne Kasten zusammengehoeren:
+ * Listen sind eine Flaeche mit Haarlinien, nicht eine Karte je Zeile.
  */
 
 export const STYLESHEET = `
 :root {
   --grund: #f2f2f7;
   --flaeche: #ffffff;
-  --tinte: #111113;
-  --leise: #8a8a8f;
-  --linie: #e3e3e8;
-  --knopf: #111113;
-  --radius: 18px;
-  --breite: 34rem;
+  --tinte: #000000;
+  --leise: #8e8e93;
+  --linie: rgba(60, 60, 67, .18);
+  --glas: rgba(249, 249, 249, .72);
+  --glas-kante: rgba(255, 255, 255, .5);
+  --knopf: #000000;
+  --knopf-schrift: #ffffff;
+  --blau: #007aff;
+  --radius: 14px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --grund: #000000;
-    --flaeche: #151517;
-    --tinte: #f5f5f7;
-    --leise: #8a8a8f;
-    --linie: #2a2a2e;
-    --knopf: #f5f5f7;
+    --flaeche: #1c1c1e;
+    --tinte: #ffffff;
+    --leise: #8e8e93;
+    --linie: rgba(84, 84, 88, .5);
+    --glas: rgba(30, 30, 32, .72);
+    --glas-kante: rgba(255, 255, 255, .12);
+    --knopf: #ffffff;
+    --knopf-schrift: #000000;
+    --blau: #0a84ff;
   }
-  .knopf { color: #111113; }
 }
 
 * { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
   background: var(--grund);
   color: var(--tinte);
-  font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  -webkit-text-size-adjust: 100%;
+  font: 17px/1.47 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -.01em;
 }
 
+/* Die Flaeche liegt zwischen zwei schwebenden Leisten; der Abstand haelt den
+   Inhalt frei von ihnen, ohne dass etwas abgeschnitten wird. */
 .seite {
-  max-width: var(--breite);
+  max-width: 34rem;
   margin: 0 auto;
-  padding: max(1rem, env(safe-area-inset-top)) 1rem calc(2rem + env(safe-area-inset-bottom));
+  padding:
+    calc(3.4rem + env(safe-area-inset-top))
+    1rem
+    calc(6.5rem + env(safe-area-inset-bottom));
 }
 
-header.kopf {
+/* — Glas —————————————————————————————————————————————————— */
+
+.leiste, .fuss {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--glas);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Oben: nur der Titel, mittig, wie eine Navigationsleiste. */
+.leiste {
+  top: 0;
+  padding: calc(.7rem + env(safe-area-inset-top)) 1rem .7rem;
+  text-align: center;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  border-bottom: .5px solid var(--linie);
+}
+.leiste a { color: inherit; text-decoration: none; }
+.leiste .zurueck {
+  position: absolute;
+  left: .9rem;
+  bottom: .7rem;
+  color: var(--blau);
+  font-weight: 400;
+}
+
+/* Unten: die Leiste schwebt als Pille ueber dem Inhalt, mit Luft ringsum. */
+.fuss {
+  bottom: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  padding: 0 1rem calc(.7rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.fuss > * { pointer-events: auto; }
+
+.reiter {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .75rem;
-  padding: .25rem 0 1rem;
+  max-width: 32rem;
+  margin: 0 auto;
+  border-radius: 22px;
+  padding: .3rem;
+  background: var(--glas);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: .5px solid var(--glas-kante);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .12);
 }
-header.kopf a { color: var(--leise); text-decoration: none; font-size: .92rem; }
-header.kopf a:hover, header.kopf a:focus { color: var(--tinte); }
-.wortmarke {
-  font-weight: 700;
-  letter-spacing: -.02em;
-  color: var(--tinte) !important;
-  font-size: 1.05rem;
+.reiter a {
+  flex: 1;
+  text-align: center;
+  padding: .5rem .25rem;
+  border-radius: 18px;
+  color: var(--leise);
+  text-decoration: none;
+  font-size: .8125rem;
+  letter-spacing: -.005em;
 }
+.reiter a[aria-current] { color: var(--tinte); font-weight: 600; }
+.reiter a:focus-visible { outline: 2px solid var(--blau); outline-offset: 1px; }
 
-.karte {
+/* — Flaechen —————————————————————————————————————————————— */
+
+.flaeche {
   background: var(--flaeche);
   border-radius: var(--radius);
-  padding: 1rem 1.1rem;
-  margin-bottom: .85rem;
+  overflow: hidden;
 }
+.flaeche.polster { padding: 1rem 1.05rem; }
 
-textarea, input[type="text"], input[type="password"], input[type="file"] {
+/* Eine Liste ist eine Flaeche mit Haarlinien — nicht eine Karte je Zeile.
+   Die Linie muss die Rahmen-Regeln der Formularfelder schlagen, sonst
+   verschwindet sie zwischen genau den Zeilen, die sie trennen soll. */
+.liste > * + *,
+.flaeche > * + * { border-top: .5px solid var(--linie) !important; }
+.zeile { padding: .85rem 1.05rem; }
+
+a { color: var(--blau); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* — Schreiben ————————————————————————————————————————————— */
+
+textarea {
+  display: block;
+  width: 100%;
+  /* Das Feld füllt die Fläche bis kurz über den Knopf — wie in der Referenz,
+     wo die Notiz den Bildschirm einnimmt und nicht in einer Kachel sitzt.
+     Hängt ein Foto dran, tritt es zurück: dann ist das Bild der Beitrag. */
+  min-height: calc(100vh - 19rem);
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 1rem 1.05rem;
+  resize: none;
+}
+textarea:focus { outline: none; }
+.mit-medium textarea { min-height: 5.5rem; }
+::placeholder { color: var(--leise); }
+
+input[type="text"], input[type="password"] {
   width: 100%;
   font: inherit;
   color: inherit;
   background: transparent;
   border: 0;
-  padding: 0;
-  resize: none;
+  padding: .8rem 1.05rem;
 }
-textarea:focus, input:focus { outline: none; }
-textarea { min-height: 9rem; }
-input[type="text"], input[type="password"] {
-  border-bottom: 1px solid var(--linie);
-  padding: .5rem 0;
-  margin-bottom: .9rem;
-}
-::placeholder { color: var(--leise); }
+input:focus { outline: none; }
 
-.knopf {
-  display: block;
-  width: 100%;
-  background: var(--knopf);
-  color: var(--grund);
-  border: 0;
-  border-radius: 14px;
-  padding: .85rem 1rem;
-  font: inherit;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  cursor: pointer;
-}
-.knopf.leise {
-  background: transparent;
-  color: var(--leise);
-  font-weight: 400;
-}
-
-/* Der Datei-Wähler des Browsers ist nicht gestaltbar — also versteckt man ihn
-   und macht sein Label zum Knopf. Klick und Tastatur gehen weiter über das
-   echte Feld, es ist nur nicht zu sehen. */
+/* Der Datei-Wähler des Browsers ist nicht gestaltbar — also wird sein Label
+   die Zeile, und das echte Feld bleibt unsichtbar bedienbar. */
 label.datei {
   display: block;
-  border: 1px dashed var(--linie);
-  border-radius: 12px;
-  padding: .75rem 1rem;
-  margin: .4rem 0 1rem;
-  color: var(--leise);
-  text-align: center;
+  padding: .8rem 1.05rem;
+  color: var(--blau);
   cursor: pointer;
 }
-label.datei:hover { border-color: var(--leise); }
-label.datei:focus-within { border-style: solid; border-color: var(--tinte); color: var(--tinte); }
+label.datei:focus-within { background: rgba(0, 122, 255, .08); }
 label.datei input[type="file"] {
   position: absolute;
   width: 1px;
@@ -130,48 +193,73 @@ label.datei input[type="file"] {
   pointer-events: none;
 }
 
-.hinweis { color: var(--leise); font-size: .85rem; margin: .6rem 0 0; }
-.warnung {
-  background: var(--flaeche);
-  border-left: 3px solid #d0342c;
-  border-radius: 10px;
-  padding: .7rem .9rem;
-  margin-bottom: .85rem;
-  font-size: .92rem;
-}
+/* — Knöpfe ———————————————————————————————————————————————— */
 
-.beitrag { position: relative; }
+.knopf {
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  background: var(--knopf);
+  color: var(--knopf-schrift);
+  border: 0;
+  border-radius: 22px;
+  padding: .9rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+}
+.knopf.klar {
+  background: var(--glas);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: .5px solid var(--glas-kante);
+  color: var(--blau);
+  font-weight: 400;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .1);
+}
+.knopf.klar.warnend { color: #ff3b30; }
+
+/* — Beiträge —————————————————————————————————————————————— */
+
 .beitrag .wer {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: .6rem;
-  margin-bottom: .45rem;
+  gap: .5rem;
+  margin-bottom: .2rem;
 }
-.beitrag .wer a { color: var(--tinte); text-decoration: none; font-weight: 600; }
-.beitrag .wann { color: var(--leise); font-size: .8rem; white-space: nowrap; }
+.beitrag .wer a { color: inherit; text-decoration: none; font-weight: 600; font-size: .9375rem; }
+.beitrag .wann { color: var(--leise); font-size: .8125rem; margin-left: auto; }
 .beitrag p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .beitrag img, .beitrag video {
   display: block;
   width: 100%;
-  border-radius: 12px;
-  margin-top: .7rem;
+  border-radius: 10px;
+  margin-top: .55rem;
   background: var(--grund);
 }
-.beitrag .alt { color: var(--leise); font-size: .8rem; margin-top: .4rem; }
+.beitrag .alt { color: var(--leise); font-size: .8125rem; margin-top: .35rem; }
 
-.leer { color: var(--leise); text-align: center; padding: 2.5rem 1rem; }
+/* — Kleinkram ————————————————————————————————————————————— */
 
-.gross {
-  font-size: 2rem;
-  line-height: 1.15;
+.leer { color: var(--leise); text-align: center; padding: 22vh 1rem; }
+.hinweis { color: var(--leise); font-size: .8125rem; text-align: center; margin: .7rem 0 0; }
+.warnung {
+  color: #ff3b30;
+  font-size: .8125rem;
+  text-align: center;
+  margin: 0 0 .7rem;
+}
+.titel {
+  font-size: 2.125rem;
+  line-height: 1.1;
   letter-spacing: -.03em;
   font-weight: 700;
-  margin: 1.5rem 0 .6rem;
+  margin: 2.5rem 0 .5rem;
 }
-.vorspann { color: var(--leise); margin: 0 0 1.6rem; }
-
-form + form { margin-top: .5rem; }
-fieldset { border: 0; padding: 0; margin: 0; }
-label { display: block; font-size: .85rem; color: var(--leise); margin-bottom: .3rem; }
+.vorspann { color: var(--leise); margin: 0 0 2rem; }
+form { margin: 0; }
 `;

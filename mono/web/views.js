@@ -1,8 +1,9 @@
 /**
  * Servergerendertes HTML. Kein Client-JavaScript — die CSP verbietet es.
  *
- * Es gibt vier Seiten: dein Beitrag, deine Leute, die Wand, ein Mensch. Mehr
- * Seiten hätte mono nur, wenn es mehr Beiträge hätte.
+ * Die Seiten sind nach der Referenz gebaut: oben eine Titelleiste, in der Mitte
+ * eine Fläche, unten das, was man drückt. Was schwebt, schwebt über dem Inhalt;
+ * was zusammengehört, liegt in einer Fläche statt in je einer Karte.
  */
 
 import config from '../config.js';
@@ -29,43 +30,45 @@ export function seit(iso) {
   return `vor ${Math.floor(days / 7)} w`;
 }
 
-export function layout({ title, body, account = null, nav = true }) {
-  const kopf = nav
-    ? `<header class="kopf">
-        <a class="wortmarke" href="/">mono</a>
-        <nav>
-          ${
-            account
-              ? `<a href="/">deins</a> · <a href="/leute">leute</a> · <a href="/wand">wand</a> · <a href="/@${escape(account.handle)}">@${escape(account.handle)}</a>`
-              : '<a href="/wand">wand</a> · <a href="/anmelden">anmelden</a>'
-          }
-        </nav>
-      </header>`
-    : '';
+const reiter = (hier) => {
+  const eintrag = (pfad, wort) =>
+    `<a href="${pfad}"${hier === pfad ? ' aria-current="page"' : ''}>${wort}</a>`;
+  return `<nav class="reiter">${eintrag('/', 'Deins')}${eintrag('/leute', 'Leute')}${eintrag('/wand', 'Wand')}</nav>`;
+};
 
+/**
+ * @param titel  steht mittig in der Leiste — sonst steht dort nichts
+ * @param fuss   was unten schwebt, über den Reitern
+ * @param hier   Pfad für die Markierung im Reiter; null blendet ihn aus
+ */
+export function layout({ titel, body, hier = null, fuss = '', zurueck = null }) {
   return `<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${escape(title)} — ${escape(config.instanceName)}</title>
+<meta name="theme-color" content="#f2f2f7">
+<title>${escape(titel)}</title>
 <style>${STYLESHEET}</style>
 </head>
 <body>
-<div class="seite">
-${kopf}
+<header class="leiste">${
+    zurueck ? `<a class="zurueck" href="${zurueck}">Zurück</a>` : ''
+  }${escape(titel)}</header>
+<main class="seite">
 ${body}
+</main>
+<div class="fuss">
+${fuss}
+${hier === null ? '' : reiter(hier)}
 </div>
 </body>
 </html>`;
 }
 
-const warnung = (message) => (message ? `<p class="warnung">${escape(message)}</p>` : '');
-
-/** Ein Beitrag. Es gibt genau eine Darstellung — überall dieselbe. */
-export function beitrag(mono, { self = false } = {}) {
+/** Ein Beitrag als Zeile. Überall dieselbe Darstellung. */
+export function beitrag(mono, { name = true } = {}) {
   if (!mono) return '';
-  const name = mono.account.displayName || mono.account.handle;
   let medium = '';
   if (mono.media) {
     const src = `/medien/${mono.media.id}`;
@@ -76,132 +79,122 @@ export function beitrag(mono, { self = false } = {}) {
         : `<img src="${src}" alt="${escape(mono.media.alt)}">
            <p class="alt">${escape(mono.media.alt)}</p>`;
   }
-  return `<article class="karte beitrag">
-    <div class="wer">
-      <a href="/@${escape(mono.account.handle)}">${escape(name)}${self ? ' (du)' : ''}</a>
-      <span class="wann">${seit(mono.at)}</span>
-    </div>
+  const wer = name
+    ? `<div class="wer">
+         <a href="/@${escape(mono.account.handle)}">${escape(mono.account.displayName || mono.account.handle)}</a>
+         <span class="wann">${seit(mono.at)}</span>
+       </div>`
+    : '';
+  return `<article class="zeile beitrag">
+    ${wer}
     ${mono.text ? `<p>${escape(mono.text)}</p>` : ''}
     ${medium}
   </article>`;
 }
 
-/** Das Schreibfeld. Es steht immer über dem, was es ersetzen wird. */
-export function schreiben(mono, fehler) {
-  const ersetzt = mono
-    ? '<p class="hinweis">Wenn du das abschickst, ist dein jetziger Beitrag weg. Es gibt nur einen.</p>'
-    : '<p class="hinweis">Du hast gerade nichts stehen. Was du schreibst, steht dann da — bis du etwas anderes schreibst.</p>';
+const listeVon = (monos, leer) =>
+  monos.length
+    ? `<div class="flaeche liste">${monos.map((m) => beitrag(m)).join('')}</div>`
+    : `<p class="leer">${leer}</p>`;
 
-  return `${warnung(fehler)}
-  <form class="karte" method="post" action="/mono" enctype="multipart/form-data">
-    <textarea name="text" maxlength="${config.limits.monoLength}" placeholder="Schreib etwas…"></textarea>
-    <fieldset>
-      <label class="datei">
-        <input id="datei" type="file" name="datei" accept="image/*,video/*">
-        <span>Foto oder Video wählen — ersetzt ebenfalls alles</span>
-      </label>
-      <label for="alt">Beschreibung, wenn du eins anhängst (Pflicht)</label>
-      <input id="alt" type="text" name="alt" maxlength="${config.limits.altLength}" placeholder="Was ist zu sehen?">
-    </fieldset>
-    <button class="knopf" type="submit">Fertig</button>
-  </form>
-  ${ersetzt}`;
-}
-
-export function startseite({ account, mono, fehler }) {
-  // Reihenfolge mit Absicht: schreiben, dann sehen, was das ersetzen wuerde,
-  // und erst darunter der Weg, es ersatzlos wegzunehmen. Ein Loesch-Knopf ueber
-  // dem Beitrag zeigt auf nichts.
-  const jetzt = mono
-    ? `<p class="hinweis">Das steht gerade unter deinem Namen:</p>
-       ${beitrag(mono, { self: true })}
-       <form method="post" action="/mono/loeschen">
-         <button class="knopf leise" type="submit">Löschen und nichts hinstellen</button>
-       </form>`
+/**
+ * Deine Seite ist dein Beitrag — das Feld *ist* das, was dasteht, wie in der
+ * Referenz die Notiz das Feld ist. Kein Schreibfeld über einer Karte, die
+ * dasselbe nochmal zeigt: Was du siehst, ist was gilt, und was du abschickst,
+ * ersetzt es. Leer abschicken löscht; deshalb braucht es keinen Löschknopf.
+ */
+export function startseite({ mono, fehler }) {
+  const angehaengt = mono?.media
+    ? `<div class="zeile beitrag">${
+        mono.media.kind === 'video'
+          ? `<video controls preload="metadata" src="/medien/${mono.media.id}"></video>`
+          : `<img src="/medien/${mono.media.id}" alt="${escape(mono.media.alt)}">`
+      }</div>`
     : '';
+
   return layout({
-    title: 'dein mono',
-    account,
-    body: `${schreiben(mono, fehler)}${jetzt}`,
+    titel: config.instanceName,
+    hier: '/',
+    body: `${fehler ? `<p class="warnung">${escape(fehler)}</p>` : ''}
+      <form id="schreiben" class="flaeche${mono?.media ? ' mit-medium' : ''}" method="post" action="/mono" enctype="multipart/form-data">
+        <textarea name="text" maxlength="${config.limits.monoLength}" placeholder="Schreib etwas…">${escape(mono?.text ?? '')}</textarea>
+        ${angehaengt}
+        <div class="liste">
+          <label class="datei">
+            <input id="datei" type="file" name="datei" accept="image/*,video/*">
+            <span>Foto oder Video</span>
+          </label>
+          <input id="alt" type="text" name="alt" maxlength="${config.limits.altLength}" placeholder="Was ist zu sehen?">
+        </div>
+      </form>
+      ${mono ? '<p class="hinweis">Leer abschicken löscht.</p>' : ''}`,
+    fuss: `<button class="knopf" type="submit" form="schreiben">Fertig</button>`,
   });
 }
 
-export function leute({ account, monos }) {
-  const body = monos.length
-    ? monos.map((m) => beitrag(m)).join('\n')
-    : `<p class="leer">Du folgst noch niemandem — oder niemand von ihnen sagt gerade etwas.<br><a href="/wand">Schau auf die Wand.</a></p>`;
-  return layout({ title: 'deine leute', account, body });
-}
-
-export function wand({ account, monos }) {
-  const body = monos.length
-    ? monos.map((m) => beitrag(m)).join('\n')
-    : '<p class="leer">Hier sagt gerade niemand etwas.</p>';
-  return layout({
-    title: 'die wand',
-    account,
-    body: `<p class="hinweis">Alle, die gerade etwas stehen haben. Neueste zuerst, sonst keine Ordnung.</p>${body}`,
+export const leute = ({ monos }) =>
+  layout({
+    titel: 'Leute',
+    hier: '/leute',
+    body: listeVon(monos, 'Von deinen Leuten sagt gerade niemand etwas.'),
   });
-}
+
+export const wand = ({ monos }) =>
+  layout({
+    titel: 'Wand',
+    hier: '/wand',
+    body: listeVon(monos, 'Hier sagt gerade niemand etwas.'),
+  });
 
 export function profil({ account, person, mono, folgt }) {
-  const name = person.display_name || person.handle;
   const knopf =
     account && account.id !== person.id
       ? `<form method="post" action="/@${escape(person.handle)}/${folgt ? 'entfolgen' : 'folgen'}">
-           <button class="knopf${folgt ? ' leise' : ''}" type="submit">${folgt ? 'nicht mehr folgen' : 'folgen'}</button>
+           <button class="knopf klar${folgt ? ' warnend' : ''}" type="submit">${
+             folgt ? 'Nicht mehr folgen' : 'Folgen'
+           }</button>
          </form>`
       : '';
-  const inhalt = mono
-    ? beitrag(mono, { self: Boolean(account) && account.id === person.id })
-    : `<p class="leer">${escape(name)} sagt gerade nichts.</p>`;
   return layout({
-    title: `@${person.handle}`,
-    account,
-    body: `<h1 class="gross">${escape(name)}</h1>
-      <p class="vorspann">@${escape(person.handle)}</p>
-      ${inhalt}
-      ${knopf}`,
+    titel: person.display_name || person.handle,
+    hier: null,
+    zurueck: '/wand',
+    body: mono
+      ? `<div class="flaeche liste">${beitrag(mono, { name: false })}</div>
+         <p class="hinweis">@${escape(person.handle)} · ${seit(mono.at)}</p>`
+      : `<p class="leer">@${escape(person.handle)} sagt gerade nichts.</p>`,
+    fuss: knopf,
   });
 }
 
-export function willkommen({ fehler }) {
-  return layout({
-    title: 'ein Beitrag',
-    nav: true,
-    body: `<h1 class="gross">Ein Beitrag.<br>Mehr hast du nicht.</h1>
-      <p class="vorspann">mono gibt jedem Menschen genau einen Platz. Was du schreibst oder
-      zeigst, steht da — bis du etwas anderes hinstellst. Dann ist das Alte weg. Kein Verlauf,
-      keine Zahlen, nichts zu scrollen, was du schon kennst.</p>
-      ${warnung(fehler)}
-      <form class="karte" method="post" action="/registrieren">
-        <label for="handle">Name (a–z, 0–9, _)</label>
-        <input id="handle" type="text" name="handle" maxlength="${config.limits.handleLength}" required>
-        <label for="anzeige">Wie du angezeigt wirst</label>
-        <input id="anzeige" type="text" name="displayName" maxlength="${config.limits.displayNameLength}">
-        <label for="pw">Passwort (mindestens 8 Zeichen)</label>
-        <input id="pw" type="password" name="password" required>
-        <button class="knopf" type="submit">Anfangen</button>
+export const willkommen = ({ fehler }) =>
+  layout({
+    titel: config.instanceName,
+    hier: null,
+    body: `<h1 class="titel">Ein Beitrag.<br>Mehr hast du nicht.</h1>
+      <p class="vorspann">Bis du etwas anderes hinstellst.</p>
+      ${fehler ? `<p class="warnung">${escape(fehler)}</p>` : ''}
+      <form id="anlegen" class="flaeche liste" method="post" action="/registrieren">
+        <input type="text" name="handle" maxlength="${config.limits.handleLength}" placeholder="Name" required>
+        <input type="text" name="displayName" maxlength="${config.limits.displayNameLength}" placeholder="Angezeigt als">
+        <input type="password" name="password" placeholder="Passwort" required>
       </form>
-      <p class="hinweis">Schon dabei? <a href="/anmelden">Anmelden</a>.</p>`,
+      <p class="hinweis">Schon dabei? <a href="/anmelden">Anmelden</a></p>`,
+    fuss: `<button class="knopf" type="submit" form="anlegen">Anfangen</button>`,
   });
-}
 
-export function anmelden({ fehler }) {
-  return layout({
-    title: 'anmelden',
-    body: `<h1 class="gross">Anmelden</h1>
-      ${warnung(fehler)}
-      <form class="karte" method="post" action="/anmelden">
-        <label for="handle">Name</label>
-        <input id="handle" type="text" name="handle" required>
-        <label for="pw">Passwort</label>
-        <input id="pw" type="password" name="password" required>
-        <button class="knopf" type="submit">Weiter</button>
-      </form>
-      <p class="hinweis">Neu hier? <a href="/">Konto anlegen</a>.</p>`,
+export const anmelden = ({ fehler }) =>
+  layout({
+    titel: 'Anmelden',
+    hier: null,
+    zurueck: '/',
+    body: `${fehler ? `<p class="warnung">${escape(fehler)}</p>` : ''}
+      <form id="anmelden" class="flaeche liste" method="post" action="/anmelden">
+        <input type="text" name="handle" placeholder="Name" required>
+        <input type="password" name="password" placeholder="Passwort" required>
+      </form>`,
+    fuss: `<button class="knopf" type="submit" form="anmelden">Weiter</button>`,
   });
-}
 
 export const nichtGefunden = () =>
-  layout({ title: 'nichts da', body: '<p class="leer">Diese Seite gibt es nicht.</p>' });
+  layout({ titel: 'Nichts da', hier: null, body: '<p class="leer">Diese Seite gibt es nicht.</p>' });

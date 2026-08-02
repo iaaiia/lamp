@@ -50,15 +50,32 @@ Formularfehler.
 
 | Pfad | Zweck |
 | --- | --- |
-| `/` | abgemeldet die Einladung, angemeldet dein Schreibfeld über deinem jetzigen Beitrag |
+| `/` | abgemeldet die Einladung, angemeldet **dein Beitrag als Feld** — was du siehst, ist was gilt |
 | `/leute` | was die Menschen gerade sagen, denen du folgst — neueste zuerst |
 | `/wand` | alle, die gerade etwas stehen haben |
 | `/@name` | ein Mensch und sein einer Beitrag; hier wird gefolgt |
 | `/medien/:id` | das Medium des *aktuellen* Beitrags, sonst 404 |
 | `/anmelden`, `/registrieren`, `/abmelden` | Konto |
 
-Kein Client-JavaScript; die CSP setzt `script-src 'none'`. Das Aussehen kommt aus
-mononote: heller Grund, eine weiße Fläche, ein schwarzer Knopf, sonst nichts.
+Kein Client-JavaScript; die CSP setzt `script-src 'none'`.
+
+## Aussehen
+
+Nach der Referenz: iOS-Standard, sehr zurückhaltend. Oben eine Titelleiste, in der Mitte
+eine Fläche, unten das, was man drückt. Was schwebt, ist Glas — unscharfer Hintergrund,
+dünne Kante, weicher Schatten, und der Inhalt zieht darunter durch. Systemschrift,
+Systemblau, Hell und Dunkel je nach Gerät.
+
+Zwei Regeln halten die Oberfläche karg:
+
+**Kein Kasten um Dinge, die auch ohne Kasten zusammengehören.** Eine Liste ist *eine*
+Fläche mit Haarlinien, nicht eine Karte je Zeile.
+
+**Das Feld ist der Beitrag.** Auf deiner Seite steht kein Schreibfeld über einer Karte,
+die dasselbe nochmal zeigt — die Fläche enthält, was gerade unter deinem Namen steht, und
+was du abschickst, ersetzt es. Daraus folgt der Löschweg von selbst: Feld leerräumen,
+abschicken. Deshalb gibt es keinen Löschknopf, keine Bestätigung und keinen erklärenden
+Absatz darüber.
 
 ## Starten
 

@@ -323,19 +323,26 @@ test('HTTP: Fehler kommen auf Deutsch, in der Sprache der Oberfläche', async ()
   });
 });
 
-test('HTTP: der Löschen-Knopf steht unter dem Beitrag, den er löscht', async () => {
+test('HTTP: das Feld ist der Beitrag — leer abschicken löscht ihn', async () => {
   fresh();
   await withServer(async (base) => {
     const cookie = await signUp(base, 'mira');
-    let page = await (await fetch(`${base}/`, { headers: { cookie } })).text();
-    assert.ok(!page.includes('/mono/loeschen'), 'ohne Beitrag gibt es nichts zu löschen');
+    const post = (text) =>
+      fetch(`${base}/mono`, {
+        ...form({ text }),
+        headers: { 'content-type': 'application/x-www-form-urlencoded', cookie },
+      });
 
-    await fetch(`${base}/mono`, {
-      ...form({ text: 'etwas' }),
-      headers: { 'content-type': 'application/x-www-form-urlencoded', cookie },
-    });
+    await post('etwas');
+    // Das Feld zeigt, was gilt — es steht nicht daneben.
+    let page = await (await fetch(`${base}/`, { headers: { cookie } })).text();
+    assert.match(page, /<textarea[^>]*>etwas<\/textarea>/);
+
+    const res = await post('   ');
+    assert.equal(res.status, 303);
+    assert.equal(mono.read(accounts.findByHandle('mira').id), null);
     page = await (await fetch(`${base}/`, { headers: { cookie } })).text();
-    assert.ok(page.indexOf('<article') < page.indexOf('/mono/loeschen'));
+    assert.match(page, /<textarea[^>]*><\/textarea>/);
   });
 });
 

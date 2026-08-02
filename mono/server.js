@@ -51,17 +51,17 @@ export function createApp() {
   router.get('/', (req, res) => {
     const account = viewer(req);
     if (!account) return sendHtml(res, 200, views.willkommen({}));
-    sendHtml(res, 200, views.startseite({ account, mono: mono.read(account.id) }));
+    sendHtml(res, 200, views.startseite({ mono: mono.read(account.id) }));
   });
 
   router.get('/leute', (req, res) => {
     const account = viewer(req);
     if (!account) return redirect(res, '/anmelden');
-    sendHtml(res, 200, views.leute({ account, monos: mono.circle(account.id) }));
+    sendHtml(res, 200, views.leute({ monos: mono.circle(account.id) }));
   });
 
   router.get('/wand', (req, res) => {
-    sendHtml(res, 200, views.wand({ account: viewer(req), monos: mono.wall() }));
+    sendHtml(res, 200, views.wand({ monos: mono.wall() }));
   });
 
   router.get('/@:handle', (req, res, { params }) => {
@@ -125,23 +125,15 @@ export function createApp() {
         const form = parseForm(await readBody(req));
         text = form.text ?? '';
       }
-      mono.replace(account.id, { text, media });
+      // Das Feld *ist* der Beitrag: Wer es leerraeumt und abschickt, nimmt ihn
+      // weg. Deshalb gibt es keinen eigenen Loeschknopf — und deshalb ist ein
+      // leeres Feld hier kein Fehler, sondern eine Aussage.
+      if (!String(text).trim() && !media) mono.clear(account.id);
+      else mono.replace(account.id, { text, media });
     } catch (error) {
       const fehler = error instanceof mono.MonoError ? error.message : 'Das hat nicht geklappt.';
-      return sendHtml(
-        res,
-        400,
-        views.startseite({ account, mono: mono.read(account.id), fehler }),
-      );
+      return sendHtml(res, 400, views.startseite({ mono: mono.read(account.id), fehler }));
     }
-    redirect(res, '/');
-  });
-
-  router.post('/mono/loeschen', async (req, res) => {
-    const account = viewer(req);
-    if (!account) return redirect(res, '/anmelden');
-    await readBody(req);
-    mono.clear(account.id);
     redirect(res, '/');
   });
 

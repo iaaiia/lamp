@@ -286,6 +286,28 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D40 — Ein Beitrag ist eine Nachricht, keine Karte
+
+**Chosen:** Beitragsseite und Profil zeigen einen Beitrag in derselben Form wie die
+Startseite: Kugel links, Text rechts, Support darunter — kein weißer Kasten, kein eigener
+Grund, keine Kontur. Beide Seiten stehen auf derselben Bühne (`body.on-stage`) wie der Weg,
+also auf demselben Papier mit denselben Bogenlinien. `postArticle`/`postArticleInner` und die
+Stile zu `article.post` entfallen; es gibt nur noch `chatMessage`. Der Profilkopf und die
+Reiterzeile verlieren ihren Kasten gleich mit.
+
+**Why:** dieselbe Sache soll überall gleich aussehen. Ein Beitrag, der auf der Startseite eine
+Nachricht ist und zwei Klicks weiter eine Karte, liest sich wie zwei verschiedene Dinge —
+und die Karte behauptet dabei eine Wichtigkeit, die der Beitrag gar nicht hat. Die Kugeln
+sind das Bild dieses Produkts; alles, was sie in einen Rahmen sperrt, arbeitet dagegen.
+
+**Nebeneffekt:** eine Codeform weniger. Bilder mit ihrem Alternativtext (D7) und der
+Inhaltshinweis sind mit in `chatMessage` gewandert, damit auf dem Weg nichts fehlt, was
+vorher nur die Karte konnte.
+
+**Enforced by:** `chatMessage()` als einzige Beitragsform in `src/web/views.js`;
+`tests/ui.test.js` („zeigt einen Beitrag überall als Nachricht, nirgends als Karte") prüft,
+dass weder `<article class="post">` im HTML noch `article.post` im Stylesheet übrig ist.
+
 ## D39 — Support ist die einzige Handlung; der geschützte Chat entsteht von selbst
 
 **Chosen:** unter einem Beitrag steht genau ein Knopf: **Support geben**. Es gibt keinen

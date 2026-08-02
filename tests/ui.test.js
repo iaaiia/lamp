@@ -657,6 +657,25 @@ describe('Chatfenster', () => {
     );
   });
 
+  it('zeigt einen Beitrag überall als Nachricht, nirgends als Karte', async () => {
+    // Ein Beitrag sieht auf der Beitragsseite und im Profil aus wie auf der
+    // Startseite: Kugel, Text, kein Kasten und kein eigener Grund (D40).
+    const erste = await load('/c/kultur');
+    const link = erste.match(/href="(\/posts\/\d+)"/)[1];
+
+    for (const pfad of [link, '/@wirtin']) {
+      const html = await load(pfad);
+      assert.doesNotMatch(html, /<article class="post"/, `${pfad}: noch eine Karte`);
+      assert.match(html, /<body[^>]*class="[^"]*on-stage/, `${pfad}: nicht auf der Bühne`);
+    }
+
+    const beitrag = await load(link);
+    assert.match(beitrag, /class="msg"/, 'keine Nachricht');
+    assert.match(beitrag, /class="orb-mark"/, 'keine Kugel');
+    // Und die Karten-Stile für Beiträge sind mit den Karten verschwunden.
+    assert.doesNotMatch(STYLESHEET, /article\.post/);
+  });
+
   it('antwortet unter einem Beitrag, statt einen neuen anzufangen', async () => {
     // Wer einen Beitrag offen hat, schreibt darunter — die Leiste ist die
     // Antwort, und sie sagt, an wen sie geht.

@@ -146,75 +146,6 @@ ${viewer ? '' : `<footer class="site">
 </html>`;
 }
 
-/** Eine Beitragskarte für Listen — Hülle plus Inhalt. */
-export function postArticle(post, view) {
-  return `<article class="post">${postArticleInner(post, view)}</article>`;
-}
-
-/**
- * Der Inhalt einer Beitragskarte, ohne die Hülle — damit die Kreisseite die
- * Karte selbst setzen und die Kommentare mit hineinnehmen kann.
- */
-function postArticleInner(post, { viewer, showMetrics, supportSentence, supported, replyCount, canReply, replyReason }) {
-  const media = JSON.parse(post.media || '[]')
-    .map((item) => `<figure><img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt)}"><figcaption>${escapeHtml(item.alt)}</figcaption></figure>`)
-    .join('');
-
-  const body = post.content_warning
-    ? `<details><summary>Inhaltshinweis: ${escapeHtml(post.content_warning)}</summary><div class="body">${escapeHtml(post.content)}</div>${media}</details>`
-    : `<div class="body">${escapeHtml(post.content)}</div>${media}`;
-
-  // Nie eine nackte Zahl: entweder Menschen, oder der Hinweis, dass der
-  // Rückhalt im Kreis bleibt.
-  const support = showMetrics
-    ? supportSentence
-      ? `<span class="support-note">${escapeHtml(supportSentence)}</span>`
-      : ''
-    : '<span class="support-note">Rückhalt bleibt im Kreis</span>';
-
-  const supportButton = viewer
-    ? `<form method="post" action="/posts/${post.id}/support">
-         <button class="support" type="submit" aria-pressed="${supported ? 'true' : 'false'}">
-           ${supportArc}${supported ? 'Du stehst dahinter' : 'Support geben'}
-         </button>
-       </form>`
-    : '';
-
-  // Rückhalt soll in Zuwendung münden, nicht im Klick enden.
-  const followUp = supported && post.content_warning && canReply
-    ? `<div class="notice ember small">
-         <strong>Du stehst hinter ${escapeHtml(post.display_name || post.username)}.</strong>
-         Willst du auch etwas schreiben? <a href="/posts/${post.id}#reply">Antworten</a>
-       </div>`
-    : '';
-
-  // Kein Antworten-Knopf (D39): Support ist die eine Handlung, und geschrieben
-  // wird beim Beitrag, wenn man mag. Was hier steht, ist entweder die Zahl der
-  // vorhandenen Antworten oder der Hinweis, dass hier nicht geantwortet wird.
-  const replyControl = !viewer || canReply
-    ? replyCount > 0
-      ? `<a href="/posts/${post.id}" class="small">${replyCount} ${
-          replyCount === 1 ? 'Antwort' : 'Antworten'
-        }</a>`
-      : ''
-    : `<span class="meta small">${escapeHtml(replyReason ?? 'Antworten sind hier eingeschränkt.')}</span>`;
-
-  return `
-  <div class="who">
-    <span class="faces" aria-hidden="true"><span>${escapeHtml(initials(post))}</span></span>
-    <span class="name">${escapeHtml(post.display_name || post.username)}</span>
-    <span class="handle">${escapeHtml(handleOf(post))}</span>
-    ${timeTag(post.created_at)}
-  </div>
-  ${body}
-  <div class="actions">
-    ${supportButton}
-    ${support}
-    ${replyControl}
-  </div>
-  ${followUp}`;
-}
-
 export function composer({ prefs, replyTo = null, error = null, action = null }) {
   const labels = {
     everyone: 'Alle können antworten',
@@ -248,12 +179,24 @@ export function composer({ prefs, replyTo = null, error = null, action = null })
 </form>`;
 }
 
-export function threadPage({ viewer, prefs, post, replies, replyState, error }) {
+/**
+ * Ein Beitrag mit seinen Antworten — in derselben Bildsprache wie die
+ * Startseite: Kugel links, Text rechts, kein Kasten drumherum. Ein Beitrag ist
+ * hier nirgends eine Karte, weil er auf der Startseite auch keine ist; nur der
+ * Grund darunter wechselt, nicht die Sache selbst (D40).
+ */
+export function threadPage({ viewer, prefs, post, replies, replyState, error, nonce = '' }) {
+  const alle = [post, ...replies];
+  const kugeln = alle.map((p, i) =>
+    personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `threadorb-${i}`, i));
+
   return layout({
     title: 'Beitrag',
     viewer,
     prefs,
     bar: { title: 'Beitrag' },
+    stage: true,
+    head: `<style nonce="${escapeHtml(nonce)}">${kugeln.join('')}</style>`,
     // Wer einen Beitrag offen hat, schreibt darunter — die Leiste antwortet.
     schreiben: viewer && replyState.allowed
       ? {
@@ -265,9 +208,13 @@ export function threadPage({ viewer, prefs, post, replies, replyState, error }) 
       }
       : null,
     body: `
-${postArticle(post, post.view)}
-<h2>Antworten</h2>
-${replies.length ? replies.map((r) => postArticle(r, r.view)).join('') : '<p class="card">Noch keine Antworten.</p>'}
+<section class="chat-window is-chat tiefe-2" aria-label="Beitrag">
+${chatMessage(post, [], viewer, 'threadorb-0', { ohneAntwortzahl: true })}
+${replies.length
+  ? `<p class="bahn-zwischen">${replies.length === 1 ? 'Eine Antwort' : `${replies.length} Antworten`}</p>
+     ${replies.map((r, i) => chatMessage(r, [], viewer, `threadorb-${i + 1}`)).join('')}`
+  : '<p class="chat-start">Noch nichts gesagt.</p>'}
+</section>
 ${
   viewer
     ? replyState.allowed ? '' : `<p class="notice" id="reply">${escapeHtml(replyState.reason)}</p>`
@@ -276,7 +223,7 @@ ${
   });
 }
 
-export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextCursor, counts, isSelf, following, paused }) {
+export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextCursor, counts, isSelf, following, paused, nonce = '' }) {
   if (paused) {
     return layout({
       title: `@${account.username}`,
@@ -314,6 +261,9 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
        </div>`
     : `<p class="meta small stats-private">Dieses Konto hält seinen Kreis privat.</p>`;
 
+  const kugeln = posts.map((p, i) =>
+    personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `profilorb-${i}`, i));
+
   return layout({
     title: `@${account.username}`,
     viewer,
@@ -324,6 +274,8 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
       back: '/',
       action: secondary,
     },
+    stage: true,
+    head: `<style nonce="${escapeHtml(nonce)}">${kugeln.join('')}</style>`,
     body: `
 <section class="profile">
   <span class="avatar">${circleSigil({ slug: account.username, kind: 'topic', member_count: counts.followers + 1 }, { size: 96, id: 'me' })}</span>
@@ -334,11 +286,12 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
   <div class="actions-row profile-actions">${primary}</div>
 </section>
 
-<div class="tabs" role="tablist" aria-label="Was von diesem Konto">
-  <span class="tab-item is-active" role="tab" aria-selected="true">Beiträge</span>
-</div>
-
-${posts.length ? posts.map((p) => postArticle(p, p.view)).join('') : '<p class="card">Noch keine Beiträge.</p>'}
+<p class="bahn-zwischen">Beiträge</p>
+<section class="chat-window is-chat tiefe-2" aria-label="Beiträge">
+${posts.length
+  ? posts.map((p, i) => chatMessage(p, [], viewer, `profilorb-${i}`)).join('')
+  : '<p class="chat-start">Noch keine Beiträge.</p>'}
+</section>
 ${
   nextCursor
     ? `<p class="pager"><a class="button secondary" href="/@${escapeHtml(account.username)}?before=${encodeURIComponent(nextCursor)}">Ältere Beiträge zeigen</a></p>`
@@ -716,7 +669,7 @@ ${list}
  *
  * Aufklappen ist ein <details> — kein Skript, wie überall sonst auch.
  */
-function chatMessage(post, replies, viewer, orbId) {
+function chatMessage(post, replies, viewer, orbId, { ohneAntwortzahl = false } = {}) {
   const v = post.view;
   const name = post.display_name || post.username;
 
@@ -732,10 +685,16 @@ function chatMessage(post, replies, viewer, orbId) {
        </form>`
     : '';
 
+  // Bilder tragen ihren Alternativtext sichtbar mit (D7) — auch hier, wo es
+  // sonst nur um Text geht.
+  const media = JSON.parse(post.media || '[]')
+    .map((item) => `<figure><img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt)}"><figcaption>${escapeHtml(item.alt)}</figcaption></figure>`)
+    .join('');
+
   const body = post.content_warning
     ? `<details><summary>Inhaltshinweis: ${escapeHtml(post.content_warning)}</summary>
-         <p class="bubble-text">${escapeHtml(post.content)}</p></details>`
-    : `<p class="bubble-text">${escapeHtml(post.content)}</p>`;
+         <p class="bubble-text">${escapeHtml(post.content)}</p>${media}</details>`
+    : `<p class="bubble-text">${escapeHtml(post.content)}</p>${media}`;
 
   const antworten = replies
     .map(
@@ -769,7 +728,10 @@ function chatMessage(post, replies, viewer, orbId) {
     ${antworten ? `<div class="replies">${antworten}</div>` : ''}
     <div class="bubble-fuss">
       ${supportButton}
-      ${v.replyCount > 0
+      ${viewer && !v.canReply
+        ? `<span class="fuss-link">${escapeHtml(v.replyReason ?? 'Antworten sind hier eingeschränkt.')}</span>`
+        : ''}
+      ${v.replyCount > 0 && !ohneAntwortzahl
         ? `<a class="fuss-link" href="/posts/${post.id}">${v.replyCount} ${
             v.replyCount === 1 ? 'Antwort' : 'Antworten'
           }</a>`

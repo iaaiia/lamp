@@ -344,14 +344,16 @@ router.get('/posts/:id', (ctx, res) => {
   if (!post || !isVisibleTo(post, ctx.viewer)) return notFound(ctx, res);
 
   const enriched = { ...post, ...ctx.authorOf(post) };
+  const nonce = randomToken(16);
   sendHtml(res, 200, threadPage({
     viewer: ctx.viewer,
     prefs: preferencesOf(ctx.viewer),
     post: decorate(enriched, ctx.viewer),
-    replies: repliesTo(post.id).map((r) => decorate(r, ctx.viewer)),
+    replies: repliesTo(post.id).map((r) => decorate({ ...r, ...ctx.authorOf(r) }, ctx.viewer)),
     replyState: canReply(post, ctx.viewer),
     error: ctx.url.searchParams.get('error'),
-  }));
+    nonce,
+  }), nonce);
 });
 
 router.post('/posts/:id/reply', (ctx, res) => {
@@ -398,6 +400,7 @@ router.get('/@:username', async (ctx, res) => {
 
   const before = ctx.url.searchParams.get('before');
   const { posts, nextCursor } = accountTimeline(account.id, { before });
+  const nonce = randomToken(16);
   sendHtml(res, 200, profilePage({
     viewer: ctx.viewer,
     prefs: preferencesOf(ctx.viewer),
@@ -413,7 +416,8 @@ router.get('/@:username', async (ctx, res) => {
     },
     isSelf: ctx.viewer?.id === account.id,
     following: ctx.viewer ? isFollowing(ctx.viewer.id, account.id) : false,
-  }));
+    nonce,
+  }), nonce);
 });
 
 router.get('/@:username/outbox', (ctx, res) => {

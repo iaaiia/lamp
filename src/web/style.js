@@ -489,7 +489,7 @@ main { padding-bottom: 4rem; }
 
 /* -------------------------------------------------------------------- Karten */
 
-.card, article.post, .panel {
+.card, .panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-l);
@@ -497,7 +497,7 @@ main { padding-bottom: 4rem; }
   margin: 0 0 1rem;
   box-shadow: var(--shadow);
 }
-.card.flat, article.post { box-shadow: none; }
+.card.flat { box-shadow: none; }
 
 /* Feine Bogenlinien im Hintergrund — das leise Ornament der Referenz. Sie
    liegen ganz hinten, kreuzen die Fläche und geben dem Papier Bewegung, ohne
@@ -750,7 +750,6 @@ body.on-stage footer.site { background: transparent; border-top-color: rgba(22, 
 
 body.on-stage main > *,
 body.on-stage .space-head,
-body.on-stage article.post,
 body.on-stage .card,
 body.on-stage .compose-slot,
 body.on-stage .cluster,
@@ -798,7 +797,6 @@ body.on-stage .space-actions button.secondary:hover { border-color: var(--violet
 /* Karten: weiß, weit gerundet, ohne Kontur — sie stehen durch ihren Schatten
    auf dem Papier, nicht durch einen Strich. So macht es die Referenz. */
 body.on-stage .card,
-body.on-stage article.post,
 body.on-stage .tile,
 body.on-stage .compose-slot > summary {
   background: #FDFCFA;
@@ -807,7 +805,6 @@ body.on-stage .compose-slot > summary {
   border-radius: 26px;
   box-shadow: 0 2px 4px -2px rgba(22, 26, 30, .06), 0 18px 40px -28px rgba(22, 26, 30, .35);
 }
-body.on-stage article.post { padding: 1.35rem 1.25rem; }
 body.on-stage .compose-slot > summary {
   border: 1px dashed var(--line);
   color: #5F6169;
@@ -1254,6 +1251,7 @@ body.low-stimulus .cloud { animation: none; }
   border: 1px solid var(--line);
   border-radius: var(--radius-l);
   margin-bottom: 1rem;
+  /* Auf der Bühne steht der Kopf frei — wie alles andere auch (D40). */
 }
 .profile .avatar {
   display: grid;
@@ -1271,6 +1269,17 @@ body.low-stimulus .cloud { animation: none; }
 .profile-actions { width: 100%; max-width: 22rem; margin-top: 1rem; justify-content: center; }
 .profile-actions form { display: contents; }
 .profile-actions .grow button, .profile-actions .grow { width: 100%; }
+
+/* Auf der Bühne trägt nichts einen Kasten: der Beitrag nicht, und der
+   Profilkopf darüber auch nicht. Die Kugeln sind das Bild, der Rest ist
+   Papier (D40). */
+body.on-stage .profile,
+body.on-stage .profile .avatar {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+body.on-stage .profile { padding: .5rem 0 1rem; margin-bottom: .25rem; }
 
 /* Zahlen groß, Bezeichnung leise darunter — und wo nichts freigegeben ist,
    steht das da, statt eine Null zu behaupten. */
@@ -1290,39 +1299,6 @@ body.low-stimulus .cloud { animation: none; }
 }
 .stat .lbl { font-size: .72rem; color: var(--ink-muted); }
 .stats-private { margin-top: .9rem; }
-
-/* Reiter: der aktive kräftig, die anderen leise. */
-.tabs {
-  display: flex;
-  gap: 1.2rem;
-  align-items: baseline;
-  padding: 0 .25rem .75rem;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 1rem;
-}
-.tab-item {
-  font-family: var(--display);
-  font-size: 1.02rem;
-  font-weight: 700;
-  letter-spacing: -.015em;
-  color: var(--ink-muted);
-  text-decoration: none;
-  position: relative;
-  padding-bottom: .75rem;
-  margin-bottom: -.75rem;
-}
-.tab-item.is-active { color: var(--ink); }
-.tab-item.is-active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--blue);
-}
-.tab-item:hover { color: var(--ink); }
 
 /* --------------------------------------------------------- Hilfsklassen */
 .flush { margin: 0; }
@@ -1543,37 +1519,22 @@ body.low-stimulus .orb-body {
 
 /* ------------------------------------------------------------------ Beitrag */
 
-article.post { display: flex; flex-direction: column; gap: .7rem; }
-article.post .who {
-  display: flex;
-  gap: .55rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-article.post .who .name { font-weight: 680; }
-article.post .who .handle,
-article.post .who time { font-size: .8rem; color: var(--ink-muted); }
-article.post .body { white-space: pre-wrap; overflow-wrap: anywhere; }
-article.post figure { margin: .5rem 0 0; }
-article.post img { max-width: 100%; border-radius: var(--radius-m); display: block; }
-article.post figcaption { font-size: .82rem; color: var(--ink-muted); margin-top: .35rem; }
-article.post details summary {
+/* Ein Beitrag ist keine Karte mehr, sondern eine Nachricht: Kugel links, Text
+   rechts, auf demselben Papier wie die Startseite (D40). Was hier steht, ist
+   nur, was die Blase zusätzlich braucht — Bilder und der Inhaltshinweis. */
+.bubble figure { margin: .6rem 0 0; }
+.bubble img { max-width: 100%; border-radius: var(--radius-m); display: block; }
+.bubble figcaption { font-size: .82rem; color: var(--ink-muted); margin-top: .35rem; }
+.bubble details summary {
   cursor: pointer;
   font-weight: 650;
-  padding: .5rem .75rem;
+  padding: .4rem .7rem;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-s);
+  font-size: .84rem;
 }
-article.post details[open] summary { margin-bottom: .75rem; }
-article.post .actions {
-  display: flex;
-  gap: .7rem;
-  align-items: center;
-  flex-wrap: wrap;
-  padding-top: .7rem;
-  border-top: 1px solid var(--line-soft);
-}
+.bubble details[open] summary { margin-bottom: .6rem; }
 
 /* Presence: Menschen als Ringe, Gruppe vor Zahl. */
 .faces { display: flex; align-items: center; }

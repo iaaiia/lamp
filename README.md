@@ -21,6 +21,7 @@ Eigenschaften darunter:
 | **Der Weg gehört dir** | Die Startseite sind drei Rubriken: **Freunde → Kreise → Support**. Freunde = wem du folgst und was diese Menschen schreiben — das ist zugleich der Folge-Strom, mit der Sortierung aus den Einstellungen. Kreise = alles, womit du zu tun hast: wofür du eingestanden bist, und wofür jemand bei dir. Support = die geschützten Chats, die daraus geworden sind. Eine Achse, und zwar die, die etwas kostet: Support geben. |
 | **Gewischt, nicht geladen** | Die vier Rubriken liegen als Bahnen nebeneinander; seitliches Wischen rastet auf die nächste ein. Die Leiste oben gehört zur Bahn: Zeichen, die vier Wörter, zwei Knöpfe — und das Wort der eigenen Bahn ist das kräftige. Beim Wischen wandert sie mit, also folgt die Betonung dem Finger, ohne dass ein Skript zusieht. Alles Bedienbare liegt als Milchglas über dem Inhalt, der darunter durchzieht. |
 | **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, ist der **geschützte Chat** da — von selbst, ohne Tür und ohne Bestätigung: ein privater Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
+| **Ein Beitrag ist eine Nachricht** | Beitragsseite und Profil zeigen einen Beitrag genauso wie die Startseite — Kugel, Text, Support. Keine Karten, kein eigener Grund: dieselbe Sache sieht überall gleich aus. |
 | **Der Kreis ist ein Chatfenster** | Ein Kreis ist nur noch das Gespräch: jede Nachricht eine Kugel mit Text daneben, versetzt und in wechselnder Größe. Die Streuung kommt aus dem Beitrag — sieht zufällig aus, ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
 | **Die Kugel ist das Bedienelement** | Antippen öffnet, wer da spricht und wie der Rückhalt steht; Support geben steht sichtbar am Beitrag, weil ein Knopf hinter einer Klappe nicht gedrückt wird — und es ist der einzige Knopf dort. Keine Knopfreihe unter jedem Text — und trotzdem kein Skript: Aufklappen ist ein `<details>`. Kugeln zur Zierde gibt es nicht: jede steht für einen Menschen, ein Thema, eine Nachricht oder einen Rückhalt. |
 | **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause), in der Mitte wo man ist, rechts ein Knopf: Einstellungen. Die Leiste ist auf jeder Seite gleich groß. Unten genau eine feste Leiste, und darin steht das Schreibfeld. Die fünfteilige Tab-Leiste ist weg. |
@@ -66,7 +67,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 146 Tests
+npm test        # 147 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -97,7 +98,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   146 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   147 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)

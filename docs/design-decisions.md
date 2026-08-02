@@ -286,6 +286,28 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D34 — Kühler Grund, frische Farben, violette Zeichen
+
+**Chosen:** die Palette folgt der Referenz (dem Sonnensystem-Plakat): ein sehr helles
+Lavendelgrau als Grund (`--fog: #EDEFF5`), tiefes Marineblau statt Schwarz als Schriftfarbe
+(`--ink: #16283F`), und frischere Akzente — Jupiterblau `#2E7FC4`, Sonnenorange `#F0862F`
+für Support, Uranusviolett `#7A5BD0`. Die Kugeln bleiben körnig und blass; nur ihre Farben
+sind neu.
+
+Zeichen und Knöpfe in der Kopfleiste sind violett gefüllt mit weißem Piktogramm. Das Zeichen
+trägt zusätzlich einen **versetzten** Ring — nach links oben verschoben, wie die Ringe der
+Planeten auf dem Plakat. Mittig wäre es ein Heiligenschein; versetzt wird aus einem Punkt
+ein Zeichen.
+
+**Zwei Farben der Vorlage fehlen mit Absicht:** das Orange gehört ausschließlich dem Support
+(D4a) und kommt in keiner Kugel vor; das Erdgrün fällt weg, weil die Marke kein dominantes
+Grün trägt — das stand so im Briefing und wiegt schwerer als die Vollständigkeit einer
+Vorlage.
+
+**Enforced by:** die Tokens in `src/web/style.js`, die Paletten in `orb.js`, `sky.js`,
+`stage.js`; `tests/ui.test.js`, Block „Farben“, prüft den kühlen Grund, das Violett samt
+versetztem Ring — und dass weder Ember noch Grün in eine Kugel geraten.
+
 ## D33 — Gewischt, nicht geladen — und alles schwebt
 
 **Chosen:** die vier Rubriken liegen als vier Bahnen **gleichzeitig** auf der Startseite, in

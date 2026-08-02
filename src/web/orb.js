@@ -25,15 +25,24 @@ function hash(text) {
   return h;
 }
 
+/**
+ * Die Farben der Referenz — die Planeten des Sonnensystem-Plakats. Frischer als
+ * vorher, aber im Korn und in der Blässe der Kugeln bleiben sie ruhig.
+ *
+ * Zwei Farben des Plakats fehlen mit Absicht: das Orange der Sonne gehört dem
+ * Support (D4a), und das Erdgrün fällt weg, weil die Marke kein dominantes
+ * Grün trägt — das war eine Vorgabe aus dem Briefing und wiegt schwerer als
+ * die Vollständigkeit einer Vorlage.
+ */
 const PALETTE = [
-  ['#6E8FDF', '#22356B'],
-  ['#8A86E4', '#37347E'],
-  ['#5F82AB', '#243C55'],
-  ['#7377C4', '#2E3170'],
-  ['#4E90AE', '#1E4356'],
-  ['#8778B4', '#3A2F63'],
-  ['#D9A250', '#5C3E13'],
-  ['#5FAFAD', '#153E3E'],
+  ['#7A5BD0', '#33206B'],  // Uranus-Violett
+  ['#2E7FC4', '#123E66'],  // Jupiter-Blau
+  ['#4FBEE4', '#12495C'],  // Cyan
+  ['#4FC2A5', '#0F4437'],  // Mint
+  ['#9A8BE0', '#3B2E80'],  // Flieder
+  ['#EE6FA8', '#6B1B41'],  // Neptun-Rosa
+  ['#F2C64B', '#6B4E0B'],  // Venus-Gelb
+  ['#6A6FD4', '#252A6E'],  // Indigo
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));

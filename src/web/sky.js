@@ -36,14 +36,14 @@ function hash(text) {
 
 /** Blau bis Violett über Schiefer. Ember fehlt: die Farbe gehört dem Support. */
 const PALETTE = [
-  ['#6E8FDF', '#22356B'],
-  ['#8A86E4', '#37347E'],
-  ['#5F82AB', '#243C55'],
-  ['#7377C4', '#2E3170'],
-  ['#4E90AE', '#1E4356'],
-  ['#8778B4', '#3A2F63'],
-  ['#D9A250', '#5C3E13'],
-  ['#5FAFAD', '#153E3E'],
+  ['#7A5BD0', '#33206B'],
+  ['#9A8BE0', '#3B2E80'],
+  ['#2E7FC4', '#123E66'],
+  ['#6A6FD4', '#252A6E'],
+  ['#4FBEE4', '#12495C'],
+  ['#EE6FA8', '#6B1B41'],
+  ['#F2C64B', '#6B4E0B'],
+  ['#4FC2A5', '#0F4437'],
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));

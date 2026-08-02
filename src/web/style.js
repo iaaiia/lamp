@@ -19,29 +19,35 @@ export const STYLESHEET = `
 :root {
   color-scheme: light dark;
 
-  /* Warmes Papier statt kühlem Grau — nach der Referenz. Der Ton ist leicht
-     gelblich gebrochen, damit die Karten darauf sichtbar heller stehen. */
-  --fog:        #F5F2EC;
+  /* Kühler Grund nach der Referenz (dem Sonnensystem-Plakat): ein sehr helles
+     Lavendelgrau, auf dem die Farben frisch stehen statt gedämpft. Die Schrift
+     ist kein Schwarz, sondern das tiefe Marineblau des Plakats — dadurch wirkt
+     die ganze Fläche kühl, ohne kalt zu werden. */
+  --fog:        #EDEFF5;
   --surface:    #FFFFFF;
-  --surface-2:  #FBF9F5;
-  --ink:        #161A1E;
-  --ink-muted:  #5F6169;
-  --line:       #E2DED6;
-  --line-soft:  #EDEAE3;
+  --surface-2:  #F7F8FC;
+  --ink:        #16283F;
+  --ink-muted:  #5C6B80;
+  --line:       #DDE1EA;
+  --line-soft:  #E9ECF2;
 
-  --blue:       #2B4C9B;
-  --blue-deep:  #1C3468;
-  --blue-tint:  #E7ECF7;
+  /* Frischer als vorher, und aus der Referenz genommen: das Blau der
+     Jupiterbahn, das Orange der Sonne, das Violett des Uranus. */
+  --blue:       #2E7FC4;
+  --blue-deep:  #1F5E96;
+  --blue-tint:  #E4F0FA;
   --blue-ink:   #FFFFFF;
-  --ember:      #DC6B45;
-  --ember-deep: #A8461F;
-  --ember-tint: #FBEDE7;
+  --ember:      #F0862F;
+  --ember-deep: #C4620F;
+  --ember-tint: #FDEEDF;
   --ember-ink:  #FFFFFF;
-  --forum:      #5B57C4;
-  --forum-tint: #ECEBF9;
+  --violet:     #7A5BD0;
+  --violet-deep: #5F42AE;
+  --forum:      #7A5BD0;
+  --forum-tint: #EDE8FA;
 
-  --warn:       #A96613;
-  --crit:       #A8322A;
+  --warn:       #B5760F;
+  --crit:       #C0453A;
 
   --radius-s: 10px;
   --radius-m: 16px;
@@ -56,7 +62,7 @@ export const STYLESHEET = `
   --body: system-ui, -apple-system, "Inter", "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
-  --shadow: 0 1px 2px rgba(20,23,29,.05), 0 8px 24px -12px rgba(20,23,29,.18);
+  --shadow: 0 1px 2px rgba(22,40,63,.05), 0 8px 24px -12px rgba(22,40,63,.18);
   --focus: 0 0 0 3px var(--blue-tint);
   --measure: 62ch;
 
@@ -264,6 +270,44 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
 .brandmark svg { display: block; }
 .appbar .slot.right { gap: .4rem; }
 
+/* Auf den übrigen Seiten trägt die Leiste dasselbe Zeichen und dieselben
+   Knöpfe wie auf dem Weg: violett gefüllt, weißes Piktogramm, und beim Zeichen
+   der versetzte Ring. Eine Marke, nicht zwei. */
+.brandmark {
+  position: relative;
+  gap: .6rem;
+  padding-left: .5rem;
+}
+.brandmark svg {
+  width: 17px;
+  height: 17px;
+  padding: 8px;
+  box-sizing: content-box;
+  border-radius: 50%;
+  background: var(--violet);
+}
+.brandmark svg circle:first-child { stroke: #FFFFFF; }
+.brandmark svg circle:last-child { fill: #FFFFFF; }
+.brandmark::after {
+  content: "";
+  position: absolute;
+  left: .5rem;
+  top: 50%;
+  width: 2.1rem;
+  height: 2.1rem;
+  transform: translateY(-50%) translate(-4px, -4px);
+  border-radius: 50%;
+  border: 1.5px solid var(--violet);
+  opacity: .5;
+  pointer-events: none;
+}
+.appbar .slot.right .icon-btn {
+  background: var(--violet);
+  border-color: transparent;
+  color: #FFFFFF;
+}
+.appbar .slot.right .icon-btn:hover { background: var(--violet-deep); }
+
 /* ------------------------------------------------------------------ Der Weg */
 /* Vier Bahnen nebeneinander in einer Fläche, die einrastet. Gewischt wird mit
    dem Finger, gesprungen mit dem Anker — beides ohne eine Zeile Skript.
@@ -315,22 +359,36 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
 .mark,
 .icon-btn.rund {
   flex: none;
+  position: relative;
   display: grid;
   place-items: center;
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 50%;
-  background: var(--ink);
-  color: var(--surface);
+  background: var(--violet);
+  color: #FFFFFF;
   border: 0;
   text-decoration: none;
 }
-.mark svg { width: 18px; height: 18px; }
-.mark svg circle:first-child { stroke: var(--surface); }
-.mark svg circle:last-child { fill: var(--ember); }
-.icon-btn.rund svg { width: 18px; height: 18px; }
+/* Der versetzte Ring: in der Referenz tragen die Planeten eine Schale, die
+   nicht mittig sitzt. Genau das macht aus einem Punkt ein Zeichen. */
+.mark::after {
+  content: "";
+  position: absolute;
+  /* Nicht mittig: die Schale sitzt nach links oben versetzt, wie die Ringe der
+     Planeten auf dem Plakat. Mittig wäre es ein Heiligenschein. */
+  inset: -6px 0 0 -6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--violet);
+  opacity: .5;
+}
+.mark svg { width: 17px; height: 17px; }
+.mark svg circle:first-child { stroke: #FFFFFF; }
+.mark svg circle:last-child { fill: #FFFFFF; }
+.icon-btn.rund svg { width: 18px; height: 18px; color: #FFFFFF; }
 .mark:hover,
-.icon-btn.rund:hover { background: var(--blue-deep); }
+.icon-btn.rund:hover { background: var(--violet-deep); }
+.mark:hover::after { border-color: var(--violet-deep); }
 
 /* Die vier Wörter. Kräftig ist das, in dessen Bahn man gerade steht — jede
    Bahn bringt ihre eigene Leiste mit, deshalb stimmt es beim Wischen von
@@ -483,10 +541,10 @@ body.landing {
   /* Warmes Papier mit einem kaum sichtbaren Verlauf — der Grund der Referenz.
      Die Farbe kommt von den Kugeln, nicht vom Hintergrund. */
   background:
-    radial-gradient(120% 80% at 78% 4%, #FBF6EE 0%, transparent 60%),
-    radial-gradient(100% 70% at 8% 96%, #F2F4F7 0%, transparent 62%),
-    #F7F4EE;
-  color: #161A1E;
+    radial-gradient(120% 80% at 78% 4%, #F6F7FB 0%, transparent 60%),
+    radial-gradient(100% 70% at 8% 96%, #E6EAF4 0%, transparent 62%),
+    #EDEFF5;
+  color: #16283F;
   overflow-x: hidden;
 
   /* Eine Serifenschrift für die eine große Zeile — wie im Vorbild. Keine
@@ -646,17 +704,17 @@ body.landing {
 /* Die eine Handlung: dunkel gefüllt, wie in der Referenz. */
 .stage-search button {
   border: 0;
-  background: #17201F;
+  background: var(--violet);
   color: #FBFAF7;
   min-height: 3rem;
   padding: .75rem 1.5rem;
   font-size: .98rem;
 }
-.stage-search button:hover { background: #0C1211; border-color: transparent; }
+.stage-search button:hover { background: var(--violet-deep); border-color: transparent; }
 
 .stage-links { display: flex; gap: .7rem; margin: .2rem 0 0; font-size: .9rem; }
 .stage-links a { color: #2C3A38; text-decoration-color: rgba(44, 58, 56, .4); }
-.stage-links a:hover { color: #0C1211; }
+.stage-links a:hover { color: var(--violet-deep); }
 .stage-links span { color: rgba(44, 58, 56, .35); }
 
 .stage-note {
@@ -683,15 +741,15 @@ body.landing {
 
 body.on-stage {
   background:
-    radial-gradient(120% 60% at 80% 0%, #FBF6EE 0%, transparent 62%),
-    radial-gradient(90% 50% at 4% 100%, #F1F4F7 0%, transparent 60%),
-    #F7F4EE;
+    radial-gradient(120% 60% at 80% 0%, #F6F7FB 0%, transparent 62%),
+    radial-gradient(90% 50% at 4% 100%, #E6EAF4 0%, transparent 60%),
+    #EDEFF5;
   background-attachment: fixed;
-  color: #161A1E;
+  color: #16283F;
 }
 body.on-stage .appbar {
-  background: color-mix(in oklab, #F7F4EE 82%, transparent);
-  border-bottom-color: rgba(22, 26, 30, .1);
+  background: color-mix(in oklab, #EDEFF5 82%, transparent);
+  border-bottom-color: rgba(22, 40, 63, .1);
 }
 body.on-stage main { position: relative; z-index: 1; }
 body.on-stage footer.site { background: transparent; border-top-color: rgba(22, 26, 30, .1); }
@@ -719,17 +777,17 @@ body.on-stage .orbfield.stage-orbs { z-index: 0; }
 /* Die leise Handlung auf dunklem Grund: umrandet statt grau gefüllt. */
 /* Die Hauptsache auf der Bühne ist dunkel gefüllt wie in der Referenz. */
 body.on-stage .space-actions button {
-  background: #17201F;
-  border-color: #17201F;
+  background: var(--violet);
+  border-color: var(--violet);
   color: #FBFAF7;
 }
-body.on-stage .space-actions button:hover { background: #0C1211; border-color: #0C1211; }
+body.on-stage .space-actions button:hover { background: var(--violet-deep); border-color: var(--violet-deep); }
 body.on-stage .space-actions button.secondary {
   background: transparent;
   border: 1.5px solid rgba(22, 26, 30, .22);
   color: #161A1E;
 }
-body.on-stage .space-actions button.secondary:hover { border-color: #17201F; background: transparent; color: #0C1211; }
+body.on-stage .space-actions button.secondary:hover { border-color: var(--violet); background: transparent; color: var(--violet-deep); }
 
 /* Der Kopf eines Kreises ist eine Zeile, kein Plakat: der Name steht schon in
    der App-Leiste, also stehen hier nur noch Art, Größe, Zweck und der eine
@@ -824,7 +882,7 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 }
 .chat-start { text-align: center; font-size: .84rem; color: var(--ink-muted); margin: .5rem 0 1rem; }
 /* Platz, damit die letzte Blase unter dem schwebenden Schreibfeld hervorkommt. */
-.chat-window.is-chat { padding-bottom: 1rem; }
+.chat-window.is-chat { padding-bottom: calc(var(--unten) + 5rem); }
 .pager.top { margin: 0 0 .5rem; }
 
 /* Nachrichten: die Kugel ist der Inhalt, nicht die Verzierung. Sie liegt

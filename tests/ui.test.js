@@ -55,8 +55,32 @@ describe('Kreiszeichen', () => {
   it('benutzt nie Ember — die Farbe gehört dem Support', () => {
     for (const slug of ['a', 'bb', 'ccc', 'dddd', 'eeeee', 'ffffff', 'ggggggg']) {
       const svg = circleSigil({ slug, kind: 'topic', member_count: 5 }, { id: 'x' });
-      assert.doesNotMatch(svg, /DC6B45|F08A5E/i);
+      assert.doesNotMatch(svg, /DC6B45|F08A5E|F0862F/i);
     }
+  });
+});
+
+describe('Farben', () => {
+  it('hält Ember bei den Kugeln draußen und Grün aus der Marke', () => {
+    // Zwei Regeln aus dem Briefing, die eine Vorlage nicht aushebelt: Orange
+    // gehört dem Support, und die Marke trägt kein dominantes Grün.
+    for (const seed of ['a', 'bb', 'ccc', 'dddd', 'eeeee', 'ffffff', 'ggggggg', 'hhh']) {
+      const regel = personOrbCss(seed, '1', 'x');
+      assert.doesNotMatch(regel, /F0862F|DC6B45|F08A5E/i, 'Ember gehört dem Support');
+      assert.doesNotMatch(regel, /8CC152|4CAF50|3FBF3F/i, 'kein dominantes Grün');
+    }
+  });
+
+  it('steht auf kühlem Grund, nicht mehr auf warmem Papier', () => {
+    assert.match(STYLESHEET, /--fog:\s*#EDEFF5/);
+    assert.match(STYLESHEET, /--ink:\s*#16283F/);
+    assert.doesNotMatch(STYLESHEET, /#F7F4EE|#F5F2EC/, 'das warme Papier ist weg');
+  });
+
+  it('gibt Zeichen und Knöpfen oben Violett und einen versetzten Ring', () => {
+    assert.match(STYLESHEET, /--violet:\s*#7A5BD0/);
+    assert.match(STYLESHEET, /\.mark,\s*\n\.icon-btn\.rund \{[^}]*background: var\(--violet\)/s);
+    assert.match(STYLESHEET, /\.mark::after \{[^}]*inset: -6px 0 0 -6px/s, 'der Ring sitzt versetzt');
   });
 });
 

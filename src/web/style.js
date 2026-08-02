@@ -184,22 +184,50 @@ small, .small { font-size: .875rem; }
 
 :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
 
+/* -------------------------------------------------------------------- Glas */
+/* Alles Bedienbare schwebt über dem Inhalt, statt ihn zu verdrängen: eine
+   Scheibe aus Milchglas, unter der die Kugeln durchziehen. Eine Klasse, damit
+   es überall dieselbe Scheibe ist — Kopfleiste, Bahnkopf, Schreibleiste.
+
+   Die Kante ist zweiteilig: außen eine dünne dunkle Linie, innen ein heller
+   Schimmer (inset). Das ist der Unterschied zwischen „weißer Kasten mit
+   Transparenz" und Glas. */
+.glas {
+  background: color-mix(in oklab, var(--surface) 62%, transparent);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .55) inset,
+    0 10px 30px -18px rgba(22, 26, 30, .45);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glas { background: color-mix(in oklab, var(--surface) 94%, transparent); }
+}
+
 /* ---------------------------------------------------------------- App-Leiste */
-/* Links zurück, in der Mitte wo man ist, rechts eine Handlung. */
+/* Sie liegt nicht mehr am Rand, sondern schwebt eingerückt darüber. */
 
 .appbar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: max(.5rem, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(48rem, calc(100% - 1.5rem));
   z-index: 12;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: .5rem;
-  padding: .55rem .75rem;
-  background: color-mix(in oklab, var(--surface) 92%, transparent);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line);
+  padding: .5rem .6rem;
+  border-radius: 24px;
 }
+/* Platz für die schwebende Leiste — sie verdrängt nichts, also muss der
+   Inhalt selbst anfangen, wo sie aufhört. */
+body main { padding-top: 4.6rem; }
+/* Auf dem Weg scrollen die Bahnen, nicht die Seite. */
+body:has(.weg) { overflow: hidden; }
+body:has(.weg) main { padding-bottom: 0; }
 .appbar .slot { display: flex; align-items: center; }
 .appbar .slot.right { justify-content: flex-end; }
 .appbar-title {
@@ -228,6 +256,105 @@ small, .small { font-size: .875rem; }
 .brandmark svg { display: block; }
 .appbar .slot.right { gap: .4rem; }
 
+/* Der Pfad: vier Wörter in der Kopfleiste, das aktuelle kräftig. Welches das
+   ist, sagt die Fläche — der Anker unter dem Finger. */
+.pfad {
+  display: flex;
+  gap: .7rem;
+  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.pfad::-webkit-scrollbar { display: none; }
+.pfad-wort {
+  flex: none;
+  font-size: .8rem;
+  font-weight: 660;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: .15rem .1rem;
+  border-radius: 8px;
+}
+.pfad-wort:hover { color: var(--ink); }
+
+/* ------------------------------------------------------------------ Der Weg */
+/* Vier Bahnen nebeneinander in einer Fläche, die einrastet. Gewischt wird mit
+   dem Finger, gesprungen mit dem Anker — beides ohne eine Zeile Skript.
+
+   Jede Bahn scrollt für sich. Das ist nicht Geschmack: overflow-x auto macht
+   aus overflow-y visible automatisch auto, und dann klebt ein sticky Element
+   an der falschen Kante. Scrollt die Bahn selbst, klebt ihr Kopf dort,
+   wo er hingehört. */
+.weg {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  margin: 0 -1.25rem;
+  height: calc(100dvh - 9.5rem);
+}
+.weg::-webkit-scrollbar { display: none; }
+.bahn {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1.25rem 2rem;
+  min-width: 0;
+  scrollbar-width: none;
+}
+.bahn::-webkit-scrollbar { display: none; }
+.bahn:focus { outline: none; }
+
+/* Der Kopf einer Bahn schwebt über ihrem Inhalt: er bleibt oben stehen,
+   während die Kugeln darunter durchziehen — und er trägt den Namen der
+   Rubrik, in der man gerade ist. */
+.bahn-kopf {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  border-radius: 20px;
+  padding: .7rem 1rem .8rem;
+  margin-bottom: 1rem;
+}
+.bahn-wort { flex: 1; min-width: 0; }
+.bahn-titel {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 780;
+  letter-spacing: -.02em;
+  margin: 0;
+}
+.bahn-satz { margin: .2rem 0 0; font-size: .82rem; color: var(--ink-muted); max-width: none; }
+.bahn-weiter { display: flex; gap: .2rem; flex: none; }
+.bahn-weiter a {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  text-decoration: none;
+  color: var(--ink-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.bahn-weiter a:hover { color: var(--ink); background: color-mix(in oklab, var(--ink) 6%, transparent); }
+.bahn-zwischen {
+  margin: 1.6rem 0 .8rem;
+  font-size: .74rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-family: var(--mono);
+}
+.bahn-inhalt { padding-bottom: 1rem; }
+
 /* ------------------------------------------------------- Die Schreibleiste */
 /* Unten liegt genau eine feste Leiste, und in ihr steht das Schreibfeld.
    Vorher waren es fünf Ziele plus eine Handlung — zwei Navigationen für eine
@@ -236,18 +363,17 @@ small, .small { font-size: .875rem; }
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  width: min(48rem, 100%);
-  bottom: 0;
   z-index: 11;
   display: flex;
   align-items: flex-end;
   gap: .6rem;
-  padding: 1.8rem 1.25rem calc(.9rem + env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, rgba(247, 244, 238, 0) 0%, var(--paper, #F7F4EE) 45%);
-  backdrop-filter: blur(3px);
+  bottom: max(.6rem, env(safe-area-inset-bottom));
+  width: min(48rem, calc(100% - 1.5rem));
+  padding: .5rem .6rem;
+  border-radius: 28px;
 }
 .writebar > details, .writebar > .write-field { flex: 1; }
-.writebar .icon-btn { background: #FDFCFA; box-shadow: 0 8px 26px -18px rgba(22, 26, 30, .5); }
+.writebar .icon-btn { background: color-mix(in oklab, var(--surface) 70%, transparent); border-color: transparent; }
 
 /* Damit der Inhalt nicht hinter der Leiste endet. */
 body.has-writebar main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
@@ -255,9 +381,9 @@ body.has-writebar footer.site { padding-bottom: calc(6rem + env(safe-area-inset-
 
 .write-field {
   display: block;
-  padding: .9rem 1.25rem;
-  background: #FDFCFA;
-  border: 1px solid var(--line);
+  padding: .8rem 1.15rem;
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  border: 1px solid transparent;
   border-radius: 999px;
   color: var(--ink-muted);
   font-weight: 620;
@@ -761,13 +887,12 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .chat-compose > summary {
   cursor: pointer;
   list-style: none;
-  padding: .9rem 1.25rem;
-  background: #FDFCFA;
-  border: 1px solid var(--line);
+  padding: .8rem 1.15rem;
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  border: 1px solid transparent;
   border-radius: 999px;
   color: var(--ink-muted);
   font-weight: 620;
-  box-shadow: 0 8px 26px -18px rgba(22, 26, 30, .5);
 }
 .chat-compose > summary::-webkit-details-marker { display: none; }
 .chat-compose > summary:hover { border-color: var(--blue); color: var(--ink); }

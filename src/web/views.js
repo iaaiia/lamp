@@ -75,18 +75,23 @@ export function layout({
   ].filter(Boolean).join(' ');
 
   /**
-   * Die Kopfzeile ist die ganze Navigation: links das Zeichen, das nach Hause
-   * führt, in der Mitte, wo man ist, rechts zwei Handlungen — Nachrichten und
-   * Einstellungen. Vorher stand hier ein Zurück-Pfeil und unten eine Leiste mit
-   * fünf Zielen; das waren zwei Navigationen für eine App mit einem Ort.
+   * Die Kopfzeile schwebt über dem Inhalt statt ihn nach unten zu schieben:
+   * eine Kapsel aus Milchglas, unter der die Kugeln durchziehen. Links das
+   * Zeichen, in der Mitte, wo man ist, rechts zwei Handlungen.
+   *
+   * Auf dem Weg bleibt die Mitte leer: welche Rubrik gerade dran ist, sagt der
+   * Kopf der Bahn — er wandert mit ihr, und damit sagt es die Fläche selbst
+   * statt der Server.
    */
-  const appbar = `<header class="appbar">
+  const appbar = `<header class="appbar glas">
      <div class="slot left">${
        viewer
-         ? `<a class="brandmark" href="/" aria-label="Zum Himmel">${logo}<span>${escapeHtml(config.instanceName)}</span></a>`
+         ? `<a class="brandmark" href="/" aria-label="Startseite">${logo}<span>${escapeHtml(config.instanceName)}</span></a>`
          : `<span class="brandmark">${logo}<span>${escapeHtml(config.instanceName)}</span></span>`
      }</div>
-     <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
+     ${bar?.pfad
+       ? `<h1 class="visually-hidden">${escapeHtml(title)}</h1>`
+       : `<h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>`}
      <div class="slot right">${
        viewer
          ? `<a class="icon-btn" href="/stream" aria-label="Nachrichten"${
@@ -107,7 +112,7 @@ export function layout({
   const writeBar = !viewer
     ? ''
     : writebar ??
-      `<div class="writebar">
+      `<div class="writebar glas">
          <a class="write-field" href="/compose">Etwas sagen …</a>
          <a class="icon-btn" href="/discover" aria-label="Kreise suchen">${iconSearch()}</a>
        </div>`;
@@ -862,27 +867,42 @@ const WEG_SATZ = Object.fromEntries(WEG.map(([id, , , satz]) => [id, satz]));
  * rechts wird es dichter.
  */
 export function homePage({
-  viewer, prefs, ansicht = 'leute', leute = [], feed = [], spur = [], themen = [], raeume = [],
-  moeglich = [], nonce = '',
+  viewer, prefs, leute = [], feed = [], spur = [], themen = [], raeume = [], moeglich = [], nonce = '',
 }) {
-  const zeile = `<nav class="views" aria-label="Dein Weg">
-  ${WEG.map(([id, label]) => `<a class="view${ansicht === id ? ' is-active' : ''}"
-    href="/${id === 'leute' ? '' : `?ansicht=${id}`}"${ansicht === id ? ' aria-current="page"' : ''}>${label}</a>`).join('')}
-</nav>`;
+  /**
+   * Alle vier Bahnen liegen nebeneinander in einer Fläche, die einrastet: man
+   * wischt seitlich, und die Rubrik wechselt. Kein Skript — `scroll-snap`
+   * macht das Wischen, `#anker` macht dasselbe für Tastatur und Screenreader,
+   * und ohne beides bleibt es eine Seite, auf der alles vorhanden ist.
+   */
+  const bahn = (id, titel, satz, inhalt, stufe, vorher, nachher) => `
+<section class="bahn tiefe-${stufe}" id="${id}" aria-label="${escapeHtml(titel)}" tabindex="-1">
+  <div class="bahn-kopf glas">
+    <div class="bahn-wort">
+      <h2 class="bahn-titel">${escapeHtml(titel)}</h2>
+      <p class="bahn-satz">${escapeHtml(satz)}</p>
+    </div>
+    <nav class="bahn-weiter" aria-label="Rubrik wechseln">
+      ${vorher ? `<a href="#${vorher[0]}" aria-label="Zurück zu ${escapeHtml(vorher[1])}">‹</a>` : ''}
+      ${nachher ? `<a href="#${nachher[0]}" aria-label="Weiter zu ${escapeHtml(nachher[1])}">›</a>` : ''}
+    </nav>
+  </div>
+  <div class="bahn-inhalt">${inhalt}</div>
+</section>`;
 
   const leuteAnsicht = `
 ${leute.length
     ? `<div class="orb-list menschen">${leute
         .map((person, i) => orbRow(
           `/@${escapeHtml(person.username)}`,
-          `wegorb-${i}`,
+          `leuteorb-${i}`,
           escapeHtml(person.display_name || person.username),
           escapeHtml(handleOf(person)),
         ))
         .join('')}</div>`
     : `<p class="chat-start">Du folgst noch niemandem. <a href="/discover">Such jemanden</a>.</p>`}
 ${feed.length
-    ? `<h2 class="weg-titel">Was sie schreiben</h2>${feed
+    ? `<p class="bahn-zwischen">Was sie schreiben</p>${feed
         .map((post, i) => chatMessage(post, [], viewer, `feedorb-${i}`))
         .join('')}`
     : ''}`;
@@ -892,11 +912,11 @@ ${feed.length
    * hier Support — und beide zeigen beide Richtungen. Die Zeile darunter sagt
    * jedes Mal, welche der beiden Richtungen dieser Eintrag ist.
    */
-  const spurListe = (eintraege, hin, her, leer) => (eintraege.length
+  const spurListe = (eintraege, praefix, hin, her, leer) => (eintraege.length
     ? `<div class="orb-list">${eintraege
         .map((eintrag, i) => orbRow(
           `/posts/${eintrag.id}`,
-          `wegorb-${i}`,
+          `${praefix}-${i}`,
           escapeHtml(eintrag.content.length > 110 ? `${eintrag.content.slice(0, 110).trimEnd()}…` : eintrag.content),
           `${eintrag.art === 'meine' ? hin : her} · ${escapeHtml(
             eintrag.display_name || eintrag.username,
@@ -904,20 +924,6 @@ ${feed.length
         ))
         .join('')}</div>`
     : `<p class="chat-start">${leer}</p>`);
-
-  const gespraechAnsicht = spurListe(
-    spur,
-    'Du hast kommentiert',
-    'hat bei dir kommentiert',
-    'Noch keine Gespräche. Sie entstehen, sobald du irgendwo antwortest — oder jemand bei dir.',
-  );
-
-  const themenAnsicht = spurListe(
-    themen,
-    'Du stehst dahinter',
-    'steht hinter deinem Beitrag',
-    'Noch keine Themen. Sie entstehen, sobald du Support gibst — oder jemand dir.',
-  );
 
   const tueren = moeglich.length
     ? `<div class="orb-list rueckhalt">${moeglich
@@ -938,7 +944,7 @@ ${feed.length
     ? `${tueren}${raeume.length ? `<div class="orb-list">${raeume
         .map((raum, i) => orbRow(
           `/c/${escapeHtml(raum.slug)}`,
-          `wegorb-${i}`,
+          `raumorb-${i}`,
           escapeHtml(raum.gegenueber_name || raum.gegenueber || 'Rückhalt'),
           raum.zuletzt ? `${escapeHtml(raum.letztes.slice(0, 60))}${raum.letztes.length > 60 ? '…' : ''} · ${timeTag(raum.zuletzt)}` : 'Noch nichts gesagt',
         ))
@@ -946,41 +952,39 @@ ${feed.length
     : `<p class="chat-start">Noch kein Rückhalt-Raum. Er entsteht, sobald ihr beide in einem Kreis
        hinter etwas vom anderen steht — dann steht die Tür hier.</p>`;
 
-  const inhalt = {
+  const bahnen = {
     leute: leuteAnsicht,
-    gespraech: gespraechAnsicht,
-    themen: themenAnsicht,
+    gespraech: spurListe(spur, 'gsporb', 'Du hast kommentiert', 'hat bei dir kommentiert',
+      'Noch keine Gespräche. Sie entstehen, sobald du irgendwo antwortest — oder jemand bei dir.'),
+    themen: spurListe(themen, 'themaorb', 'Du stehst dahinter', 'steht hinter deinem Beitrag',
+      'Noch keine Themen. Sie entstehen, sobald du Support gibst — oder jemand dir.'),
     rueckhalt: rueckhaltAnsicht,
-  }[ansicht] ?? leuteAnsicht;
+  };
 
-  // Die Kugeln der aktiven Rubrik — Farbe von der Person, Form von der Sache.
-  const kugeln = {
-    leute: [
-      ...leute.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, `l${p.id}`, `wegorb-${i}`, i)),
-      ...feed.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `feedorb-${i}`, i)),
-    ],
-    gespraech: spur.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `wegorb-${i}`, i)),
-    themen: themen.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `wegorb-${i}`, i)),
-    rueckhalt: [
-      ...moeglich.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `t${m.id}`, `tuerorb-${i}`, i)),
-      ...raeume.map((r, i) => personOrbCss(String(r.gegenueber ?? r.slug), String(r.id), `wegorb-${i}`, i)),
-    ],
-  }[ansicht] ?? [];
+  // Alle Kugeln aller Bahnen — jede Bahn hat ihr eigenes Präfix, damit sich
+  // nichts überschreibt, wenn alle vier gleichzeitig auf der Seite liegen.
+  const kugeln = [
+    ...leute.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, `l${p.id}`, `leuteorb-${i}`, i)),
+    ...feed.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `feedorb-${i}`, i)),
+    ...spur.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `gsporb-${i}`, i)),
+    ...themen.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `themaorb-${i}`, i)),
+    ...moeglich.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `t${m.id}`, `tuerorb-${i}`, i)),
+    ...raeume.map((r, i) => personOrbCss(String(r.gegenueber ?? r.slug), String(r.id), `raumorb-${i}`, i)),
+  ];
 
   return layout({
     title: 'Dein Weg',
     viewer,
     prefs,
     current: 'weg',
-    bar: { title: WEG_LABEL[ansicht] ?? 'Leute' },
+    bar: { pfad: true },
     stage: true,
     head: `<style nonce="${escapeHtml(nonce)}">${kugeln.join('')}</style>`,
     body: `
-${zeile}
-<section class="chat-window tiefe-${WEG_TIEFE[ansicht] ?? 1}" aria-label="${escapeHtml(WEG_LABEL[ansicht] ?? 'Leute')}">
-<p class="tiefe-satz">${escapeHtml(WEG_SATZ[ansicht] ?? WEG_SATZ.leute)}</p>
-${inhalt}
-</section>`,
+<div class="weg" role="group" aria-label="Dein Weg: seitlich wischen">
+${WEG.map(([id, label, stufe, satz], i) =>
+    bahn(id, label, satz, bahnen[id], stufe, WEG[i - 1], WEG[i + 1])).join('')}
+</div>`,
   });
 }
 
@@ -1030,7 +1034,7 @@ ${posts.length
 
   // Die feste Leiste unten ist hier das Schreibfeld dieses Kreises.
   const composerBar = isMember
-    ? `<div class="writebar">
+    ? `<div class="writebar glas">
          <details class="chat-compose"${error || writeOpen ? ' open' : ''}>
            <summary>Etwas sagen …</summary>
            ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}

@@ -194,25 +194,22 @@ router.get('/', (ctx, res) => {
   }
 
   // Angemeldet ist die Startseite der eigene Weg: Leute → Gespräch → Themen →
-  // Rückhalt. Die vier Rubriken gehören der Person, nicht einem Raum.
+  // Rückhalt. Alle vier Bahnen liegen gleichzeitig auf der Seite — gewechselt
+  // wird durch Wischen, nicht durch Laden, also müssen auch alle vier hier
+  // stehen. Das ist der Preis der Geste, und er ist bezahlbar: es sind vier
+  // kurze Abfragen auf die eigenen Daten.
   const prefs = preferencesOf(ctx.viewer);
   const nonce = randomToken(16);
-  const ansicht = ['leute', 'gespraech', 'themen', 'rueckhalt'].includes(ctx.url.searchParams.get('ansicht'))
-    ? ctx.url.searchParams.get('ansicht')
-    : 'leute';
 
   sendHtml(res, 200, homePage({
     viewer: ctx.viewer,
     prefs,
-    ansicht,
-    leute: ansicht === 'leute' ? meineLeute(ctx.viewer.id) : [],
-    feed: ansicht === 'leute'
-      ? leuteFeed(ctx.viewer.id).map((post) => ({ ...decorate(post, ctx.viewer), replies: [] }))
-      : [],
-    spur: ansicht === 'gespraech' ? meinGespraech(ctx.viewer.id) : [],
-    themen: ansicht === 'themen' ? meineThemen(ctx.viewer.id) : [],
-    raeume: ansicht === 'rueckhalt' ? meineRaeume(ctx.viewer.id) : [],
-    moeglich: ansicht === 'rueckhalt' ? moeglicheRaeume(ctx.viewer.id) : [],
+    leute: meineLeute(ctx.viewer.id),
+    feed: leuteFeed(ctx.viewer.id).map((post) => ({ ...decorate(post, ctx.viewer), replies: [] })),
+    spur: meinGespraech(ctx.viewer.id),
+    themen: meineThemen(ctx.viewer.id),
+    raeume: meineRaeume(ctx.viewer.id),
+    moeglich: moeglicheRaeume(ctx.viewer.id),
     nonce,
   }), nonce);
 });

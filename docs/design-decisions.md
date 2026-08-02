@@ -286,6 +286,39 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D33 — Gewischt, nicht geladen — und alles schwebt
+
+**Chosen:** die vier Rubriken liegen als vier Bahnen **gleichzeitig** auf der Startseite, in
+einer Fläche mit `scroll-snap-type: x mandatory`. Gewechselt wird durch seitliches Wischen;
+die Bahn rastet ein. Der Name der Rubrik steht in einem schwebenden Kopf, der zu seiner Bahn
+gehört und beim Scrollen oben stehen bleibt — welche Rubrik gerade dran ist, sagt damit die
+Fläche selbst, nicht der Server. Neben dem Namen führen zwei Pfeile zu den Nachbarbahnen,
+für Tastatur und Screenreader.
+
+Alles Bedienbare schwebt: Kopfleiste, Bahnkopf und Schreibleiste sind Kapseln aus Milchglas
+(`.glas`: 62 % Deckung, `backdrop-filter: blur(22px) saturate(180%)`, außen eine dünne
+dunkle Kante, innen ein heller Schimmer). Der Inhalt zieht darunter durch, statt von ihnen
+verdrängt zu werden.
+
+**Warum das ohne Skript geht:** `scroll-snap` ist das Wischen; `#anker` ist derselbe Sprung
+für alle, die nicht wischen. Ohne beides bleibt eine Seite, auf der alle vier Rubriken
+untereinander vorhanden sind. Die Anwendung liefert weiterhin null Client-JavaScript aus
+(D3), und die CSP verbietet es weiterhin.
+
+**Was das kostet:** der Server rendert jetzt alle vier Bahnen pro Aufruf statt einer. Das
+sind vier kurze Abfragen auf die eigenen Daten — bezahlbar, und der Preis der Geste. Wer
+`?ansicht=` in der Adresse hatte, kommt jetzt über `#leute`, `#gespraech`, `#themen`,
+`#rueckhalt` an dieselbe Stelle.
+
+**Eine Falle, die dabei zugeschnappt ist:** `overflow-x: auto` macht aus `overflow-y: visible`
+automatisch `auto`. Der Bahnkopf klebte deshalb an der falschen Kante und legte sich über
+den Inhalt. Jetzt scrollt jede Bahn selbst — dann klebt ihr Kopf dort, wo er hingehört.
+
+**Enforced by:** `.weg`, `.bahn`, `.bahn-kopf`, `.glas` in `src/web/style.js`, `homePage()`
+in `src/web/views.js`; `tests/ui.test.js` prüft, dass alle vier Bahnen im Markup liegen,
+dass die Fläche einrastet, dass jede Bahn ihren Namen im schwebenden Kopf trägt, dass die
+Nachbarpfeile da sind — und weiterhin, dass kein Skript ausgeliefert wird.
+
 ## D32 — Der Weg gehört der Person, nicht dem Raum — und Gespräch/Themen sind zwei Achsen
 
 **Chosen:** die vier Rubriken **Leute — Gespräch — Themen — Rückhalt** liegen auf der

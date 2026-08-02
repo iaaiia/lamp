@@ -174,14 +174,14 @@ describe('Seiten', () => {
 
   it('stellt überall dieselbe Schreibleiste unten hin', async () => {
     const html = await load('/');
-    assert.match(html, /class="writebar"/);
+    assert.match(html, /class="writebar glas"/, 'die Leiste schwebt als Glas');
     assert.match(html, /class="write-field" href="\/compose">Etwas sagen …<\/a>/);
   });
 
   it('setzt das Schreibfeld unten wie in einem Messenger — eingeklappt', async () => {
     const html = await load('/c/lebhafter-kreis');
     const nachricht = html.indexOf('Hier ist gerade etwas los');
-    const schreibfeld = html.indexOf('class="writebar"');
+    const schreibfeld = html.indexOf('class="writebar glas"');
 
     assert.ok(schreibfeld !== -1, 'es gibt eine Schreibleiste');
     assert.ok(nachricht < schreibfeld, 'sie steht unter dem Gespräch, nicht darüber');
@@ -288,7 +288,11 @@ describe('Oberfläche im neuen Zuschnitt', () => {
   const load = async (path) => (await fetch(`${base}${path}`, { headers: { cookie }, redirect: 'manual' })).text();
 
   it('sagt in der Kopfleiste, wo man ist', async () => {
-    assert.match(await load('/'), /<h1 class="appbar-title">Leute<\/h1>/);
+    // Auf dem Weg bleibt die Mitte der Leiste leer: den Namen trägt der Kopf
+    // der Bahn, und der wandert mit. Überall sonst steht dort, wo man ist.
+    const weg = await load('/');
+    assert.doesNotMatch(weg, /class="appbar-title"/);
+    assert.match(weg, /<h2 class="bahn-titel">Leute<\/h2>/);
     assert.match(await load('/kreise'), /<h1 class="appbar-title">Dein Himmel<\/h1>/);
     assert.match(await load('/settings'), /<h1 class="appbar-title">Einstellungen<\/h1>/);
   });
@@ -296,7 +300,7 @@ describe('Oberfläche im neuen Zuschnitt', () => {
   it('führt von überall mit einem Griff nach Hause', async () => {
     // Statt eines Zurück-Pfeils, der je nach Seite woanders hinführte: das
     // Zeichen links, immer derselbe Weg.
-    assert.match(await load('/settings'), /class="brandmark" href="\/" aria-label="Zum Himmel"/);
+    assert.match(await load('/settings'), /class="brandmark" href="\/" aria-label="Startseite"/);
     assert.match(await load('/c/kultur-leipzig'), /class="brandmark" href="\/"/);
   });
 
@@ -652,22 +656,44 @@ describe('Der eigene Weg', () => {
 
   const load = async (pfad) => (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
 
-  it('macht die Startseite zum eigenen Weg, nicht zum Raum eines anderen', async () => {
+  // Alle vier Bahnen liegen jetzt gleichzeitig auf der Seite. Wer prüfen will,
+  // was in einer davon steht, muss sie also ausschneiden — sonst prüft man die
+  // ganze Seite und bekommt Treffer aus der Nachbarbahn.
+  const bahn = async (id) => {
     const html = await load('/');
-    const zeile = html.slice(html.indexOf('class="views"'), html.indexOf('</nav>'));
-    const worte = [...zeile.matchAll(/>(Leute|Gespräch|Themen|Rückhalt)</g)].map((m) => m[1]);
+    const anfang = html.indexOf(`id="${id}"`);
+    const ende = html.indexOf('<section class="bahn', anfang);
+    return html.slice(anfang, ende === -1 ? undefined : ende);
+  };
+
+  it('legt alle vier Bahnen nebeneinander — gewischt wird, nicht geladen', async () => {
+    const html = await load('/');
+
+    // Vier Bahnen, jede mit ihrem Namen im schwebenden Kopf.
+    const worte = [...html.matchAll(/<h2 class="bahn-titel">([^<]+)</g)].map((m) => m[1]);
     assert.deepEqual(worte, ['Leute', 'Gespräch', 'Themen', 'Rückhalt']);
+    for (const id of ['leute', 'gespraech', 'themen', 'rueckhalt']) {
+      assert.match(html, new RegExp(`<section class="bahn[^"]*" id="${id}"`), `Bahn ${id} fehlt`);
+    }
+
+    // Ohne Wischen kommt man mit den Nachbarn weiter — auch mit der Tastatur.
+    assert.match(html, /href="#gespraech" aria-label="Weiter zu Gespräch"/);
+    assert.match(html, /href="#themen" aria-label="Zurück zu Themen"/);
+
+    // Und die Fläche rastet ein — das ist das Wischen.
+    assert.match(STYLESHEET, /\.weg \{[^}]*scroll-snap-type: x mandatory/s);
+    assert.match(STYLESHEET, /\.bahn \{[^}]*scroll-snap-align: start/s);
   });
 
   it('zeigt unter Leute, wem ich folge — und was diese schreiben', async () => {
-    const html = await load('/');
+    const html = await bahn('leute');
     assert.match(html, /Jonas/);
     assert.match(html, /Unter eigenem Namen/);
     assert.doesNotMatch(html, /Im Kreis gesagt/, 'was im Kreis gesagt wurde, bleibt im Kreis');
   });
 
   it('zeigt unter Gespräch die Kommentar-Achse — in beide Richtungen', async () => {
-    const html = await load('/?ansicht=gespraech');
+    const html = await bahn('gespraech');
     assert.match(html, /Kommentiere ich/, 'was ich kommentiert habe');
     assert.match(html, /Du hast kommentiert/);
     assert.match(html, /Mein Beitrag mit Antwort/, 'und was jemand bei mir kommentiert hat');
@@ -678,7 +704,7 @@ describe('Der eigene Weg', () => {
   });
 
   it('zeigt unter Themen die Support-Achse — in beide Richtungen', async () => {
-    const html = await load('/?ansicht=themen');
+    const html = await bahn('themen');
     assert.match(html, /Stehe ich dahinter/, 'wofür ich eingestanden bin');
     assert.match(html, /Du stehst dahinter/);
     assert.match(html, /Mein Beitrag mit Support/, 'und wofür jemand bei mir eingestanden ist');
@@ -689,7 +715,7 @@ describe('Der eigene Weg', () => {
 
   it('zeigt unter Rückhalt erst die Tür, dann den Raum', async () => {
     // Die Tür steht dort, wo auch die Räume stehen — nicht mehr im Kreis.
-    const tuer = await load('/?ansicht=rueckhalt');
+    const tuer = await bahn('rueckhalt');
     assert.match(tuer, /Ihr steht beide hintereinander/);
     assert.match(tuer, /action="\/c\/wegkreis\/rueckhalt"/);
 
@@ -700,13 +726,11 @@ describe('Der eigene Weg', () => {
       redirect: 'manual',
     });
 
-    const html = await load('/?ansicht=rueckhalt');
+    const html = await bahn('rueckhalt');
     assert.match(html, /Jonas/, 'der Raum steht unter dem Namen der anderen Person');
   });
 
   it('braucht für den ganzen Weg kein Skript', async () => {
-    for (const p of ['', '?ansicht=gespraech', '?ansicht=themen', '?ansicht=rueckhalt']) {
-      assert.doesNotMatch(await load(`/${p}`), /<script/i, p);
-    }
+    assert.doesNotMatch(await load('/'), /<script/i, 'auch das Wischen nicht');
   });
 });

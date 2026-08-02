@@ -127,6 +127,22 @@ Youth Panels mit Phasenlogik und Protokoll (der Kreistyp `panel` steht im Datenm
 Verfahren fehlt), die Onboarding-Strecke, Medien-Upload, allgemeine Direktnachrichten (den
 Rückhalt-Raum gibt es, den freien DM nicht), AT-Protocol-Brücke, Mehrsprachigkeit. Reihenfolge und Aufwand in `docs/lamb/produkt.md`, Abschnitt 8.
 
+## mono — ein zweiter Ansatz im selben Repository
+
+`mono/` ist ein eigenständiger Prototyp neben lamb, gebaut auf der Idee von
+[Mononote](https://apps.apple.com/de/app/mononote-one-note/id6788222857): **Jeder Mensch hat
+genau einen Beitrag.** Text, Foto oder Video — schreibt jemand etwas Neues, ist das Alte
+gelöscht. Kein Verlauf, keine Reaktionen, keine Zahlen, nichts nachzuladen. Ein Profil ist
+kein Archiv, sondern ein Zustand.
+
+```bash
+npm run mono        # http://localhost:3100, Demo-Konten mira / jonas
+npm run test:mono
+```
+
+Warum das so gebaut ist und was es strukturell erledigt, steht in `docs/mono.md`. lamb
+bleibt davon unberührt — die beiden teilen sich nur `src/lib/`.
+
 ## Lizenz
 
 EUPL-1.2. Die Ausschreibung verlangt Open Source unter der am besten geeigneten Lizenz; die

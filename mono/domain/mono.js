@@ -38,21 +38,25 @@ export function clear(accountId) {
 export function replace(accountId, { text = '', media = null } = {}) {
   const value = String(text ?? '').trim();
   if (value.length > config.limits.monoLength) {
-    throw new MonoError(`mono is longer than ${config.limits.monoLength} characters`);
+    throw new MonoError(`Das ist länger als ${config.limits.monoLength} Zeichen.`);
   }
-  if (!value && !media) throw new MonoError('a mono needs text or a photo/video');
+  if (!value && !media) throw new MonoError('Ein Beitrag braucht Text oder ein Foto/Video.');
 
   let mediaId = null;
   if (media) {
     const kind = kindFor(media.contentType);
-    if (!kind) throw new MonoError(`unsupported media type: ${media.contentType || 'unknown'}`);
-    if (!media.data?.length) throw new MonoError('empty upload');
-    if (media.data.length > config.limits.mediaBytes) throw new MonoError('file too large');
+    if (!kind) {
+      throw new MonoError(`Dieses Dateiformat geht nicht: ${media.contentType || 'unbekannt'}.`);
+    }
+    if (!media.data?.length) throw new MonoError('Die Datei war leer.');
+    if (media.data.length > config.limits.mediaBytes) {
+      throw new MonoError(`Die Datei ist größer als ${config.limits.mediaBytes / 1024 / 1024} MB.`);
+    }
 
     // Bildbeschreibung ist Pflicht — auch beim Video, wo sie sagt, was zu sehen
     // und zu hoeren ist. Ohne sie waere der eine Beitrag fuer manche leer.
     const alt = String(media.alt ?? '').trim();
-    if (!alt) throw new MonoError('a description is required');
+    if (!alt) throw new MonoError('Schreib dazu, was zu sehen ist — ohne das geht es nicht.');
 
     mediaId = run(
       `INSERT INTO media (account_id, kind, content_type, alt, bytes, created_at)

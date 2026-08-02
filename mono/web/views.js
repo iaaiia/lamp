@@ -94,31 +94,35 @@ export function schreiben(mono, fehler) {
 
   return `${warnung(fehler)}
   <form class="karte" method="post" action="/mono" enctype="multipart/form-data">
-    <textarea name="text" maxlength="${config.limits.monoLength}" placeholder="Schreib etwas…">${escape('')}</textarea>
+    <textarea name="text" maxlength="${config.limits.monoLength}" placeholder="Schreib etwas…"></textarea>
     <fieldset>
-      <label for="datei">Foto oder Video (ersetzt ebenfalls alles)</label>
-      <input id="datei" type="file" name="datei" accept="image/*,video/*">
-      <label for="alt">Beschreibung des Mediums (Pflicht, wenn du eins anhängst)</label>
+      <label class="datei">
+        <input id="datei" type="file" name="datei" accept="image/*,video/*">
+        <span>Foto oder Video wählen — ersetzt ebenfalls alles</span>
+      </label>
+      <label for="alt">Beschreibung, wenn du eins anhängst (Pflicht)</label>
       <input id="alt" type="text" name="alt" maxlength="${config.limits.altLength}" placeholder="Was ist zu sehen?">
     </fieldset>
     <button class="knopf" type="submit">Fertig</button>
   </form>
-  ${ersetzt}
-  ${
-    mono
-      ? `<form method="post" action="/mono/loeschen">
-           <button class="knopf leise" type="submit">Beitrag löschen und nichts hinstellen</button>
-         </form>`
-      : ''
-  }`;
+  ${ersetzt}`;
 }
 
 export function startseite({ account, mono, fehler }) {
+  // Reihenfolge mit Absicht: schreiben, dann sehen, was das ersetzen wuerde,
+  // und erst darunter der Weg, es ersatzlos wegzunehmen. Ein Loesch-Knopf ueber
+  // dem Beitrag zeigt auf nichts.
+  const jetzt = mono
+    ? `<p class="hinweis">Das steht gerade unter deinem Namen:</p>
+       ${beitrag(mono, { self: true })}
+       <form method="post" action="/mono/loeschen">
+         <button class="knopf leise" type="submit">Löschen und nichts hinstellen</button>
+       </form>`
+    : '';
   return layout({
     title: 'dein mono',
     account,
-    body: `${schreiben(mono, fehler)}
-      ${mono ? `<p class="hinweis">Das steht gerade unter deinem Namen:</p>${beitrag(mono, { self: true })}` : ''}`,
+    body: `${schreiben(mono, fehler)}${jetzt}`,
   });
 }
 

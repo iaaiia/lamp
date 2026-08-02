@@ -83,7 +83,7 @@ test('ein abgelehntes Medium kostet nicht den bestehenden Beitrag', () => {
   );
   assert.throws(
     () => mono.replace(mira.id, { media: { contentType: 'image/png', alt: '', data: PNG } }),
-    /description is required/,
+    /was zu sehen ist/,
   );
   assert.equal(mono.read(mira.id).text, 'bleibt');
 });
@@ -307,6 +307,38 @@ test('HTTP: folgen und entfolgen ändern deine Leute', async () => {
   });
 });
 
+test('HTTP: Fehler kommen auf Deutsch, in der Sprache der Oberfläche', async () => {
+  fresh();
+  await withServer(async (base) => {
+    const cookie = await signUp(base, 'mira');
+    const body = new FormData();
+    body.set('text', '');
+    body.set('alt', '');
+    body.set('datei', new Blob([PNG], { type: 'image/png' }), 'p.png');
+    const res = await fetch(`${base}/mono`, { method: 'POST', body, headers: { cookie } });
+    assert.equal(res.status, 400);
+    const page = await res.text();
+    assert.ok(page.includes('was zu sehen ist'));
+    assert.ok(!/required|unsupported|too large/.test(page));
+  });
+});
+
+test('HTTP: der Löschen-Knopf steht unter dem Beitrag, den er löscht', async () => {
+  fresh();
+  await withServer(async (base) => {
+    const cookie = await signUp(base, 'mira');
+    let page = await (await fetch(`${base}/`, { headers: { cookie } })).text();
+    assert.ok(!page.includes('/mono/loeschen'), 'ohne Beitrag gibt es nichts zu löschen');
+
+    await fetch(`${base}/mono`, {
+      ...form({ text: 'etwas' }),
+      headers: { 'content-type': 'application/x-www-form-urlencoded', cookie },
+    });
+    page = await (await fetch(`${base}/`, { headers: { cookie } })).text();
+    assert.ok(page.indexOf('<article') < page.indexOf('/mono/loeschen'));
+  });
+});
+
 test('HTTP: unbekannter Mensch ergibt 404', async () => {
   fresh();
   await withServer(async (base) => {
@@ -328,11 +360,11 @@ test('seit() sagt Abstand statt Zeitstempel', () => {
 test('Handles sind eng begrenzt und einmalig', () => {
   fresh();
   makeAccount('mira');
-  assert.throws(() => makeAccount('mira'), /taken/);
-  assert.throws(() => makeAccount('Mi ra'), /handle/);
+  assert.throws(() => makeAccount('mira'), /hat schon jemand/);
+  assert.throws(() => makeAccount('Mi ra'), /geht so nicht/);
   assert.throws(
     () => accounts.createAccount({ handle: 'kurz', password: 'kurz' }),
-    /password too short/,
+    /Passwort ist zu kurz/,
   );
 });
 

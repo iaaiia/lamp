@@ -107,6 +107,29 @@ input[type="text"], input[type="password"] {
   font-weight: 400;
 }
 
+/* Der Datei-Wähler des Browsers ist nicht gestaltbar — also versteckt man ihn
+   und macht sein Label zum Knopf. Klick und Tastatur gehen weiter über das
+   echte Feld, es ist nur nicht zu sehen. */
+label.datei {
+  display: block;
+  border: 1px dashed var(--linie);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  margin: .4rem 0 1rem;
+  color: var(--leise);
+  text-align: center;
+  cursor: pointer;
+}
+label.datei:hover { border-color: var(--leise); }
+label.datei:focus-within { border-style: solid; border-color: var(--tinte); color: var(--tinte); }
+label.datei input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .hinweis { color: var(--leise); font-size: .85rem; margin: .6rem 0 0; }
 .warnung {
   background: var(--flaeche);

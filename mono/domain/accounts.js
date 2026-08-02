@@ -12,9 +12,9 @@ export function normaliseHandle(value = '') {
 
 export function createAccount({ handle, password, displayName = '' }) {
   const name = normaliseHandle(handle);
-  if (!HANDLE.test(name)) throw new Error('handle must be 2–20 chars: a–z, 0–9, _');
-  if (!password || password.length < 8) throw new Error('password too short');
-  if (findByHandle(name)) throw new Error('handle taken');
+  if (!HANDLE.test(name)) throw new Error('Der Name geht so nicht: 2–20 Zeichen aus a–z, 0–9, _');
+  if (!password || password.length < 8) throw new Error('Das Passwort ist zu kurz (mindestens 8).');
+  if (findByHandle(name)) throw new Error('Diesen Namen hat schon jemand.');
 
   const id = run(
     `INSERT INTO accounts (handle, display_name, password_hash, created_at)

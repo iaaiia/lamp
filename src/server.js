@@ -44,9 +44,6 @@ import { decideReport, openReports, triage, triageAgreementStats } from './domai
 import {
   admit,
   invite,
-  circlePeople,
-  circleSupported,
-  circleThreads,
   circleTimeline,
   circlesFor,
   createCircle,
@@ -65,7 +62,10 @@ import {
   members,
   pendingRequests,
 } from './domain/circles.js';
-import { findRaum, mutualSupporters, openRaum } from './domain/rueckhalt.js';
+import { openRaum } from './domain/rueckhalt.js';
+import {
+  leuteFeed, meinGespraech, meineLeute, meineRaeume, meineThemen, moeglicheRaeume,
+} from './domain/weg.js';
 import {
   actorDocument,
   collection,
@@ -98,6 +98,7 @@ import { landingPage } from './web/landing.js';
 import { ORBS_SCRIPT } from './web/orbs-script.js';
 import {
   circlePage,
+  homePage,
   skyPage,
   composePage,
   discoverPage,
@@ -192,14 +193,37 @@ router.get('/', (ctx, res) => {
     return sendHtml(res, 200, page.html.replace('__NONCE__', nonce), nonce, { allowScript: true });
   }
 
-  // Die Startseite ist eine Fläche, kein Fluss und keine Liste: eigene Kreise
-  // innen, unbekannte weiter außen. Entdecken heisst schieben.
+  // Angemeldet ist die Startseite der eigene Weg: Leute → Gespräch → Themen →
+  // Rückhalt. Die vier Rubriken gehören der Person, nicht einem Raum.
   const prefs = preferencesOf(ctx.viewer);
   const nonce = randomToken(16);
+  const ansicht = ['leute', 'gespraech', 'themen', 'rueckhalt'].includes(ctx.url.searchParams.get('ansicht'))
+    ? ctx.url.searchParams.get('ansicht')
+    : 'leute';
 
-  sendHtml(res, 200, skyPage({
+  sendHtml(res, 200, homePage({
     viewer: ctx.viewer,
     prefs,
+    ansicht,
+    leute: ansicht === 'leute' ? meineLeute(ctx.viewer.id) : [],
+    feed: ansicht === 'leute'
+      ? leuteFeed(ctx.viewer.id).map((post) => ({ ...decorate(post, ctx.viewer), replies: [] }))
+      : [],
+    spur: ansicht === 'gespraech' ? meinGespraech(ctx.viewer.id) : [],
+    themen: ansicht === 'themen' ? meineThemen(ctx.viewer.id) : [],
+    raeume: ansicht === 'rueckhalt' ? meineRaeume(ctx.viewer.id) : [],
+    moeglich: ansicht === 'rueckhalt' ? moeglicheRaeume(ctx.viewer.id) : [],
+    nonce,
+  }), nonce);
+});
+
+/** Der Himmel: die Kreise als Fläche, die man schiebt. */
+router.get('/kreise', (ctx, res) => {
+  if (!requireViewer(ctx, res)) return;
+  const nonce = randomToken(16);
+  sendHtml(res, 200, skyPage({
+    viewer: ctx.viewer,
+    prefs: preferencesOf(ctx.viewer),
     near: circlesFor(ctx.viewer.id),
     far: discoverable(ctx.viewer.id, 8),
     nonce,
@@ -535,9 +559,6 @@ router.get('/c/:slug', (ctx, res) => {
   if (member) markRead(circle.id, ctx.viewer.id);
 
   const before = ctx.url.searchParams.get('before');
-  const ansicht = ['chat', 'themen', 'leute', 'support'].includes(ctx.url.searchParams.get('ansicht'))
-    ? ctx.url.searchParams.get('ansicht')
-    : 'chat';
   const { posts, nextCursor } = circleTimeline(circle.id, { before });
   const nonce = randomToken(16);
 
@@ -554,23 +575,6 @@ router.get('/c/:slug', (ctx, res) => {
     nextCursor,
     people: members(circle.id, 3),
     nonce,
-    ansicht,
-    threads: ansicht === 'themen' ? circleThreads(circle.id) : [],
-    leute: ansicht === 'leute' ? circlePeople(circle.id) : [],
-    gestuetzt: ansicht === 'support'
-      ? circleSupported(circle.id).map((p) => ({
-          ...p,
-          // Auch hier: Menschen statt Zahl, und nur wenn freigegeben.
-          supportSentence: metricsVisible(p, ctx.viewer) ? supportSentence(p.id) : null,
-        }))
-      : [],
-    // Der geschützte Raum: nur für die eigene Sicht, nie für andere berechnet.
-    gegenseitig: ansicht === 'support' && ctx.viewer && member
-      ? mutualSupporters(circle.id, ctx.viewer.id).map((person) => ({
-          ...person,
-          raum: findRaum(circle, ctx.viewer.id, person.id),
-        }))
-      : [],
     memberCount: memberCount(circle.id),
     pending: ctx.viewer && isModerator(circle.id, ctx.viewer.id) ? pendingRequests(circle.id) : [],
     error: ctx.url.searchParams.get('error'),

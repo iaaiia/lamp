@@ -16,6 +16,7 @@ import { createApp } from '../src/server.js';
 import { createSession } from '../src/domain/accounts.js';
 import { createCircle, findBySlug, join, searchCircles } from '../src/domain/circles.js';
 import { createPost, react } from '../src/domain/posts.js';
+import { acceptFollow, requestFollow } from '../src/domain/safety.js';
 import { circleSigil } from '../src/web/sigil.js';
 import { layoutSky } from '../src/web/sky.js';
 import { circleTile } from '../src/web/views.js';
@@ -135,20 +136,20 @@ describe('Seiten', () => {
   const load = async (path) => (await fetch(`${base}${path}`, { headers: { cookie }, redirect: 'manual' })).text();
 
   it('legt eigene Kreise nach innen und unbekannte nach außen', async () => {
-    const html = await load('/');
+    const html = await load('/kreise');
     assert.match(html, /class="cloud"/, 'eigene Kreise liegen nah');
     assert.match(html, /Lebhafter Kreis/);
     assert.match(html, /Stiller Kreis/);
   });
 
   it('zeigt Vorschau und zweiten Weg ohne Klick', async () => {
-    const html = await load('/');
+    const html = await load('/kreise');
     assert.match(html, /Hier ist gerade etwas los/, 'der letzte Beitrag steht in der Wolke');
     assert.match(html, /\?write=1/, 'und ein Weg direkt ins Schreibfeld');
   });
 
   it('bietet denselben Bestand als Liste an', async () => {
-    const html = await load('/');
+    const html = await load('/kreise');
     const list = html.slice(html.indexOf('sky-list'));
     assert.match(list, /Lebhafter Kreis/);
     assert.match(list, /Stiller Kreis/);
@@ -245,7 +246,7 @@ describe('Himmel im Browser', () => {
   after(() => server?.close());
 
   it('erlaubt genau einen erzeugten Style-Block und sonst keine Inline-Styles', async () => {
-    const response = await fetch(`${base}/`, { headers: { cookie } });
+    const response = await fetch(`${base}/kreise`, { headers: { cookie } });
     const html = await response.text();
     const nonce = html.match(/<style nonce="([a-f0-9]+)">/);
 
@@ -255,7 +256,7 @@ describe('Himmel im Browser', () => {
   });
 
   it('verschachtelt keine Links — sonst hebt der Browser sie aus der Wolke', async () => {
-    const html = await (await fetch(`${base}/`, { headers: { cookie } })).text();
+    const html = await (await fetch(`${base}/kreise`, { headers: { cookie } })).text();
     const clouds = html.match(/<div class="cloud[^"]*"[^>]*>[\s\S]*?<\/div>/g) ?? [];
     assert.ok(clouds.length > 0);
     for (const cloud of clouds) {
@@ -287,7 +288,8 @@ describe('Oberfläche im neuen Zuschnitt', () => {
   const load = async (path) => (await fetch(`${base}${path}`, { headers: { cookie }, redirect: 'manual' })).text();
 
   it('sagt in der Kopfleiste, wo man ist', async () => {
-    assert.match(await load('/'), /<h1 class="appbar-title">Dein Himmel<\/h1>/);
+    assert.match(await load('/'), /<h1 class="appbar-title">Leute<\/h1>/);
+    assert.match(await load('/kreise'), /<h1 class="appbar-title">Dein Himmel<\/h1>/);
     assert.match(await load('/settings'), /<h1 class="appbar-title">Einstellungen<\/h1>/);
   });
 
@@ -598,96 +600,113 @@ describe('Chatfenster', () => {
     assert.equal((await load('/c/kultur')).match(/#msgorb-0\{[^}]*\}/)[0], `#msgorb-0{${regeln[0]}}`);
   });
 
-  it('stellt die vier Ansichten als Weg auf: Leute, Gespräch, Themen, Rückhalt', async () => {
-    // Kein Menü, sondern eine Reihenfolge: man verbindet sich mit Menschen,
-    // fängt Gespräche an, daraus werden Themen, daraus wird Rückhalt.
-    const html = await load('/c/kultur');
+  it('braucht für all das kein Skript', async () => {
+    for (const p of ['', '?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
+      assert.doesNotMatch(await load(`/c/kultur${p}`), /<script/i, p);
+    }
+  });
+});
+
+describe('Der eigene Weg', () => {
+  let server;
+  let base;
+  let cookie;
+  let gegenueber;
+
+  before(async () => {
+    freshDatabase();
+    const mira = makeAccount('mira9', { displayName: 'Mira' });
+    const jonas = makeAccount('jonas9', { displayName: 'Jonas' });
+    cookie = `lamb_session=${createSession(mira.id).id}`;
+    gegenueber = jonas;
+
+    // Mira folgt Jonas, Jonas schreibt unter eigenem Namen.
+    requestFollow(mira.id, jonas.id);
+    acceptFollow(mira.id, jonas.id);
+    createPost(jonas, { content: 'Unter eigenem Namen', visibility: 'public' });
+
+    // Und im Kreis wenden sich beide einander zu.
+    const kreis = createCircle(mira, { name: 'Wegkreis', kind: 'topic', joining: 'open' });
+    join(kreis, jonas);
+
+    // Vier Handlungen, damit beide Achsen in beide Richtungen etwas zeigen:
+    const seinKommentiertes = createPost(jonas, { content: 'Kommentiere ich', circleId: kreis.id, replyPolicy: 'everyone' });
+    createPost(mira, { content: 'Meine Antwort', inReplyTo: seinKommentiertes.id });
+
+    const meinKommentiertes = createPost(mira, { content: 'Mein Beitrag mit Antwort', circleId: kreis.id, replyPolicy: 'everyone' });
+    createPost(jonas, { content: 'Seine Antwort', inReplyTo: meinKommentiertes.id });
+
+    const seinGestuetztes = createPost(jonas, { content: 'Stehe ich dahinter', circleId: kreis.id, replyPolicy: 'everyone' });
+    react(mira.id, seinGestuetztes.id);
+
+    const meinGestuetztes = createPost(mira, { content: 'Mein Beitrag mit Support', circleId: kreis.id, replyPolicy: 'everyone' });
+    react(jonas.id, meinGestuetztes.id);
+    // Damit ist der Rückhalt zwischen beiden gegenseitig — die Tür steht offen.
+
+    server = createServer(createApp());
+    await new Promise((resolve) => server.listen(0, resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(() => server?.close());
+
+  const load = async (pfad) => (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
+
+  it('macht die Startseite zum eigenen Weg, nicht zum Raum eines anderen', async () => {
+    const html = await load('/');
     const zeile = html.slice(html.indexOf('class="views"'), html.indexOf('</nav>'));
     const worte = [...zeile.matchAll(/>(Leute|Gespräch|Themen|Rückhalt)</g)].map((m) => m[1]);
     assert.deepEqual(worte, ['Leute', 'Gespräch', 'Themen', 'Rückhalt']);
   });
 
-  it('wird nach rechts tiefer — und sagt in jeder Stufe, wofür sie da ist', async () => {
-    const stufen = { leute: 1, chat: 2, themen: 3, support: 4 };
-    for (const [ansicht, stufe] of Object.entries(stufen)) {
-      const html = await load(`/c/kultur${ansicht === 'chat' ? '' : `?ansicht=${ansicht}`}`);
-      assert.match(html, new RegExp(`class="chat-window[^"]*tiefe-${stufe}"`), `${ansicht} liegt falsch`);
-      assert.match(html, /class="tiefe-satz"/, `${ansicht} sagt nicht, wofür es da ist`);
-    }
+  it('zeigt unter Leute, wem ich folge — und was diese schreiben', async () => {
+    const html = await load('/');
+    assert.match(html, /Jonas/);
+    assert.match(html, /Unter eigenem Namen/);
+    assert.doesNotMatch(html, /Im Kreis gesagt/, 'was im Kreis gesagt wurde, bleibt im Kreis');
   });
 
-  it('trägt in jeder Ansicht Kugeln, die etwas bedeuten', async () => {
-    for (const [ansicht, praefix] of [['leute', 'leuteorb'], ['themen', 'themaorb'], ['support', 'stuetzorb']]) {
-      const html = await load(`/c/kultur?ansicht=${ansicht}`);
-      assert.match(html, new RegExp(`class="orb-mark" id="${praefix}-0"`), `${ansicht} ohne Kugeln`);
-      assert.match(html, new RegExp(`#${praefix}-0\\{[^}]*--od:`), `${ansicht} ohne eigene Größe`);
-    }
+  it('zeigt unter Gespräch die Kommentar-Achse — in beide Richtungen', async () => {
+    const html = await load('/?ansicht=gespraech');
+    assert.match(html, /Kommentiere ich/, 'was ich kommentiert habe');
+    assert.match(html, /Du hast kommentiert/);
+    assert.match(html, /Mein Beitrag mit Antwort/, 'und was jemand bei mir kommentiert hat');
+    assert.match(html, /hat bei dir kommentiert/);
+
+    // Support gehört in die andere Rubrik — sonst wären beide dasselbe.
+    assert.doesNotMatch(html, /Stehe ich dahinter/);
   });
 
-  it('gibt jedem Wort in der Ansichtszeile eine eigene Ansicht', async () => {
-    const html = await load('/c/kultur');
-    for (const ziel of ['?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
-      assert.ok(html.includes(ziel), `${ziel} fehlt in der Zeile`);
-    }
-    assert.match(html, /class="view is-active"[^>]*href="\/c\/kultur"/, 'das Gespräch ist aktiv');
+  it('zeigt unter Themen die Support-Achse — in beide Richtungen', async () => {
+    const html = await load('/?ansicht=themen');
+    assert.match(html, /Stehe ich dahinter/, 'wofür ich eingestanden bin');
+    assert.match(html, /Du stehst dahinter/);
+    assert.match(html, /Mein Beitrag mit Support/, 'und wofür jemand bei mir eingestanden ist');
+    assert.match(html, /steht hinter deinem Beitrag/);
+
+    assert.doesNotMatch(html, /Kommentiere ich/, 'Kommentare gehören ins Gespräch');
   });
 
-  it('zeigt unter Themen nur, woraus etwas geworden ist', async () => {
-    // Ein Thema entsteht durch Zuwendung: eine Antwort oder Rückhalt. Ohne das
-    // wäre „Themen“ nur das Gespräch ein zweites Mal.
-    const html = await load('/c/kultur?ansicht=themen');
-    assert.match(html, /Erste Nachricht/, 'hat Antwort und Rückhalt');
-    assert.match(html, /1 Antwort/);
-    assert.doesNotMatch(html, /Zweite Nachricht/, 'unbeantwortet, also noch kein Thema');
-    assert.doesNotMatch(html, /<summary>Etwas sagen …<\/summary>/, 'hier wird nicht geschrieben');
-  });
+  it('zeigt unter Rückhalt erst die Tür, dann den Raum', async () => {
+    // Die Tür steht dort, wo auch die Räume stehen — nicht mehr im Kreis.
+    const tuer = await load('/?ansicht=rueckhalt');
+    assert.match(tuer, /Ihr steht beide hintereinander/);
+    assert.match(tuer, /action="\/c\/wegkreis\/rueckhalt"/);
 
-  it('zeigt unter Leute, wer hier ist — mit Moderation', async () => {
-    const html = await load('/c/kultur?ansicht=leute');
-    assert.match(html, /Mira/);
-    assert.match(html, /Moderation/);
-    assert.match(html, /href="\/@gast7"/, 'und führt zu den Profilen');
-  });
-
-  it('bietet unter Rückhalt den geschützten Raum an — nur bei Gegenseitigkeit', async () => {
-    // Mira und Jonas stehen beide hintereinander (siehe Aufbau), also gibt es
-    // die Tür. Bei einseitigem Rückhalt gäbe es sie nicht.
-    const html = await load('/c/kultur?ansicht=support');
-    assert.match(html, /Ihr steht beide hintereinander/);
-    assert.match(html, /action="\/c\/kultur\/rueckhalt"/, 'und ein Weg, ihn zu öffnen');
-    assert.match(html, /Er verlässt diesen Server nie|verlässt diesen Server nie/);
-  });
-
-  it('öffnet den Raum nur mit gegenseitigem Rückhalt — auch über HTTP', async () => {
-    // Die Tür ist nicht nur in der Oberfläche zu: wer sie direkt anfragt, ohne
-    // dass der Rückhalt gegenseitig ist, kommt mit einer Absage zurück.
-    const fremd = makeAccount('fremde7', { displayName: 'Fremde' });
-    join(findBySlug('kultur'), fremd);
-    const fremdCookie = `lamb_session=${createSession(fremd.id).id}`;
-    const antwort = await fetch(`${base}/c/kultur/rueckhalt`, {
+    await fetch(`${base}/c/wegkreis/rueckhalt`, {
       method: 'POST',
-      headers: { cookie: fremdCookie, 'content-type': 'application/x-www-form-urlencoded' },
-      body: `account_id=${mitglied.id}`,
+      headers: { cookie, 'content-type': 'application/x-www-form-urlencoded' },
+      body: `account_id=${gegenueber.id}`,
       redirect: 'manual',
     });
-    assert.equal(antwort.status, 303);
-    assert.match(decodeURIComponent(antwort.headers.get('location')), /beide hinter etwas vom anderen steht/);
+
+    const html = await load('/?ansicht=rueckhalt');
+    assert.match(html, /Jonas/, 'der Raum steht unter dem Namen der anderen Person');
   });
 
-  it('zeigt unter Rückhalt, wo Support gegeben wurde — als Menschen', async () => {
-    const html = await load('/c/kultur?ansicht=support');
-    assert.match(html, /Erste Nachricht/);
-    assert.match(html, /Jonas steht dahinter/);
-  });
-
-  it('bleibt eine Ansicht, wenn jemand etwas Unbekanntes anfragt', async () => {
-    const html = await load('/c/kultur?ansicht=quatsch');
-    assert.match(html, /<summary>Etwas sagen …<\/summary>/, 'zurück ins Gespräch');
-  });
-
-  it('braucht für all das kein Skript', async () => {
-    for (const p of ['', '?ansicht=themen', '?ansicht=leute', '?ansicht=support']) {
-      assert.doesNotMatch(await load(`/c/kultur${p}`), /<script/i, p);
+  it('braucht für den ganzen Weg kein Skript', async () => {
+    for (const p of ['', '?ansicht=gespraech', '?ansicht=themen', '?ansicht=rueckhalt']) {
+      assert.doesNotMatch(await load(`/${p}`), /<script/i, p);
     }
   });
 });

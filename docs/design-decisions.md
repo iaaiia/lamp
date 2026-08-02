@@ -286,6 +286,39 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D32 — Der Weg gehört der Person, nicht dem Raum — und Gespräch/Themen sind zwei Achsen
+
+**Chosen:** die vier Rubriken **Leute — Gespräch — Themen — Rückhalt** liegen auf der
+Startseite und gehören der angemeldeten Person. Ein Klick tauscht nur den Inhalt; Kopfleiste,
+Zeile und Schreibfeld bleiben stehen.
+
+- **Leute** — wem ich folge, darunter deren Beiträge unter eigenem Namen (nichts aus Kreisen).
+- **Gespräch** — die **Kommentar-Achse**, beide Richtungen: was ich kommentiert habe, und
+  meine Beiträge, die jemand kommentiert hat.
+- **Themen** — dieselbe Form, **Support-Achse**: wofür ich eingestanden bin, und wofür jemand
+  bei mir eingestanden ist.
+- **Rückhalt** — die geschützten Räume (D31) und die Türen dorthin.
+
+Der Kreis ist damit wieder nur das Gespräch: die vier Wörter standen dort ein zweites Mal und
+meinten etwas anderes als auf der Startseite. Der Himmel ist von `/` nach `/kreise` gezogen.
+
+**Why:** Gespräch und Themen sind bewusst dieselbe Liste in zwei Achsen — das ist keine
+Doppelung, sondern die Unterscheidung, um die es dem Produkt geht: **Reden** ist nicht
+**Einstehen**. Wer wissen will, woran er beteiligt ist, schaut ins Gespräch; wer wissen will,
+wofür er und andere geradestehen, schaut in die Themen. Beide zeigen beide Richtungen, weil
+eine Zuwendung erst dann etwas ist, wenn sie ankommt.
+
+Es steht keine Zahl daran und keine Rangliste dahinter; sortiert wird nach Zeit (D2, D4a).
+Und was in einem Kreis gesagt wurde, taucht unter „Leute“ nicht auf — der Kreis bleibt die
+Grenze (D30 galt für die Ansicht, hier gilt es für den Feed).
+
+**Enforced by:** `src/domain/weg.js` (`meineLeute`, `leuteFeed`, `meinGespraech`,
+`meineThemen`, `meineRaeume`, `moeglicheRaeume`), `homePage()` in `src/web/views.js`, die
+Ansichts-Whitelist in `src/server.js`; `tests/ui.test.js`, Block „Der eigene Weg“, prüft die
+Reihenfolge der vier Wörter, beide Richtungen je Achse, dass Support nicht im Gespräch und
+Kommentare nicht in den Themen auftauchen, und dass Kreisbeiträge nicht in den Leute-Feed
+geraten.
+
 ## D31 — Rückhalt ist ein Ort, kein Gefühl: der geschützte Raum
 
 **Chosen:** wenn zwei Menschen im selben Kreis jeweils hinter einem Beitrag der anderen

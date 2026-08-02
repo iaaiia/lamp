@@ -64,8 +64,10 @@ describe('web surface', () => {
     assert.doesNotMatch(await andere.text(), /<script/i);
   });
 
-  it('makes the home page a space you push around rather than a stream', async () => {
-    const html = await (await fetchPath('/', { headers: { cookie } })).text();
+  it('keeps the sky a space you push around rather than a stream', async () => {
+    // Der Himmel ist nicht mehr die Startseite — die gehört dem eigenen Weg —,
+    // aber er ist unverändert eine Fläche und keine Liste.
+    const html = await (await fetchPath('/kreise', { headers: { cookie } })).text();
     assert.match(html, /Dein Himmel/);
     assert.match(html, /Schieb ihn hin und her/);
   });

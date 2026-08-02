@@ -818,35 +818,6 @@ function chatMessage(post, replies, viewer, orbId) {
 }
 
 /**
- * Die vier Ansichten sind kein Menü, sondern ein Weg: **Leute — Gespräch —
- * Themen — Rückhalt**. Man verbindet sich mit Menschen, fängt Gespräche an,
- * findet darin Themen, und aus Themen wird Rückhalt. Nach rechts wird es
- * persönlicher, und man sieht es: die Kugeln werden größer und dichter.
- */
-const ANSICHTEN = [
-  ['leute', 'Leute', 1, 'Wen du hier triffst. Von hier aus verbindest du dich.'],
-  ['chat', 'Gespräch', 2, 'Was gesagt wird. Antworten macht aus Mitlesen ein Gespräch.'],
-  ['themen', 'Themen', 3, 'Woraus etwas geworden ist — Themen entstehen, wo Rückhalt hingeht.'],
-  ['support', 'Rückhalt', 4, 'Wer hier von wem getragen wird. Der persönlichste Ort im Kreis.'],
-];
-
-const TIEFE = Object.fromEntries(ANSICHTEN.map(([id, , stufe]) => [id, stufe]));
-const LABEL = Object.fromEntries(ANSICHTEN.map(([id, label]) => [id, label]));
-const SATZ = Object.fromEntries(ANSICHTEN.map(([id, , , satz]) => [id, satz]));
-
-function viewSwitch(circle, aktiv) {
-  return `<nav class="views" aria-label="Ansichten in diesem Kreis">
-  ${ANSICHTEN
-    .map(
-      ([id, label]) => `<a class="view${aktiv === id ? ' is-active' : ''}"
-      href="/c/${encodeURIComponent(circle.slug)}${id === 'chat' ? '' : `?ansicht=${id}`}"
-      ${aktiv === id ? 'aria-current="page"' : ''}>${label}</a>`,
-    )
-    .join('')}
-</nav>`;
-}
-
-/**
  * Eine Zeile im Inhaltsfenster: Kugel links, Text rechts. Dasselbe Bild wie im
  * Gespräch — in jeder Ansicht trägt die Kugel etwas, keine liegt zur Zierde da.
  */
@@ -861,10 +832,161 @@ function orbRow(href, orbId, titel, meta, notiz = '') {
 </a>`;
 }
 
+/**
+ * Der Weg: vier Rubriken, die der Person gehören. Die Reihenfolge ist die
+ * These — man findet Menschen, redet mit ihnen, merkt dabei, wofür man
+ * einsteht, und aus manchem davon wird ein geschützter Ort.
+ *
+ * Gespräch und Themen haben dieselbe Form und unterscheiden sich nur in der
+ * Handlung: Kommentar dort, Support hier.
+ */
+const WEG = [
+  ['leute', 'Leute', 1, 'Wem du folgst — und was diese Menschen schreiben.'],
+  ['gespraech', 'Gespräch', 2, 'Was du kommentiert hast — und was jemand bei dir kommentiert hat.'],
+  ['themen', 'Themen', 3, 'Wofür du eingestanden bist — und wofür jemand bei dir eingestanden ist.'],
+  ['rueckhalt', 'Rückhalt', 4, 'Die geschützten Räume, die daraus geworden sind. Nur ihr zwei.'],
+];
+const WEG_LABEL = Object.fromEntries(WEG.map(([id, label]) => [id, label]));
+const WEG_TIEFE = Object.fromEntries(WEG.map(([id, , stufe]) => [id, stufe]));
+const WEG_SATZ = Object.fromEntries(WEG.map(([id, , , satz]) => [id, satz]));
+
+/**
+ * Die Startseite ist der Weg — und der Weg gehört der Person, nicht einem Raum.
+ *
+ *   Leute     wem ich folge; darunter, was diese Menschen geschrieben haben
+ *   Gespräch  worauf ich reagiert und worauf ich geantwortet habe
+ *   Themen    wo sich das häuft: die Räume, in die ich zurückgehe
+ *   Rückhalt  die geschützten Räume, die daraus geworden sind
+ *
+ * Dieselbe Bildsprache wie überall: eine Kugel je Sache, Text daneben, und nach
+ * rechts wird es dichter.
+ */
+export function homePage({
+  viewer, prefs, ansicht = 'leute', leute = [], feed = [], spur = [], themen = [], raeume = [],
+  moeglich = [], nonce = '',
+}) {
+  const zeile = `<nav class="views" aria-label="Dein Weg">
+  ${WEG.map(([id, label]) => `<a class="view${ansicht === id ? ' is-active' : ''}"
+    href="/${id === 'leute' ? '' : `?ansicht=${id}`}"${ansicht === id ? ' aria-current="page"' : ''}>${label}</a>`).join('')}
+</nav>`;
+
+  const leuteAnsicht = `
+${leute.length
+    ? `<div class="orb-list menschen">${leute
+        .map((person, i) => orbRow(
+          `/@${escapeHtml(person.username)}`,
+          `wegorb-${i}`,
+          escapeHtml(person.display_name || person.username),
+          escapeHtml(handleOf(person)),
+        ))
+        .join('')}</div>`
+    : `<p class="chat-start">Du folgst noch niemandem. <a href="/discover">Such jemanden</a>.</p>`}
+${feed.length
+    ? `<h2 class="weg-titel">Was sie schreiben</h2>${feed
+        .map((post, i) => chatMessage(post, [], viewer, `feedorb-${i}`))
+        .join('')}`
+    : ''}`;
+
+  /**
+   * Gespräch und Themen sind dieselbe Liste in zwei Achsen: dort Kommentare,
+   * hier Support — und beide zeigen beide Richtungen. Die Zeile darunter sagt
+   * jedes Mal, welche der beiden Richtungen dieser Eintrag ist.
+   */
+  const spurListe = (eintraege, hin, her, leer) => (eintraege.length
+    ? `<div class="orb-list">${eintraege
+        .map((eintrag, i) => orbRow(
+          `/posts/${eintrag.id}`,
+          `wegorb-${i}`,
+          escapeHtml(eintrag.content.length > 110 ? `${eintrag.content.slice(0, 110).trimEnd()}…` : eintrag.content),
+          `${eintrag.art === 'meine' ? hin : her} · ${escapeHtml(
+            eintrag.display_name || eintrag.username,
+          )} · ${timeTag(eintrag.wann)}`,
+        ))
+        .join('')}</div>`
+    : `<p class="chat-start">${leer}</p>`);
+
+  const gespraechAnsicht = spurListe(
+    spur,
+    'Du hast kommentiert',
+    'hat bei dir kommentiert',
+    'Noch keine Gespräche. Sie entstehen, sobald du irgendwo antwortest — oder jemand bei dir.',
+  );
+
+  const themenAnsicht = spurListe(
+    themen,
+    'Du stehst dahinter',
+    'steht hinter deinem Beitrag',
+    'Noch keine Themen. Sie entstehen, sobald du Support gibst — oder jemand dir.',
+  );
+
+  const tueren = moeglich.length
+    ? `<div class="orb-list rueckhalt">${moeglich
+        .map((person, i) => `<div class="orb-row raum-row">
+    <span class="orb-row-mark">${orbHtml(`tuerorb-${i}`)}</span>
+    <span class="orb-row-text">
+      <strong>${escapeHtml(person.display_name || person.username)}</strong>
+      <span class="p-meta mono">Ihr steht beide hintereinander · ${escapeHtml(person.circle_name)}</span>
+    </span>
+    <form method="post" action="/c/${escapeHtml(person.circle_slug)}/rueckhalt">
+      <input type="hidden" name="account_id" value="${person.id}">
+      <button class="support tiny" type="submit">${supportArc}<span>Raum öffnen</span></button>
+    </form>
+  </div>`).join('')}</div>`
+    : '';
+
+  const rueckhaltAnsicht = raeume.length || moeglich.length
+    ? `${tueren}${raeume.length ? `<div class="orb-list">${raeume
+        .map((raum, i) => orbRow(
+          `/c/${escapeHtml(raum.slug)}`,
+          `wegorb-${i}`,
+          escapeHtml(raum.gegenueber_name || raum.gegenueber || 'Rückhalt'),
+          raum.zuletzt ? `${escapeHtml(raum.letztes.slice(0, 60))}${raum.letztes.length > 60 ? '…' : ''} · ${timeTag(raum.zuletzt)}` : 'Noch nichts gesagt',
+        ))
+        .join('')}</div>` : ''}`
+    : `<p class="chat-start">Noch kein Rückhalt-Raum. Er entsteht, sobald ihr beide in einem Kreis
+       hinter etwas vom anderen steht — dann steht die Tür hier.</p>`;
+
+  const inhalt = {
+    leute: leuteAnsicht,
+    gespraech: gespraechAnsicht,
+    themen: themenAnsicht,
+    rueckhalt: rueckhaltAnsicht,
+  }[ansicht] ?? leuteAnsicht;
+
+  // Die Kugeln der aktiven Rubrik — Farbe von der Person, Form von der Sache.
+  const kugeln = {
+    leute: [
+      ...leute.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, `l${p.id}`, `wegorb-${i}`, i)),
+      ...feed.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `feedorb-${i}`, i)),
+    ],
+    gespraech: spur.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `wegorb-${i}`, i)),
+    themen: themen.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `wegorb-${i}`, i)),
+    rueckhalt: [
+      ...moeglich.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `t${m.id}`, `tuerorb-${i}`, i)),
+      ...raeume.map((r, i) => personOrbCss(String(r.gegenueber ?? r.slug), String(r.id), `wegorb-${i}`, i)),
+    ],
+  }[ansicht] ?? [];
+
+  return layout({
+    title: 'Dein Weg',
+    viewer,
+    prefs,
+    current: 'weg',
+    bar: { title: WEG_LABEL[ansicht] ?? 'Leute' },
+    stage: true,
+    head: `<style nonce="${escapeHtml(nonce)}">${kugeln.join('')}</style>`,
+    body: `
+${zeile}
+<section class="chat-window tiefe-${WEG_TIEFE[ansicht] ?? 1}" aria-label="${escapeHtml(WEG_LABEL[ansicht] ?? 'Leute')}">
+<p class="tiefe-satz">${escapeHtml(WEG_SATZ[ansicht] ?? WEG_SATZ.leute)}</p>
+${inhalt}
+</section>`,
+  });
+}
+
 export function circlePage({
   viewer, prefs, circle, isMember, isModerator, posts, nextCursor, people, memberCount,
-  pending, error, writeOpen = false, nonce = '', ansicht = 'chat', threads = [], leute = [], gestuetzt = [],
-  gegenseitig = [],
+  pending, error, writeOpen = false, nonce = '',
 }) {
 
   const joinControl = viewer && !isMember
@@ -906,100 +1028,8 @@ ${posts.length
     ? posts.map((p, i) => chatMessage(p, p.replies ?? [], viewer, `msgorb-${i}`)).join('')
     : '<p class="chat-start">Noch nichts gesagt. Fang an.</p>'}`;
 
-  // Themen: jeder Gesprächsanfang eine Kugel. Größe und Versatz kommen aus dem
-  // Beitrag, die Farbe von der Person, die ihn angefangen hat.
-  const themenListe = threads.length
-    ? `<div class="orb-list">${threads
-        .map((t, i) =>
-          orbRow(
-            `/posts/${t.id}`,
-            `themaorb-${i}`,
-            escapeHtml(t.content.length > 90 ? `${t.content.slice(0, 90).trimEnd()}…` : t.content),
-            `${escapeHtml(t.display_name || t.username)} · ${t.reply_count} ${
-              Number(t.reply_count) === 1 ? 'Antwort' : 'Antworten'
-            } · ${timeTag(t.last_activity)}`,
-          ))
-        .join('')}</div>`
-    : '<p class="chat-start">Noch keine Themen. Sie entstehen im Gespräch.</p>';
-
-  const leuteListe = leute.length
-    ? `<div class="orb-list">${leute
-        .map((m, i) =>
-          orbRow(
-            `/@${escapeHtml(m.username)}`,
-            `leuteorb-${i}`,
-            escapeHtml(m.display_name || m.username),
-            `${escapeHtml(handleOf(m))}${m.role === 'moderator' ? ' · Moderation' : ''} · ${
-              m.post_count
-            } ${Number(m.post_count) === 1 ? 'Beitrag' : 'Beiträge'}`,
-          ))
-        .join('')}</div>`
-    : '<p class="chat-start">Noch niemand hier.</p>';
-
-  /**
-   * Der geschützte Raum. Er entsteht nicht durch eine Einladung, sondern durch
-   * zwei Handlungen: beide standen hintereinander. Deshalb steht hier kein
-   * „Einladen“, sondern „Raum öffnen“ — und nur bei denen, bei denen es
-   * gegenseitig ist.
-   */
-  const raeume = gegenseitig.length
-    ? `<div class="orb-list rueckhalt">${gegenseitig
-        .map((person, i) => `<div class="orb-row raum-row">
-    <span class="orb-row-mark">${orbHtml(`raumorb-${i}`)}</span>
-    <span class="orb-row-text">
-      <strong>${escapeHtml(person.display_name || person.username)}</strong>
-      <span class="p-meta mono">Ihr steht beide hintereinander</span>
-    </span>
-    ${person.raum
-      ? `<a class="button secondary small" href="/c/${escapeHtml(person.raum.slug)}">Raum betreten</a>`
-      : `<form method="post" action="/c/${escapeHtml(circle.slug)}/rueckhalt">
-           <input type="hidden" name="account_id" value="${person.id}">
-           <button class="support tiny" type="submit">${supportArc}<span>Raum öffnen</span></button>
-         </form>`}
-  </div>`)
-        .join('')}</div>`
-    : '';
-
-  const raumHinweis = viewer && isMember
-    ? `<p class="raum-hinweis">Ein Rückhalt-Raum ist ein privater Kreis für genau zwei. Er entsteht,
-       wenn ihr beide hinter etwas vom anderen steht — er verlässt diesen Server nie, und für alle
-       anderen gibt es ihn nicht.</p>`
-    : '';
-
-  const supportListe = gestuetzt.length
-    ? `<div class="orb-list">${gestuetzt
-        .map((p, i) =>
-          orbRow(
-            `/posts/${p.id}`,
-            `stuetzorb-${i}`,
-            escapeHtml(p.content.length > 120 ? `${p.content.slice(0, 120).trimEnd()}…` : p.content),
-            `${escapeHtml(p.display_name || p.username)} · ${timeTag(p.created_at)}`,
-            escapeHtml(p.supportSentence ?? 'Rückhalt bleibt im Kreis'),
-          ))
-        .join('')}</div>`
-    : '<p class="chat-start">Hier hat noch niemand Rückhalt bekommen.</p>';
-
-  // Die Kugeln jeder Ansicht: Farbe von der Person, Größe und Versatz von der
-  // Sache. Erzeugt statt gewürfelt — verspielt, aber jedes Mal gleich.
-  const orbStyles = {
-    chat: posts.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `msgorb-${i}`, i)),
-    themen: threads.map((t, i) => personOrbCss(`${t.username}${t.domain ?? ''}`, String(t.id), `themaorb-${i}`, i)),
-    leute: leute.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `p${m.id}`, `leuteorb-${i}`, i)),
-    support: [
-      ...gegenseitig.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `r${m.id}`, `raumorb-${i}`, i)),
-      ...gestuetzt.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `stuetzorb-${i}`, i)),
-    ],
-  }[ansicht]?.join('') ?? '';
-
-  const inhalt = {
-    chat: gespraech,
-    themen: themenListe,
-    leute: leuteListe,
-    support: `${raeume}${raumHinweis}${supportListe}`,
-  }[ansicht] ?? gespraech;
-
   // Die feste Leiste unten ist hier das Schreibfeld dieses Kreises.
-  const composerBar = ansicht === 'chat' && isMember
+  const composerBar = isMember
     ? `<div class="writebar">
          <details class="chat-compose"${error || writeOpen ? ' open' : ''}>
            <summary>Etwas sagen …</summary>
@@ -1020,10 +1050,11 @@ ${posts.length
     bar: { title: circle.name },
     stage: true,
     writebar: composerBar,
-    // Nur Kugeln, die etwas tragen: die des Gesprächs, der Themen, der Leute,
-    // des Rückhalts. Die Deko-Kugeln im Hintergrund sind weg — sie standen vor
-    // den Inhalten und sagten nichts.
-    head: `<style nonce="${escapeHtml(nonce)}">${orbStyles}</style>`,
+    // Nur Kugeln, die etwas tragen: eine je Nachricht. Deko-Kugeln gibt es
+    // nicht mehr — sie standen vor den Inhalten und sagten nichts.
+    head: `<style nonce="${escapeHtml(nonce)}">${posts
+      .map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `msgorb-${i}`, i))
+      .join('')}</style>`,
     body: `
 <header class="space-head">
   <p class="space-meta mono">${escapeHtml(KIND_LABELS[circle.kind] ?? circle.kind)}${
@@ -1034,13 +1065,10 @@ ${posts.length
   ${gastHinweis}
 </header>
 
-${viewSwitch(circle, ansicht)}
 ${requests}
 
-<section class="chat-window${ansicht === 'chat' ? ' is-chat' : ''} tiefe-${TIEFE[ansicht] ?? 2}"
-  aria-label="${escapeHtml(LABEL[ansicht] ?? 'Gespräch')}">
-<p class="tiefe-satz">${escapeHtml(SATZ[ansicht] ?? SATZ.chat)}</p>
-${inhalt}
+<section class="chat-window is-chat tiefe-2" aria-label="Gespräch">
+${gespraech}
 </section>`,
   });
 }

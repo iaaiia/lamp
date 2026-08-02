@@ -17,10 +17,10 @@ Eigenschaften darunter:
 | Eigenschaft | Was das im Produkt heißt |
 | --- | --- |
 | **Kreise statt globaler Timeline** | Private Kreise, Themen- und lokale Kreise sind echte Räume mit Mitgliedschaft. Die Art des Kreises bestimmt die Sichtbarkeit — wer in einem privaten Kreis schreibt, kann das nicht versehentlich öffentlich tun. Private Kreise verlassen diesen Server nie und existieren für Nichtmitglieder nicht einmal als Seite. |
-| **Ein Himmel statt eines Stroms** | Die Startseite ist eine Fläche, die größer ist als der Bildschirm. Kreise liegen darin als Wolken; man schiebt sie hin und her und entdeckt dabei welche, die man nicht gesucht hat. Eigene liegen links, unbekannte rechts jenseits des Randes. Positionen sind fest — ein Kreis liegt morgen dort, wo er heute lag. |
-| **Vier Ansichten als Weg** | **Leute → Gespräch → Themen → Rückhalt.** Man verbindet sich mit Menschen, fängt an zu reden, aus Zuwendung werden Themen, daraus wird Rückhalt. Ein Klick tauscht nur die Kugeln im Inhaltsfenster; nach rechts wird es dichter und persönlicher — die Kugeln wachsen und rücken zusammen. Wie persönlich, entscheidet die Interaktion: ein Beitrag wird erst zum Thema, wenn jemand geantwortet hat oder dahintersteht. |
+| **Ein Himmel statt eines Stroms** | `/kreise` ist eine Fläche, die größer ist als der Bildschirm. Kreise liegen darin als Wolken; man schiebt sie hin und her und entdeckt dabei welche, die man nicht gesucht hat. Eigene liegen links, unbekannte rechts jenseits des Randes. Positionen sind fest — ein Kreis liegt morgen dort, wo er heute lag. |
+| **Der Weg gehört dir** | Die Startseite sind vier Rubriken: **Leute → Gespräch → Themen → Rückhalt**. Leute = wem du folgst und was sie schreiben. Gespräch = die Kommentar-Achse: was du kommentiert hast und was jemand bei dir. Themen = dieselbe Form auf der Support-Achse: wofür du eingestanden bist und wofür jemand bei dir. Rückhalt = die geschützten Räume. Reden ist nicht Einstehen — deshalb zwei Achsen statt einer Liste. |
 | **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
-| **Der Kreis ist ein Chatfenster** | Ein Kreis öffnet als Gespräch: jede Nachricht ist eine Kugel mit Text daneben. Die Kugeln liegen versetzt und in wechselnder Größe — die Streuung kommt aus dem Beitrag, sieht zufällig aus und ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
+| **Der Kreis ist ein Chatfenster** | Ein Kreis ist nur noch das Gespräch: jede Nachricht eine Kugel mit Text daneben, versetzt und in wechselnder Größe. Die Streuung kommt aus dem Beitrag — sieht zufällig aus, ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
 | **Die Kugel ist das Bedienelement** | Antippen öffnet, wer da spricht, wie der Rückhalt steht und wie man antwortet. Keine Knopfreihe unter jedem Text — und trotzdem kein Skript: Aufklappen ist ein `<details>`. Kugeln zur Zierde gibt es nicht: jede steht für einen Menschen, ein Thema, eine Nachricht oder einen Rückhalt. |
 | **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause) und zwei Knöpfe: Nachrichten, Einstellungen. Unten genau eine feste Leiste, und darin steht das Schreibfeld — in einem Kreis das des Kreises, sonst der Weg zur Kreiswahl. Die fünfteilige Tab-Leiste ist weg. |
 | **Auskunft ohne Klick** | Jede Wolke nennt Art, Größe und Zustand von sich aus; bei Zeiger oder Tastaturfokus klappt Zweck und letzter Beitrag auf. Aus der Wolke führt ein Weg direkt ins Schreibfeld — nicht über zwei Seiten. |
@@ -55,7 +55,7 @@ Sitzungen. Der Rundgang wird mit `npm run build:pages` nach `site/` erzeugt — 
 den auch der Server benutzt.
 
 **Veröffentlichen:** Die Pages-Quelle steht auf **GitHub Actions**; `.github/workflows/pages.yml`
-baut bei jedem Push auf `main` die Tests, dann den Rundgang, und veröffentlicht `site/`.
+baut bei jedem Push auf den Standard-Branch die Tests, dann den Rundgang, und veröffentlicht `site/`.
 Erzeugte Dateien liegen deshalb nicht im Repository.
 
 ## Selbst starten
@@ -64,7 +64,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 141 Tests
+npm test        # 137 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -95,7 +95,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   141 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   137 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)
@@ -106,7 +106,8 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 
 | Pfad | Zweck |
 | --- | --- |
-| `/` | Abgemeldet das Plakat mit den Kugeln, angemeldet dein Himmel |
+| `/` | Abgemeldet das Plakat mit den Kugeln, angemeldet dein Weg; `?ansicht=gespraech\|themen\|rueckhalt` |
+| `/kreise` | der Himmel: deine Kreise als Fläche, die man schiebt |
 | `/stream` | Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben |
 | `/c/:slug` | ein Kreis als Chatfenster; `?ansicht=chat\|themen\|leute\|support` schaltet die Fläche um, `/circles/new` legt einen an |
 | `/compose` | „Wo willst du das sagen?" — Kreiswahl vor dem Schreiben |

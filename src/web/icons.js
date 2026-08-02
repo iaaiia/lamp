@@ -20,7 +20,6 @@ export const iconSearch = (o) => svg('<circle cx="11" cy="11" r="6.5"/><path d="
 export const iconPlus = (o) => svg('<path d="M12 5.5v13M5.5 12h13"/>', { ...o });
 
 /** Der Strom: was Menschen unter eigenem Namen schreiben. */
-export const iconStream = (o) => svg('<path d="M4 7h16M4 12h16M4 17h9"/>', o);
 
 export const iconProfile = (o) =>
   svg('<circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/>', o);

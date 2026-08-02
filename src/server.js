@@ -64,7 +64,7 @@ import {
 } from './domain/circles.js';
 import { openRaum } from './domain/rueckhalt.js';
 import {
-  leuteFeed, meinGespraech, meineLeute, meineRaeume, meineThemen, moeglicheRaeume,
+  meinGespraech, meineLeute, meineRaeume, meineThemen, moeglicheRaeume,
 } from './domain/weg.js';
 import {
   actorDocument,
@@ -108,7 +108,6 @@ import {
   profilePage,
   settingsPage,
   threadPage,
-  timelinePage,
 } from './web/views.js';
 
 const router = createRouter();
@@ -199,12 +198,16 @@ router.get('/', (ctx, res) => {
   // kurze Abfragen auf die eigenen Daten.
   const prefs = preferencesOf(ctx.viewer);
   const nonce = randomToken(16);
+  // Die Bahn „Leute" ist der Folge-Strom — mit der Sortierung, die in den
+  // Einstellungen gewählt wurde, und mit ihrer Erklärung daneben (D2).
+  const strom = timeline(ctx.viewer, { feedId: prefs.feed });
 
   sendHtml(res, 200, homePage({
     viewer: ctx.viewer,
     prefs,
     leute: meineLeute(ctx.viewer.id),
-    feed: leuteFeed(ctx.viewer.id).map((post) => ({ ...decorate(post, ctx.viewer), replies: [] })),
+    feed: strom.posts.map((post) => ({ ...decorate(post, ctx.viewer), replies: [] })),
+    sortierung: strom.feed,
     spur: meinGespraech(ctx.viewer.id),
     themen: meineThemen(ctx.viewer.id),
     raeume: meineRaeume(ctx.viewer.id),
@@ -225,26 +228,6 @@ router.get('/kreise', (ctx, res) => {
     nonce,
   }), nonce);
 });
-
-/** Der Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben. */
-router.get('/stream', (ctx, res) => {
-  if (!requireViewer(ctx, res)) return;
-  const prefs = preferencesOf(ctx.viewer);
-  const feedId = ctx.url.searchParams.get('feed') ?? prefs.feed;
-  const before = ctx.url.searchParams.get('before');
-  const result = timeline(ctx.viewer, { feedId, before });
-
-  sendHtml(res, 200, timelinePage({
-    viewer: ctx.viewer,
-    prefs,
-    feed: result.feed,
-    posts: result.posts.map((p) => decorate(p, ctx.viewer)),
-    nextCursor: result.nextCursor,
-    error: ctx.url.searchParams.get('error'),
-  }));
-});
-
-/* ------------------------------------------------------------------ accounts */
 
 router.get('/register', (ctx, res) =>
   sendHtml(res, 200, formPage({

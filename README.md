@@ -18,7 +18,7 @@ Eigenschaften darunter:
 | --- | --- |
 | **Kreise statt globaler Timeline** | Private Kreise, Themen- und lokale Kreise sind echte Räume mit Mitgliedschaft. Die Art des Kreises bestimmt die Sichtbarkeit — wer in einem privaten Kreis schreibt, kann das nicht versehentlich öffentlich tun. Private Kreise verlassen diesen Server nie und existieren für Nichtmitglieder nicht einmal als Seite. |
 | **Ein Himmel statt eines Stroms** | `/kreise` ist eine Fläche, die größer ist als der Bildschirm. Kreise liegen darin als Wolken; man schiebt sie hin und her und entdeckt dabei welche, die man nicht gesucht hat. Eigene liegen links, unbekannte rechts jenseits des Randes. Positionen sind fest — ein Kreis liegt morgen dort, wo er heute lag. |
-| **Der Weg gehört dir** | Die Startseite sind vier Rubriken: **Leute → Gespräch → Themen → Rückhalt**. Leute = wem du folgst und was sie schreiben. Gespräch = die Kommentar-Achse: was du kommentiert hast und was jemand bei dir. Themen = dieselbe Form auf der Support-Achse: wofür du eingestanden bist und wofür jemand bei dir. Rückhalt = die geschützten Räume. Reden ist nicht Einstehen — deshalb zwei Achsen statt einer Liste. |
+| **Der Weg gehört dir** | Die Startseite sind vier Rubriken: **Leute → Gespräch → Themen → Rückhalt**. Leute = wem du folgst und was sie schreiben — das ist zugleich der Folge-Strom, mit der Sortierung aus den Einstellungen. Gespräch = die Kommentar-Achse: was du kommentiert hast und was jemand bei dir. Themen = dieselbe Form auf der Support-Achse: wofür du eingestanden bist und wofür jemand bei dir. Rückhalt = die geschützten Räume. Reden ist nicht Einstehen — deshalb zwei Achsen statt einer Liste. |
 | **Gewischt, nicht geladen** | Die vier Rubriken liegen als Bahnen nebeneinander; seitliches Wischen rastet auf die nächste ein. Die Leiste oben gehört zur Bahn: Zeichen, die vier Wörter, zwei Knöpfe — und das Wort der eigenen Bahn ist das kräftige. Beim Wischen wandert sie mit, also folgt die Betonung dem Finger, ohne dass ein Skript zusieht. Alles Bedienbare liegt als Milchglas über dem Inhalt, der darunter durchzieht. |
 | **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
 | **Der Kreis ist ein Chatfenster** | Ein Kreis ist nur noch das Gespräch: jede Nachricht eine Kugel mit Text daneben, versetzt und in wechselnder Größe. Die Streuung kommt aus dem Beitrag — sieht zufällig aus, ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
@@ -108,9 +108,8 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 
 | Pfad | Zweck |
 | --- | --- |
-| `/` | Abgemeldet das Plakat mit den Kugeln, angemeldet dein Weg — vier Bahnen zum Wischen (`#leute`, `#gespraech`, `#themen`, `#rueckhalt`) |
+| `/` | Abgemeldet das Plakat mit den Kugeln, angemeldet dein Weg — vier Bahnen zum Wischen (`#leute`, `#gespraech`, `#themen`, `#rueckhalt`). „Leute" ist zugleich der Folge-Strom |
 | `/kreise` | der Himmel: deine Kreise als Fläche, die man schiebt |
-| `/stream` | Folge-Strom: was Menschen öffentlich unter eigenem Namen schreiben |
 | `/c/:slug` | ein Kreis als Chatfenster; `?ansicht=chat\|themen\|leute\|support` schaltet die Fläche um, `/circles/new` legt einen an |
 | `/discover` | Kreise suchen und finden (private nie) |
 | `/@name` | Profil als HTML — oder das Actor-Dokument bei `Accept: application/activity+json` |

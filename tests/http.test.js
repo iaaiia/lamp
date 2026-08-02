@@ -42,7 +42,7 @@ describe('web surface', () => {
     // Die Anwendung bleibt skriptfrei. Genau eine Seite darf ein Skript laden —
     // die abgemeldete Startseite, wo Kugeln geschoben werden. Dieser Test hält
     // die Grenze fest, damit die Ausnahme nicht leise wächst.
-    for (const path of ['/', '/stream', '/posts/1', '/discover', '/settings']) {
+    for (const path of ['/', '/posts/1', '/discover', '/settings']) {
       const response = await fetchPath(path, { headers: { cookie } });
       assert.doesNotMatch(await response.text(), /<script/i, `${path} enthält ein Skript`);
       assert.match(
@@ -73,17 +73,20 @@ describe('web surface', () => {
   });
 
   it('tells the phone to fill the screen, so the safe areas are real', async () => {
-    for (const path of ['/', '/stream']) {
+    for (const path of ['/', '/discover']) {
       const html = await (await fetchPath(path, { headers: { cookie } })).text();
       assert.match(html, /viewport-fit=cover/, `${path} lacks viewport-fit`);
     }
   });
 
-  it('renders the follow stream with a feed explanation and an explicit end marker', async () => {
-    const html = await (await fetchPath('/stream', { headers: { cookie } })).text();
+  it('explains the active sort where the posts are, not on a page of its own', async () => {
+    // Die Seite "Strom" gibt es nicht mehr — die Bahn "Leute" ist der
+    // Folge-Strom. Die Erklärung der Sortierung steht dort, wie D2 es verlangt.
+    const html = await (await fetchPath('/', { headers: { cookie } })).text();
     assert.match(html, /Neueste zuerst/);
     assert.match(html, /Nichts wird gewichtet/);
-    assert.match(html, /Es lädt nichts von allein nach/);
+
+    assert.equal((await fetchPath('/stream', { headers: { cookie } })).status, 404);
   });
 
   it('shows support as people, never as a bare number', async () => {

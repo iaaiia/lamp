@@ -1,7 +1,8 @@
 /**
  * Der Weg — die vier Rubriken, und zwar meine, nicht die eines Raums.
  *
- *   Leute     wem ich folge, und was diese Menschen geschrieben haben
+ *   Leute     wem ich folge — was sie schreiben, liefert der Feed-Mechanismus
+ *             (src/domain/feeds.js), damit die gewählte Sortierung auch hier gilt
  *   Gespräch  Beiträge, die ich kommentiert habe — und meine, die jemand kommentiert hat
  *   Themen    Beiträge, hinter die ich mich gestellt habe — und meine, hinter die sich jemand gestellt hat
  *   Rückhalt  die geschützten Räume, die daraus entstanden sind
@@ -28,25 +29,6 @@ export const meineLeute = (accountId) =>
      WHERE f.follower_id = ? AND f.state = 'accepted' AND a.paused_at IS NULL
      ORDER BY a.display_name, a.username`,
     accountId,
-  );
-
-/**
- * Was diese Menschen unter eigenem Namen geschrieben haben. Beiträge aus
- * Kreisen tauchen hier nicht auf: was in einem Kreis gesagt wurde, gehört dem
- * Kreis — das ist die Zusicherung, auf der alles andere steht.
- */
-export const leuteFeed = (accountId, limit = 30) =>
-  all(
-    `SELECT p.*, a.username, a.domain, a.display_name
-     FROM posts p
-     JOIN accounts a ON a.id = p.account_id
-     JOIN follows f ON f.target_id = a.id AND f.follower_id = ? AND f.state = 'accepted'
-     WHERE p.circle_id IS NULL AND p.deleted_at IS NULL AND p.in_reply_to IS NULL
-       AND a.paused_at IS NULL AND p.visibility IN ('public', 'followers')
-     ORDER BY p.created_at DESC
-     LIMIT ?`,
-    accountId,
-    limit,
   );
 
 /**

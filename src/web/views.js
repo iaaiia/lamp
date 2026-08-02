@@ -17,7 +17,6 @@ import {
   iconSearch,
   iconSettings,
   iconShield,
-  iconStream,
   iconSupport,
   iconWrite,
 } from './icons.js';
@@ -93,12 +92,9 @@ export function layout({
      <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
      <div class="slot right">${
        viewer
-         ? `<a class="icon-btn" href="/stream" aria-label="Nachrichten"${
-             current === 'stream' ? ' aria-current="page"' : ''
-           }>${iconStream()}</a>
-            <a class="icon-btn" href="/settings" aria-label="Einstellungen"${
-              current === 'settings' ? ' aria-current="page"' : ''
-            }>${iconSettings()}</a>`
+         ? `<a class="icon-btn" href="/settings" aria-label="Einstellungen"${
+             current === 'settings' ? ' aria-current="page"' : ''
+           }>${iconSettings()}</a>`
          : ''
      }</div>
    </header>`;
@@ -252,42 +248,6 @@ export function composer({ prefs, replyTo = null, error = null, action = null })
 </form>`;
 }
 
-export function timelinePage({ viewer, prefs, feed, posts, nextCursor, error }) {
-  const list = posts.length
-    ? posts.map((p) => postArticle(p, p.view)).join('')
-    : `<p class="card">Hier ist noch nichts. Folge jemandem, oder schreib den ersten Beitrag.</p>`;
-
-  // Weiterblättern ist ein Link, den man bewusst anklickt.
-  const pager = nextCursor
-    ? `<p class="pager"><a class="button secondary" href="/?feed=${encodeURIComponent(feed.id)}&amp;before=${encodeURIComponent(nextCursor)}">Ältere Beiträge zeigen</a></p>`
-    : `<p class="pager end">Das war alles. Es lädt nichts von allein nach.</p>`;
-
-  return layout({
-    title: 'Strom',
-    viewer,
-    prefs,
-    current: 'stream',
-    bar: { title: 'Strom' },
-    // Der Strom ist der eigene Name: hier schreibt man öffentlich.
-    schreiben: {
-      action: '/posts',
-      label: `Etwas sagen … ${viewer?.is_minor ? 'an deine Leute' : 'für alle'}`,
-      error,
-      offen: Boolean(error),
-    },
-    body: `
-<p class="muted">Was Menschen, denen du folgst, öffentlich unter eigenem Namen schreiben.
-Beiträge aus Kreisen stehen in ihrem Kreis.</p>
-<div class="feed-explainer">
-  <p><strong>${escapeHtml(feed.name)}.</strong> ${escapeHtml(feed.explanation)}
-  <a class="small" href="/settings#sortierung">Sortierung ändern</a></p>
-</div>
-<h2>Beiträge</h2>
-${list}
-${pager}`,
-  });
-}
-
 export function threadPage({ viewer, prefs, post, replies, replyState, error }) {
   return layout({
     title: 'Beitrag',
@@ -376,7 +336,6 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
 
 <div class="tabs" role="tablist" aria-label="Was von diesem Konto">
   <span class="tab-item is-active" role="tab" aria-selected="true">Beiträge</span>
-  <a class="tab-item" role="tab" aria-selected="false" href="/stream">Strom</a>
 </div>
 
 ${posts.length ? posts.map((p) => postArticle(p, p.view)).join('') : '<p class="card">Noch keine Beiträge.</p>'}
@@ -858,7 +817,8 @@ const WEG_SATZ = Object.fromEntries(WEG.map(([id, , , satz]) => [id, satz]));
  * rechts wird es dichter.
  */
 export function homePage({
-  viewer, prefs, leute = [], feed = [], spur = [], themen = [], raeume = [], moeglich = [], nonce = '',
+  viewer, prefs, leute = [], feed = [], spur = [], themen = [], raeume = [], moeglich = [],
+  sortierung = null, nonce = '',
 }) {
   /**
    * Alle vier Bahnen liegen nebeneinander in einer Fläche, die einrastet: man
@@ -886,7 +846,6 @@ export function homePage({
         id === aktiv ? ' aria-current="true"' : ''
       }>${label}</a>`).join('')}
     </nav>
-    <a class="icon-btn rund${erste ? '' : ' schatten'}" href="/stream"${erste ? ' aria-label="Nachrichten"' : still}>${iconStream()}</a>
     <a class="icon-btn rund${erste ? '' : ' schatten'}" href="/settings"${erste ? ' aria-label="Einstellungen"' : still}>${iconSettings()}</a>
   </header>`;
   };
@@ -912,7 +871,9 @@ ${leute.length
         .join('')}</div>`
     : `<p class="chat-start">Du folgst noch niemandem. <a href="/discover">Such jemanden</a>.</p>`}
 ${feed.length
-    ? `<p class="bahn-zwischen">Was sie schreiben</p>${feed
+    ? `<p class="bahn-zwischen">Was sie schreiben</p>
+       <p class="feed-satz"><strong>${escapeHtml(sortierung?.name ?? '')}.</strong> ${escapeHtml(sortierung?.explanation ?? '')}
+       <a href="/settings#sortierung">ändern</a></p>${feed
         .map((post, i) => chatMessage(post, [], viewer, `feedorb-${i}`))
         .join('')}`
     : ''}`;

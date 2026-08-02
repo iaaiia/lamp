@@ -286,6 +286,22 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D36 — Die Seite „Strom“ entfällt; „Leute“ ist der Folge-Strom
+
+**Chosen:** die Seite `/stream` und ihr Knopf in der Kopfleiste sind weg. Was dort stand,
+steht in der Bahn **Leute**: was Menschen, denen man folgt, öffentlich unter eigenem Namen
+schreiben. Zwei Orte für denselben Bestand waren einer zu viel — und der Knopf führte an
+den vier Rubriken vorbei, die eigentlich der Weg sind.
+
+**Was das für D2 heißt:** der Feed-Mechanismus bleibt. Die Bahn „Leute“ ruft jetzt
+`timeline(viewer, { feedId: prefs.feed })` statt einer eigenen Abfrage — die gewählte
+Sortierung gilt also weiterhin, und ihre Erklärung steht direkt über den Beiträgen, dort,
+wo sie wirkt. Die Wahl selbst steht in den Einstellungen.
+
+**Enforced by:** `homePage()` (die Bahn Leute mit `sortierung`), der Wegfall der Route in
+`src/server.js`; `tests/http.test.js` prüft, dass `/stream` 404 gibt und dass die Erklärung
+der Sortierung auf der Startseite steht.
+
 ## D35 — Geschrieben wird dort, wo man steht
 
 **Chosen:** die Schreibleiste fragt nicht mehr, wohin ein Beitrag soll — sie schreibt an den

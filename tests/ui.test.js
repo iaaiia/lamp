@@ -219,7 +219,7 @@ describe('Seiten', () => {
     const html = await load('/');
     assert.doesNotMatch(html, /class="dock"/, 'die Tab-Leiste ist weg');
     assert.match(html, /class="mark" href="\/"/, 'das Zeichen führt nach Hause');
-    assert.match(html, /aria-label="Nachrichten"/);
+    assert.doesNotMatch(html, /aria-label="Nachrichten"/, 'der Strom ist weg');
     assert.match(html, /aria-label="Einstellungen"/);
   });
 
@@ -240,7 +240,7 @@ describe('Seiten', () => {
   });
 
   it('liefert weiterhin kein Client-JavaScript aus', async () => {
-    for (const path of ['/', '/stream', '/discover', '/c/lebhafter-kreis']) {
+    for (const path of ['/', '/discover', '/c/lebhafter-kreis']) {
       assert.doesNotMatch(await load(path), /<script/i, `${path} enthält ein Skript`);
     }
   });
@@ -388,7 +388,7 @@ describe('Überschriften', () => {
   after(() => server?.close());
 
   it('gibt jeder Seite genau eine Überschrift erster Ordnung', async () => {
-    const seiten = ['/', '/stream', '/discover', '/settings', '/moderation', '/@mira3', '/c/ein-kreis', '/circles/new'];
+    const seiten = ['/', '/discover', '/settings', '/moderation', '/@mira3', '/c/ein-kreis', '/circles/new'];
     for (const pfad of seiten) {
       const html = await (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
       const anzahl = (html.match(/<h1/g) ?? []).length;
@@ -748,8 +748,8 @@ describe('Der eigene Weg', () => {
     }
     assert.equal((html.match(/class="topbar glas"/g) ?? []).length, 4, 'eine Leiste je Bahn');
 
-    // Zeichen und Knöpfe gibt es trotzdem nur einmal für Tastatur und Vorlesen.
-    assert.equal((html.match(/aria-label="Nachrichten"/g) ?? []).length, 1);
+    // Zeichen und Knopf gibt es trotzdem nur einmal für Tastatur und Vorlesen.
+    assert.equal((html.match(/aria-label="Einstellungen"/g) ?? []).length, 1);
     assert.equal((html.match(/class="mark schatten"[^>]*aria-hidden="true"/g) ?? []).length, 3);
 
     // Und die Fläche rastet ein — das ist das Wischen.

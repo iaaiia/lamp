@@ -148,7 +148,6 @@ function seed() {
 
 const FLAT = new Map([
   ['/', 'index.html'],
-  ['/stream', 'stream.html'],
   ['/discover', 'discover.html'],
   ['/settings', 'settings.html'],
   ['/moderation', 'moderation.html'],

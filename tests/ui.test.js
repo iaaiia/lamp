@@ -167,7 +167,7 @@ describe('Seiten', () => {
     // Zwei Navigationen für eine App mit einem Ort waren eine zu viel.
     const html = await load('/');
     assert.doesNotMatch(html, /class="dock"/, 'die Tab-Leiste ist weg');
-    assert.match(html, /class="brandmark" href="\/"/, 'das Zeichen führt nach Hause');
+    assert.match(html, /class="mark" href="\/"/, 'das Zeichen führt nach Hause');
     assert.match(html, /aria-label="Nachrichten"/);
     assert.match(html, /aria-label="Einstellungen"/);
   });
@@ -288,11 +288,11 @@ describe('Oberfläche im neuen Zuschnitt', () => {
   const load = async (path) => (await fetch(`${base}${path}`, { headers: { cookie }, redirect: 'manual' })).text();
 
   it('sagt in der Kopfleiste, wo man ist', async () => {
-    // Auf dem Weg bleibt die Mitte der Leiste leer: den Namen trägt der Kopf
-    // der Bahn, und der wandert mit. Überall sonst steht dort, wo man ist.
+    // Auf dem Weg steht in der Leiste jeder Bahn der ganze Pfad, und das Wort
+    // der eigenen Bahn ist das kräftige. Überall sonst steht dort, wo man ist.
     const weg = await load('/');
     assert.doesNotMatch(weg, /class="appbar-title"/);
-    assert.match(weg, /<h2 class="bahn-titel">Leute<\/h2>/);
+    assert.match(weg, /<a class="pfad-wort ist-hier" href="#leute" aria-current="true">Leute<\/a>/);
     assert.match(await load('/kreise'), /<h1 class="appbar-title">Dein Himmel<\/h1>/);
     assert.match(await load('/settings'), /<h1 class="appbar-title">Einstellungen<\/h1>/);
   });
@@ -669,16 +669,21 @@ describe('Der eigene Weg', () => {
   it('legt alle vier Bahnen nebeneinander — gewischt wird, nicht geladen', async () => {
     const html = await load('/');
 
-    // Vier Bahnen, jede mit ihrem Namen im schwebenden Kopf.
-    const worte = [...html.matchAll(/<h2 class="bahn-titel">([^<]+)</g)].map((m) => m[1]);
-    assert.deepEqual(worte, ['Leute', 'Gespräch', 'Themen', 'Rückhalt']);
+    // Vier Bahnen, und jede bringt ihre eigene Leiste mit — deshalb ist beim
+    // Wischen immer das richtige Wort das kräftige, ganz ohne Skript.
     for (const id of ['leute', 'gespraech', 'themen', 'rueckhalt']) {
       assert.match(html, new RegExp(`<section class="bahn[^"]*" id="${id}"`), `Bahn ${id} fehlt`);
+      assert.match(
+        html,
+        new RegExp(`<a class="pfad-wort ist-hier" href="#${id}"`),
+        `${id} betont sich in der eigenen Bahn nicht`,
+      );
     }
+    assert.equal((html.match(/class="topbar glas"/g) ?? []).length, 4, 'eine Leiste je Bahn');
 
-    // Ohne Wischen kommt man mit den Nachbarn weiter — auch mit der Tastatur.
-    assert.match(html, /href="#gespraech" aria-label="Weiter zu Gespräch"/);
-    assert.match(html, /href="#themen" aria-label="Zurück zu Themen"/);
+    // Zeichen und Knöpfe gibt es trotzdem nur einmal für Tastatur und Vorlesen.
+    assert.equal((html.match(/aria-label="Nachrichten"/g) ?? []).length, 1);
+    assert.equal((html.match(/class="mark schatten"[^>]*aria-hidden="true"/g) ?? []).length, 3);
 
     // Und die Fläche rastet ein — das ist das Wischen.
     assert.match(STYLESHEET, /\.weg \{[^}]*scroll-snap-type: x mandatory/s);

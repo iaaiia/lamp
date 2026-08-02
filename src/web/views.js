@@ -83,15 +83,13 @@ export function layout({
    * Kopf der Bahn — er wandert mit ihr, und damit sagt es die Fläche selbst
    * statt der Server.
    */
-  const appbar = `<header class="appbar glas">
+  const appbar = bar?.eigene ? '' : `<header class="appbar glas">
      <div class="slot left">${
        viewer
          ? `<a class="brandmark" href="/" aria-label="Startseite">${logo}<span>${escapeHtml(config.instanceName)}</span></a>`
          : `<span class="brandmark">${logo}<span>${escapeHtml(config.instanceName)}</span></span>`
      }</div>
-     ${bar?.pfad
-       ? `<h1 class="visually-hidden">${escapeHtml(title)}</h1>`
-       : `<h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>`}
+     <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
      <div class="slot right">${
        viewer
          ? `<a class="icon-btn" href="/stream" aria-label="Nachrichten"${
@@ -875,19 +873,38 @@ export function homePage({
    * macht das Wischen, `#anker` macht dasselbe für Tastatur und Screenreader,
    * und ohne beides bleibt es eine Seite, auf der alles vorhanden ist.
    */
-  const bahn = (id, titel, satz, inhalt, stufe, vorher, nachher) => `
-<section class="bahn tiefe-${stufe}" id="${id}" aria-label="${escapeHtml(titel)}" tabindex="-1">
-  <div class="bahn-kopf glas">
-    <div class="bahn-wort">
-      <h2 class="bahn-titel">${escapeHtml(titel)}</h2>
-      <p class="bahn-satz">${escapeHtml(satz)}</p>
-    </div>
-    <nav class="bahn-weiter" aria-label="Rubrik wechseln">
-      ${vorher ? `<a href="#${vorher[0]}" aria-label="Zurück zu ${escapeHtml(vorher[1])}">‹</a>` : ''}
-      ${nachher ? `<a href="#${nachher[0]}" aria-label="Weiter zu ${escapeHtml(nachher[1])}">›</a>` : ''}
+  /**
+   * Die Leiste gehört zur Bahn, nicht zur Seite: Zeichen, die vier Wörter, zwei
+   * Knöpfe. Weil jede Bahn ihre eigene mitbringt, steht in ihr immer das
+   * richtige Wort kräftig — beim Wischen wandert die Leiste mit, und weil
+   * Zeichen und Knöpfe in allen vier gleich aussehen, wirkt es wie eine einzige
+   * Leiste, in der sich nur die Betonung verschiebt. Genau das ist der Trick,
+   * mit dem die Betonung dem Finger folgt, ohne dass ein Skript zusieht.
+   *
+   * Für Tastatur und Screenreader gibt es Zeichen und Knöpfe genau einmal; in
+   * den übrigen drei Bahnen sind sie Dekoration und entsprechend ausgezeichnet.
+   */
+  const leiste = (aktiv, erste) => {
+    const still = erste ? '' : ' aria-hidden="true" tabindex="-1"';
+    return `<header class="topbar glas">
+    <a class="mark${erste ? '' : ' schatten'}" href="/"${erste ? ' aria-label="Startseite"' : still}>${logo}</a>
+    <nav class="pfad" aria-label="Rubrik wechseln">
+      ${WEG.map(([id, label]) => `<a class="pfad-wort${id === aktiv ? ' ist-hier' : ''}" href="#${id}"${
+        id === aktiv ? ' aria-current="true"' : ''
+      }>${label}</a>`).join('')}
     </nav>
+    <a class="icon-btn rund${erste ? '' : ' schatten'}" href="/stream"${erste ? ' aria-label="Nachrichten"' : still}>${iconStream()}</a>
+    <a class="icon-btn rund${erste ? '' : ' schatten'}" href="/settings"${erste ? ' aria-label="Einstellungen"' : still}>${iconSettings()}</a>
+  </header>`;
+  };
+
+  const bahn = (id, titel, satz, inhalt, stufe, erste) => `
+<section class="bahn tiefe-${stufe}" id="${id}" aria-label="${escapeHtml(titel)}" tabindex="-1">
+  ${leiste(id, erste)}
+  <div class="bahn-inhalt">
+    <p class="bahn-satz">${escapeHtml(satz)}</p>
+    ${inhalt}
   </div>
-  <div class="bahn-inhalt">${inhalt}</div>
 </section>`;
 
   const leuteAnsicht = `
@@ -977,13 +994,13 @@ ${feed.length
     viewer,
     prefs,
     current: 'weg',
-    bar: { pfad: true },
+    bar: { eigene: true },
     stage: true,
     head: `<style nonce="${escapeHtml(nonce)}">${kugeln.join('')}</style>`,
     body: `
+<h1 class="visually-hidden">Dein Weg</h1>
 <div class="weg" role="group" aria-label="Dein Weg: seitlich wischen">
-${WEG.map(([id, label, stufe, satz], i) =>
-    bahn(id, label, satz, bahnen[id], stufe, WEG[i - 1], WEG[i + 1])).join('')}
+${WEG.map(([id, label, stufe, satz], i) => bahn(id, label, satz, bahnen[id], stufe, i === 0)).join('')}
 </div>`,
   });
 }

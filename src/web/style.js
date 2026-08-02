@@ -225,9 +225,10 @@ small, .small { font-size: .875rem; }
 /* Platz für die schwebende Leiste — sie verdrängt nichts, also muss der
    Inhalt selbst anfangen, wo sie aufhört. */
 body main { padding-top: 4.6rem; }
-/* Auf dem Weg scrollen die Bahnen, nicht die Seite. */
+/* Auf dem Weg trägt jede Bahn ihre eigene Leiste: die Seite braucht oben
+   keinen Platz mehr freizuhalten, und gescrollt wird in den Bahnen. */
 body:has(.weg) { overflow: hidden; }
-body:has(.weg) main { padding-bottom: 0; }
+body:has(.weg) main { padding-top: max(.5rem, env(safe-area-inset-top)); padding-bottom: 0; }
 .appbar .slot { display: flex; align-items: center; }
 .appbar .slot.right { justify-content: flex-end; }
 .appbar-title {
@@ -256,28 +257,6 @@ body:has(.weg) main { padding-bottom: 0; }
 .brandmark svg { display: block; }
 .appbar .slot.right { gap: .4rem; }
 
-/* Der Pfad: vier Wörter in der Kopfleiste, das aktuelle kräftig. Welches das
-   ist, sagt die Fläche — der Anker unter dem Finger. */
-.pfad {
-  display: flex;
-  gap: .7rem;
-  justify-content: center;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.pfad::-webkit-scrollbar { display: none; }
-.pfad-wort {
-  flex: none;
-  font-size: .8rem;
-  font-weight: 660;
-  color: var(--ink-muted);
-  text-decoration: none;
-  padding: .15rem .1rem;
-  border-radius: 8px;
-}
-.pfad-wort:hover { color: var(--ink); }
-
 /* ------------------------------------------------------------------ Der Weg */
 /* Vier Bahnen nebeneinander in einer Fläche, die einrastet. Gewischt wird mit
    dem Finger, gesprungen mit dem Anker — beides ohne eine Zeile Skript.
@@ -293,7 +272,7 @@ body:has(.weg) main { padding-bottom: 0; }
   scroll-behavior: smooth;
   scrollbar-width: none;
   margin: 0 -1.25rem;
-  height: calc(100dvh - 9.5rem);
+  height: calc(100dvh - 6rem);
 }
 .weg::-webkit-scrollbar { display: none; }
 .bahn {
@@ -309,42 +288,77 @@ body:has(.weg) main { padding-bottom: 0; }
 .bahn::-webkit-scrollbar { display: none; }
 .bahn:focus { outline: none; }
 
-/* Der Kopf einer Bahn schwebt über ihrem Inhalt: er bleibt oben stehen,
-   während die Kugeln darunter durchziehen — und er trägt den Namen der
-   Rubrik, in der man gerade ist. */
-.bahn-kopf {
+/* Die Leiste der Bahn: Zeichen, vier Wörter, zwei Knöpfe — in einer Zeile,
+   schwebend über dem Inhalt. Sie bleibt oben stehen, während die Kugeln
+   darunter durchziehen. */
+.topbar {
   position: sticky;
   top: 0;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: .8rem;
-  border-radius: 20px;
-  padding: .7rem 1rem .8rem;
-  margin-bottom: 1rem;
+  gap: .35rem;
+  padding: .35rem .45rem;
+  border-radius: 999px;
+  margin-bottom: 1.1rem;
 }
-.bahn-wort { flex: 1; min-width: 0; }
-.bahn-titel {
-  font-family: var(--display);
-  font-size: 1.15rem;
-  font-weight: 780;
-  letter-spacing: -.02em;
-  margin: 0;
-}
-.bahn-satz { margin: .2rem 0 0; font-size: .82rem; color: var(--ink-muted); max-width: none; }
-.bahn-weiter { display: flex; gap: .2rem; flex: none; }
-.bahn-weiter a {
+
+/* Zeichen und Knöpfe sind gefüllte Punkte — dunkel auf hellem Grund, wie in
+   der Skizze. Kein Rahmen, keine Beschriftung: drei Punkte, dazwischen Wörter. */
+.mark,
+.icon-btn.rund {
+  flex: none;
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.1rem;
+  height: 2.1rem;
   border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  border: 0;
   text-decoration: none;
-  color: var(--ink-muted);
-  font-size: 1.1rem;
-  line-height: 1;
 }
-.bahn-weiter a:hover { color: var(--ink); background: color-mix(in oklab, var(--ink) 6%, transparent); }
+.mark svg { width: 18px; height: 18px; }
+.mark svg circle:first-child { stroke: var(--surface); }
+.mark svg circle:last-child { fill: var(--ember); }
+.icon-btn.rund svg { width: 18px; height: 18px; }
+.mark:hover,
+.icon-btn.rund:hover { background: var(--blue-deep); }
+
+/* Die vier Wörter. Kräftig ist das, in dessen Bahn man gerade steht — jede
+   Bahn bringt ihre eigene Leiste mit, deshalb stimmt es beim Wischen von
+   selbst. */
+.pfad {
+  flex: 1;
+  display: flex;
+  gap: .5rem;
+  align-items: baseline;
+  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+}
+.pfad::-webkit-scrollbar { display: none; }
+.pfad-wort {
+  flex: none;
+  font-family: var(--display);
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--ink) 55%, transparent);
+  text-decoration: none;
+}
+.pfad-wort:hover { color: var(--ink); }
+.pfad-wort.ist-hier { color: var(--ink); font-weight: 800; }
+
+.bahn-satz {
+  margin: 0 0 1.1rem;
+  font-size: .82rem;
+  color: var(--ink-muted);
+  max-width: none;
+}
+
 .bahn-zwischen {
   margin: 1.6rem 0 .8rem;
   font-size: .74rem;

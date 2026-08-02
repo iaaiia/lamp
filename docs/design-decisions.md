@@ -290,10 +290,15 @@ Seite.
 
 **Chosen:** die vier Rubriken liegen als vier Bahnen **gleichzeitig** auf der Startseite, in
 einer Fläche mit `scroll-snap-type: x mandatory`. Gewechselt wird durch seitliches Wischen;
-die Bahn rastet ein. Der Name der Rubrik steht in einem schwebenden Kopf, der zu seiner Bahn
-gehört und beim Scrollen oben stehen bleibt — welche Rubrik gerade dran ist, sagt damit die
-Fläche selbst, nicht der Server. Neben dem Namen führen zwei Pfeile zu den Nachbarbahnen,
-für Tastatur und Screenreader.
+die Bahn rastet ein.
+
+Die Leiste oben gehört **zur Bahn, nicht zur Seite**: Zeichen, die vier Wörter, zwei Knöpfe
+— und in jeder Bahn ist ihr eigenes Wort das kräftige. Beim Wischen wandert die Leiste mit;
+weil Zeichen und Knöpfe in allen vier gleich aussehen, wirkt es wie eine einzige Leiste, in
+der sich nur die Betonung verschiebt. Das ist der Trick, mit dem die Betonung dem Finger
+folgt, ohne dass ein Skript zusieht. Zeichen und Knöpfe sind für Tastatur und Screenreader
+genau einmal vorhanden; in den übrigen drei Bahnen sind sie `aria-hidden` und nicht
+fokussierbar.
 
 Alles Bedienbare schwebt: Kopfleiste, Bahnkopf und Schreibleiste sind Kapseln aus Milchglas
 (`.glas`: 62 % Deckung, `backdrop-filter: blur(22px) saturate(180%)`, außen eine dünne
@@ -314,10 +319,11 @@ sind vier kurze Abfragen auf die eigenen Daten — bezahlbar, und der Preis der 
 automatisch `auto`. Der Bahnkopf klebte deshalb an der falschen Kante und legte sich über
 den Inhalt. Jetzt scrollt jede Bahn selbst — dann klebt ihr Kopf dort, wo er hingehört.
 
-**Enforced by:** `.weg`, `.bahn`, `.bahn-kopf`, `.glas` in `src/web/style.js`, `homePage()`
-in `src/web/views.js`; `tests/ui.test.js` prüft, dass alle vier Bahnen im Markup liegen,
-dass die Fläche einrastet, dass jede Bahn ihren Namen im schwebenden Kopf trägt, dass die
-Nachbarpfeile da sind — und weiterhin, dass kein Skript ausgeliefert wird.
+**Enforced by:** `.weg`, `.bahn`, `.topbar`, `.pfad`, `.glas` in `src/web/style.js`,
+`homePage()` in `src/web/views.js`; `tests/ui.test.js` prüft, dass alle vier Bahnen im
+Markup liegen, dass die Fläche einrastet, dass jede Bahn eine Leiste mit dem eigenen Wort
+als betontem trägt, dass Zeichen und Knöpfe nur einmal für Tastatur und Vorlesen zählen —
+und weiterhin, dass kein Skript ausgeliefert wird.
 
 ## D32 — Der Weg gehört der Person, nicht dem Raum — und Gespräch/Themen sind zwei Achsen
 

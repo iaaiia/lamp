@@ -286,6 +286,23 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D37 — Eine Leiste, überall dieselbe
+
+**Chosen:** die Leiste oben ist auf jeder Seite gleich hoch, gleich gerundet und gleich
+eingerückt — dieselben Maße wie die Leiste auf dem Weg (`padding: .35rem .45rem`,
+`border-radius: 999px`, Zeichen und Knopf je 2,1 rem). Der Schriftzug „lamb" steht in keiner
+von beiden mehr: das Zeichen genügt, und ohne den Namen sitzt der Titel wirklich in der
+Mitte statt nur ungefähr. Wo rechts kein Knopf steht, hält ein Platzhalter die Spalte —
+sonst rutscht die Mitte.
+
+**Why:** eine Leiste, die je nach Seite die Höhe wechselt, liest sich wie zwei verschiedene
+Anwendungen. Ein Test vergleicht deshalb die Maße beider Regeln miteinander, statt sie nur
+einzeln zu prüfen.
+
+**Enforced by:** `.appbar` und `.topbar` in `src/web/style.js`, `layout()` in
+`src/web/views.js`; `tests/ui.test.js` prüft, dass beide dieselben Maße tragen und dass der
+Schriftzug nirgends mehr auftaucht.
+
 ## D36 — Die Seite „Strom“ entfällt; „Leute“ ist der Folge-Strom
 
 **Chosen:** die Seite `/stream` und ihr Knopf in der Kopfleiste sind weg. Was dort stand,

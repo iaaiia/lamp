@@ -84,19 +84,15 @@ export function layout({
    * statt der Server.
    */
   const appbar = bar?.eigene ? '' : `<header class="appbar glas">
-     <div class="slot left">${
-       viewer
-         ? `<a class="brandmark" href="/" aria-label="Startseite">${logo}<span>${escapeHtml(config.instanceName)}</span></a>`
-         : `<span class="brandmark">${logo}<span>${escapeHtml(config.instanceName)}</span></span>`
-     }</div>
+     ${viewer
+       ? `<a class="mark" href="/" aria-label="Startseite">${logo}</a>`
+       : `<span class="mark">${logo}</span>`}
      <h1 class="appbar-title">${escapeHtml(bar?.title ?? title)}</h1>
-     <div class="slot right">${
-       viewer
-         ? `<a class="icon-btn" href="/settings" aria-label="Einstellungen"${
-             current === 'settings' ? ' aria-current="page"' : ''
-           }>${iconSettings()}</a>`
-         : ''
-     }</div>
+     ${viewer
+       ? `<a class="icon-btn rund" href="/settings" aria-label="Einstellungen"${
+           current === 'settings' ? ' aria-current="page"' : ''
+         }>${iconSettings()}</a>`
+       : '<span class="platzhalter" aria-hidden="true"></span>'}
    </header>`;
 
   /**

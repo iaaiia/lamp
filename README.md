@@ -23,7 +23,7 @@ Eigenschaften darunter:
 | **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
 | **Der Kreis ist ein Chatfenster** | Ein Kreis ist nur noch das Gespräch: jede Nachricht eine Kugel mit Text daneben, versetzt und in wechselnder Größe. Die Streuung kommt aus dem Beitrag — sieht zufällig aus, ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
 | **Die Kugel ist das Bedienelement** | Antippen öffnet, wer da spricht, wie der Rückhalt steht und wie man antwortet. Keine Knopfreihe unter jedem Text — und trotzdem kein Skript: Aufklappen ist ein `<details>`. Kugeln zur Zierde gibt es nicht: jede steht für einen Menschen, ein Thema, eine Nachricht oder einen Rückhalt. |
-| **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause) und zwei Knöpfe: Nachrichten, Einstellungen. Unten genau eine feste Leiste, und darin steht das Schreibfeld. Die fünfteilige Tab-Leiste ist weg. |
+| **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause), in der Mitte wo man ist, rechts ein Knopf: Einstellungen. Die Leiste ist auf jeder Seite gleich groß. Unten genau eine feste Leiste, und darin steht das Schreibfeld. Die fünfteilige Tab-Leiste ist weg. |
 | **Auskunft ohne Klick** | Jede Wolke nennt Art, Größe und Zustand von sich aus; bei Zeiger oder Tastaturfokus klappt Zweck und letzter Beitrag auf. Aus der Wolke führt ein Weg direkt ins Schreibfeld des Kreises. |
 | **Zeichen, die etwas aussagen** | Jeder Kreis trägt ein aus seiner Adresse erzeugtes Presence-Ring-Zeichen: Punkte wachsen mit der Mitgliederzahl, private Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, wie groß und wie offen ein Kreis ist, bevor man liest. |
 | **Kühler Grund, frische Farben** | Heller Lavendelgrund, Marineblau statt Schwarz, und die Akzente aus der Referenz: Jupiterblau, Uranusviolett, Sonnenorange. Das Zeichen oben ist violett mit versetztem Ring wie ein Planet, die beiden Knöpfe daneben dunkel wie der Suchen-Knopf auf dem Plakat. Das Schreibfeld unten ist dieselbe weiße Pille wie das Suchfeld. Orange bleibt dem Support vorbehalten, Grün kommt in der Marke nicht vor. |
@@ -66,7 +66,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 145 Tests
+npm test        # 146 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -97,7 +97,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   145 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   146 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)

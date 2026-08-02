@@ -221,6 +221,11 @@ small, .small { font-size: .875rem; }
 /* ---------------------------------------------------------------- App-Leiste */
 /* Sie liegt nicht mehr am Rand, sondern schwebt eingerückt darüber. */
 
+/* Die App-Leiste ist dieselbe Leiste wie auf dem Weg: gleiche Höhe, gleiche
+   Rundung, gleiche Abstände. Sie unterscheiden sich nur im Inhalt — hier ein
+   Titel, dort die vier Wörter. Der Schriftzug „lamb" steht in keiner von
+   beiden: das Zeichen genügt, und ohne den Namen ist der Titel wirklich
+   zentriert statt nur ungefähr. */
 .appbar {
   position: fixed;
   top: var(--oben);
@@ -229,12 +234,14 @@ small, .small { font-size: .875rem; }
   width: min(48rem, calc(100% - 1.5rem));
   z-index: 12;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: 2.1rem minmax(0, 1fr) 2.1rem;
   align-items: center;
-  gap: .5rem;
-  padding: .5rem .6rem;
-  border-radius: 24px;
+  gap: .35rem;
+  padding: .35rem .45rem;
+  border-radius: 999px;
 }
+/* Hält die Mitte in der Mitte, auch wenn rechts kein Knopf steht. */
+.platzhalter { display: block; width: 2.1rem; height: 2.1rem; }
 /* Platz für die schwebende Leiste — sie verdrängt nichts, also muss der
    Inhalt selbst anfangen, wo sie aufhört. */
 body main { padding-top: calc(var(--oben) + 4.1rem); }
@@ -255,58 +262,9 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Zeichen und Wort, wie in der Skizze — das Wort ist der Weg nach Hause. */
-.brandmark {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  padding-left: .35rem;
-  text-decoration: none;
-  color: var(--ink);
-  font-family: var(--display);
-  font-weight: 780;
-  letter-spacing: -.02em;
-}
-.brandmark svg { display: block; }
-.appbar .slot.right { gap: .4rem; }
 
-/* Auf den übrigen Seiten trägt die Leiste dasselbe Zeichen und dieselben
-   Knöpfe wie auf dem Weg: violett gefüllt, weißes Piktogramm, und beim Zeichen
-   der versetzte Ring. Eine Marke, nicht zwei. */
-.brandmark {
-  position: relative;
-  gap: .6rem;
-  padding-left: .5rem;
-}
-.brandmark svg {
-  width: 17px;
-  height: 17px;
-  padding: 8px;
-  box-sizing: content-box;
-  border-radius: 50%;
-  background: var(--violet);
-}
-.brandmark svg circle:first-child { stroke: #FFFFFF; }
-.brandmark svg circle:last-child { fill: #FFFFFF; }
-.brandmark::after {
-  content: "";
-  position: absolute;
-  left: .5rem;
-  top: 50%;
-  width: 2.1rem;
-  height: 2.1rem;
-  transform: translateY(-50%) translate(-4px, -4px);
-  border-radius: 50%;
-  border: 1.5px solid var(--violet);
-  opacity: .5;
-  pointer-events: none;
-}
-.appbar .slot.right .icon-btn {
-  background: var(--ink);
-  border-color: transparent;
-  color: #FFFFFF;
-}
-.appbar .slot.right .icon-btn:hover { background: #0C1724; }
+
+
 
 /* ------------------------------------------------------------------ Der Weg */
 /* Vier Bahnen nebeneinander in einer Fläche, die einrastet. Gewischt wird mit
@@ -472,7 +430,7 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
 .writebar .chat-compose > form.card > h2 { display: none; }
 .writebar .chat-compose > form.card textarea { min-height: 5.5rem; }
 .writebar .chat-compose[open] > summary { color: var(--ink); font-weight: 640; }
-.writebar > details, .writebar > .write-field { flex: 1; }
+.writebar > details, .writebar > .write-field { flex: 1; min-width: 0; }
 .writebar .icon-btn {
   flex: none;
   width: 3rem;
@@ -995,6 +953,10 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .chat-compose > summary {
   cursor: pointer;
   list-style: none;
+  /* Ein langer Kreisname darf die Pille nicht zweizeilig machen. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: .85rem .9rem;
   background: transparent;
   border: 0;

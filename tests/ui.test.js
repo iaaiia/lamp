@@ -351,8 +351,22 @@ describe('Oberfläche im neuen Zuschnitt', () => {
   it('führt von überall mit einem Griff nach Hause', async () => {
     // Statt eines Zurück-Pfeils, der je nach Seite woanders hinführte: das
     // Zeichen links, immer derselbe Weg.
-    assert.match(await load('/settings'), /class="brandmark" href="\/" aria-label="Startseite"/);
-    assert.match(await load('/c/kultur-leipzig'), /class="brandmark" href="\/"/);
+    assert.match(await load('/settings'), /class="mark" href="\/" aria-label="Startseite"/);
+    assert.match(await load('/c/kultur-leipzig'), /class="mark" href="\/"/);
+  });
+
+  it('gibt jeder Leiste dieselbe Form — und trägt den Namen nicht mit', async () => {
+    // Die Leiste auf dem Weg und die auf allen anderen Seiten sind dieselbe:
+    // gleiche Höhe, gleiche Rundung, gleiche Abstände. Der Schriftzug „lamb"
+    // steht in keiner von beiden — das Zeichen genügt, und ohne den Namen sitzt
+    // der Titel wirklich in der Mitte.
+    const einstellungen = await load('/settings');
+    assert.doesNotMatch(einstellungen, /class="brandmark"/);
+    assert.match(einstellungen, /<h1 class="appbar-title">Einstellungen<\/h1>/);
+
+    const masze = /padding: \.35rem \.45rem;\n  border-radius: 999px;/;
+    assert.match(STYLESHEET.match(/\.appbar \{[^}]*\}/s)[0], masze, 'die App-Leiste');
+    assert.match(STYLESHEET.match(/\.topbar \{[^}]*\}/s)[0], masze, 'die Leiste des Wegs');
   });
 
   it('zählt Beiträge des Kontos, nicht die der angezeigten Seite', async () => {

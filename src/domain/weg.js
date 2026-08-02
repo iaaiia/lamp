@@ -1,19 +1,15 @@
 /**
- * Der Weg — die vier Rubriken, und zwar meine, nicht die eines Raums.
+ * Der Weg — die drei Rubriken, und zwar meine, nicht die eines Raums.
  *
- *   Leute     wem ich folge — was sie schreiben, liefert der Feed-Mechanismus
- *             (src/domain/feeds.js), damit die gewählte Sortierung auch hier gilt
- *   Gespräch  Beiträge, die ich kommentiert habe — und meine, die jemand kommentiert hat
- *   Themen    Beiträge, hinter die ich mich gestellt habe — und meine, hinter die sich jemand gestellt hat
- *   Rückhalt  die geschützten Räume, die daraus entstanden sind
+ *   Freunde  wem ich folge — was sie schreiben, liefert der Feed-Mechanismus
+ *            (src/domain/feeds.js), damit die gewählte Sortierung auch hier gilt
+ *   Kreise   Beiträge, hinter die ich mich gestellt habe — und meine, hinter die sich jemand gestellt hat
+ *   Support  die geschützten Chats, die daraus entstanden sind
  *
- * Die Reihenfolge ist die These: man findet Menschen, redet mit ihnen, merkt
- * dabei, wofür man einsteht — und aus manchem davon wird ein Ort, an dem zwei
- * Menschen aufeinander zählen.
- *
- * Gespräch und Themen haben dieselbe Form und unterscheiden sich nur in der
- * Handlung: Kommentar dort, Support hier. Beide zeigen beide Richtungen, denn
- * eine Zuwendung ist erst dann etwas wert, wenn sie auch ankommt.
+ * Die Reihenfolge ist die These: man folgt Menschen, merkt dabei, wofür man
+ * einsteht — und aus manchem davon wird ein Ort, an dem zwei Menschen
+ * aufeinander zählen. Die Support-Achse zeigt beide Richtungen, denn eine
+ * Zuwendung ist erst dann etwas wert, wenn sie auch ankommt.
  *
  * Alles hier ist **die eigene Sicht**. Diese Abfragen laufen nie für jemand
  * anderen als die anfragende Person, und keine von ihnen zeigt einer dritten
@@ -32,44 +28,9 @@ export const meineLeute = (accountId) =>
   );
 
 /**
- * Gespräch — die Kommentar-Achse, in beide Richtungen: Beiträge, die **ich**
- * kommentiert habe, und Beiträge von **mir**, die jemand kommentiert hat. Was
- * hier steht, ist kein Feed von Fremden, sondern die Spur der Gespräche, an
- * denen ich beteiligt bin.
- */
-export const meinGespraech = (accountId, limit = 40) =>
-  all(
-    `SELECT * FROM (
-       -- worauf ich geantwortet habe
-       SELECT eltern.id, eltern.content, eltern.content_warning, eltern.circle_id,
-              meine.created_at AS wann, 'meine' AS art,
-              a.username, a.domain, a.display_name
-         FROM posts meine
-         JOIN posts eltern ON eltern.id = meine.in_reply_to
-         JOIN accounts a ON a.id = eltern.account_id
-        WHERE meine.account_id = :me AND meine.deleted_at IS NULL
-          AND eltern.deleted_at IS NULL AND a.paused_at IS NULL
-       UNION ALL
-       -- was jemand bei mir kommentiert hat
-       SELECT meins.id, meins.content, meins.content_warning, meins.circle_id,
-              fremde.created_at AS wann, 'fremde' AS art,
-              a.username, a.domain, a.display_name
-         FROM posts meins
-         JOIN posts fremde ON fremde.in_reply_to = meins.id
-         JOIN accounts a ON a.id = fremde.account_id
-        WHERE meins.account_id = :me AND meins.deleted_at IS NULL
-          AND fremde.deleted_at IS NULL AND fremde.account_id <> :me
-          AND a.paused_at IS NULL
-     )
-     ORDER BY wann DESC
-     LIMIT :grenze`,
-    { me: accountId, grenze: limit },
-  );
-
-/**
- * Themen — dieselbe Form, andere Achse: Support statt Kommentar. Beiträge, hinter
- * die **ich** mich gestellt habe, und Beiträge von **mir**, hinter die sich
- * jemand gestellt hat.
+ * Kreise — die Support-Achse in beide Richtungen: Beiträge, hinter die **ich**
+ * mich gestellt habe, und Beiträge von **mir**, hinter die sich jemand
+ * gestellt hat. Alles, womit ich zu tun habe.
  *
  * Themen sind damit nicht das, was viele gut finden, sondern das, wofür in
  * meiner Umgebung eingestanden wurde. Es steht keine Zahl daran und keine

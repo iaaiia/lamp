@@ -343,7 +343,7 @@ describe('Oberfläche im neuen Zuschnitt', () => {
     // der eigenen Bahn ist das kräftige. Überall sonst steht dort, wo man ist.
     const weg = await load('/');
     assert.doesNotMatch(weg, /class="appbar-title"/);
-    assert.match(weg, /<a class="pfad-wort ist-hier" href="#leute" aria-current="true">Leute<\/a>/);
+    assert.match(weg, /<a class="pfad-wort ist-hier" href="#freunde" aria-current="true">Freunde<\/a>/);
     assert.match(await load('/kreise'), /<h1 class="appbar-title">Dein Himmel<\/h1>/);
     assert.match(await load('/settings'), /<h1 class="appbar-title">Einstellungen<\/h1>/);
   });
@@ -577,11 +577,16 @@ describe('Der gesuchte Kreis', () => {
     assert.match(eine, /Samstag jemand Zeit\?/, 'die Nachricht');
     assert.match(eine, /Ich bin dabei\./, 'und die Antwort daneben');
 
-    // Support, Person und Antworten hängen an der Kugel, nicht am Text.
+    // Wer da spricht, hängt an der Kugel; Support und Antworten stehen sichtbar
+    // am Beitrag selbst — ein Knopf, den man erst aufklappen muss, wird nicht
+    // gedrückt.
     const kugel = eine.slice(eine.indexOf('class="orb-pop"'), eine.indexOf('class="bubble"'));
     assert.match(kugel, /class="msg-orb"/);
-    assert.match(kugel, /class="support tiny"/, 'der Support-Knopf');
     assert.match(kugel, /class="orb-person"/, 'wer da spricht');
+
+    const blase = eine.slice(eine.indexOf('class="bubble"'));
+    assert.match(blase, /class="bubble-fuss"/);
+    assert.match(blase, /class="support tiny"/, 'der Support-Knopf');
   });
 
   it('lässt Gäste mitlesen und sagt, wofür sie ein Konto brauchen', async () => {
@@ -737,7 +742,7 @@ describe('Der eigene Weg', () => {
 
   const load = async (pfad) => (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
 
-  // Alle vier Bahnen liegen jetzt gleichzeitig auf der Seite. Wer prüfen will,
+  // Alle drei Bahnen liegen jetzt gleichzeitig auf der Seite. Wer prüfen will,
   // was in einer davon steht, muss sie also ausschneiden — sonst prüft man die
   // ganze Seite und bekommt Treffer aus der Nachbarbahn.
   const bahn = async (id) => {
@@ -747,12 +752,12 @@ describe('Der eigene Weg', () => {
     return html.slice(anfang, ende === -1 ? undefined : ende);
   };
 
-  it('legt alle vier Bahnen nebeneinander — gewischt wird, nicht geladen', async () => {
+  it('legt alle drei Bahnen nebeneinander — gewischt wird, nicht geladen', async () => {
     const html = await load('/');
 
-    // Vier Bahnen, und jede bringt ihre eigene Leiste mit — deshalb ist beim
+    // Drei Bahnen, und jede bringt ihre eigene Leiste mit — deshalb ist beim
     // Wischen immer das richtige Wort das kräftige, ganz ohne Skript.
-    for (const id of ['leute', 'gespraech', 'themen', 'rueckhalt']) {
+    for (const id of ['freunde', 'kreise', 'support']) {
       assert.match(html, new RegExp(`<section class="bahn[^"]*" id="${id}"`), `Bahn ${id} fehlt`);
       assert.match(
         html,
@@ -760,48 +765,39 @@ describe('Der eigene Weg', () => {
         `${id} betont sich in der eigenen Bahn nicht`,
       );
     }
-    assert.equal((html.match(/class="topbar glas"/g) ?? []).length, 4, 'eine Leiste je Bahn');
+    assert.equal((html.match(/class="topbar glas"/g) ?? []).length, 3, 'eine Leiste je Bahn');
 
     // Zeichen und Knopf gibt es trotzdem nur einmal für Tastatur und Vorlesen.
     assert.equal((html.match(/aria-label="Einstellungen"/g) ?? []).length, 1);
-    assert.equal((html.match(/class="mark schatten"[^>]*aria-hidden="true"/g) ?? []).length, 3);
+    assert.equal((html.match(/class="mark schatten"[^>]*aria-hidden="true"/g) ?? []).length, 2);
 
     // Und die Fläche rastet ein — das ist das Wischen.
     assert.match(STYLESHEET, /\.weg \{[^}]*scroll-snap-type: x mandatory/s);
     assert.match(STYLESHEET, /\.bahn \{[^}]*scroll-snap-align: start/s);
   });
 
-  it('zeigt unter Leute, wem ich folge — und was diese schreiben', async () => {
-    const html = await bahn('leute');
+  it('zeigt unter Freunde, wem ich folge — und was diese schreiben', async () => {
+    const html = await bahn('freunde');
     assert.match(html, /Jonas/);
     assert.match(html, /Unter eigenem Namen/);
     assert.doesNotMatch(html, /Im Kreis gesagt/, 'was im Kreis gesagt wurde, bleibt im Kreis');
+
+    // Support gibt man dort, wo der Beitrag steht — nicht erst zwei Klicks weiter.
+    assert.match(html, /action="\/posts\/\d+\/support"/, 'Support geben fehlt am Beitrag');
+    assert.match(html, /Support geben/);
   });
 
-  it('zeigt unter Gespräch die Kommentar-Achse — in beide Richtungen', async () => {
-    const html = await bahn('gespraech');
-    assert.match(html, /Kommentiere ich/, 'was ich kommentiert habe');
-    assert.match(html, /Du hast kommentiert/);
-    assert.match(html, /Mein Beitrag mit Antwort/, 'und was jemand bei mir kommentiert hat');
-    assert.match(html, /hat bei dir kommentiert/);
-
-    // Support gehört in die andere Rubrik — sonst wären beide dasselbe.
-    assert.doesNotMatch(html, /Stehe ich dahinter/);
-  });
-
-  it('zeigt unter Themen die Support-Achse — in beide Richtungen', async () => {
-    const html = await bahn('themen');
+  it('zeigt unter Kreise die Support-Achse — in beide Richtungen', async () => {
+    const html = await bahn('kreise');
     assert.match(html, /Stehe ich dahinter/, 'wofür ich eingestanden bin');
     assert.match(html, /Du stehst dahinter/);
     assert.match(html, /Mein Beitrag mit Support/, 'und wofür jemand bei mir eingestanden ist');
     assert.match(html, /steht hinter deinem Beitrag/);
-
-    assert.doesNotMatch(html, /Kommentiere ich/, 'Kommentare gehören ins Gespräch');
   });
 
-  it('zeigt unter Rückhalt erst die Tür, dann den Raum', async () => {
+  it('zeigt unter Support erst die Tür, dann den Raum', async () => {
     // Die Tür steht dort, wo auch die Räume stehen — nicht mehr im Kreis.
-    const tuer = await bahn('rueckhalt');
+    const tuer = await bahn('support');
     assert.match(tuer, /Ihr steht beide hintereinander/);
     assert.match(tuer, /action="\/c\/wegkreis\/rueckhalt"/);
 
@@ -812,7 +808,7 @@ describe('Der eigene Weg', () => {
       redirect: 'manual',
     });
 
-    const html = await bahn('rueckhalt');
+    const html = await bahn('support');
     assert.match(html, /Jonas/, 'der Raum steht unter dem Namen der anderen Person');
   });
 

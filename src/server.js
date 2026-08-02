@@ -64,7 +64,7 @@ import {
 } from './domain/circles.js';
 import { openRaum } from './domain/rueckhalt.js';
 import {
-  meinGespraech, meineLeute, meineRaeume, meineThemen, moeglicheRaeume,
+  meineLeute, meineRaeume, meineThemen, moeglicheRaeume,
 } from './domain/weg.js';
 import {
   actorDocument,
@@ -191,14 +191,14 @@ router.get('/', (ctx, res) => {
     return sendHtml(res, 200, page.html.replace('__NONCE__', nonce), nonce, { allowScript: true });
   }
 
-  // Angemeldet ist die Startseite der eigene Weg: Leute → Gespräch → Themen →
-  // Rückhalt. Alle vier Bahnen liegen gleichzeitig auf der Seite — gewechselt
-  // wird durch Wischen, nicht durch Laden, also müssen auch alle vier hier
-  // stehen. Das ist der Preis der Geste, und er ist bezahlbar: es sind vier
-  // kurze Abfragen auf die eigenen Daten.
+  // Angemeldet ist die Startseite der eigene Weg: Freunde → Kreise → Support.
+  // Alle drei Bahnen liegen gleichzeitig auf der Seite — gewechselt wird durch
+  // Wischen, nicht durch Laden, also müssen auch alle drei hier stehen. Das ist
+  // der Preis der Geste, und er ist bezahlbar: es sind ein paar kurze Abfragen
+  // auf die eigenen Daten.
   const prefs = preferencesOf(ctx.viewer);
   const nonce = randomToken(16);
-  // Die Bahn „Leute" ist der Folge-Strom — mit der Sortierung, die in den
+  // Die Bahn „Freunde" ist der Folge-Strom — mit der Sortierung, die in den
   // Einstellungen gewählt wurde, und mit ihrer Erklärung daneben (D2).
   const strom = timeline(ctx.viewer, { feedId: prefs.feed });
 
@@ -208,7 +208,6 @@ router.get('/', (ctx, res) => {
     leute: meineLeute(ctx.viewer.id),
     feed: strom.posts.map((post) => ({ ...decorate(post, ctx.viewer), replies: [] })),
     sortierung: strom.feed,
-    spur: meinGespraech(ctx.viewer.id),
     themen: meineThemen(ctx.viewer.id),
     raeume: meineRaeume(ctx.viewer.id),
     moeglich: moeglicheRaeume(ctx.viewer.id),

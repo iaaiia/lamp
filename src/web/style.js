@@ -929,6 +929,11 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 }
 .bubble-support { font-size: .78rem; color: var(--ink-muted); }
 
+/* Support geben steht am Beitrag, nicht hinter einer Klappe: wer zustimmen
+   will, soll den Knopf sehen, ohne erst die Kugel zu öffnen. */
+.bubble-fuss { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; margin-top: .55rem; }
+.bubble-fuss .button.small { padding: .35rem .8rem; min-height: 0; font-size: .8rem; }
+
 /* Der Support-Knopf in der Blase ist klein, aber bleibt Ember. */
 .support.tiny {
   min-height: 0;
@@ -990,10 +995,13 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .orb-row-text .p-meta { display: block; font-size: .74rem; color: var(--ink-muted); margin-top: .15rem; }
 .orb-row-note { display: block; font-size: .8rem; color: var(--ember-deep); margin-top: .3rem; }
 
-/* Der geschützte Raum steht über dem, was öffentlich getragen wurde. */
-.raum-row { align-items: center; gap: .8rem; }
-.raum-row .orb-row-text { flex: 1; }
-.raum-row form { margin: 0; }
+/* Der geschützte Raum steht über dem, was öffentlich getragen wurde. Die Tür
+   ist eine Zeile: Kugel, Name, Knopf — und auf schmalen Geräten rutscht der
+   Knopf darunter, statt den Namen in eine Spalte zu quetschen. */
+.raum-row { align-items: center; gap: .8rem; flex-wrap: wrap; }
+.raum-row .orb-row-mark .orb-mark { --od-scale: .62; }
+.raum-row .orb-row-text { flex: 1 1 8rem; }
+.raum-row form { margin: 0; flex: none; }
 .raum-hinweis {
   font-size: .82rem;
   color: var(--ink-muted);
@@ -1002,9 +1010,9 @@ body.on-stage .cluster { position: relative; z-index: 1; }
   border-top: 1px solid var(--line-soft);
 }
 
-/* Der Weg: Leute — Gespräch — Themen — Rückhalt. Nach rechts wird es
-   persönlicher, und das sieht man: die Kugeln rücken näher zusammen, werden
-   voller und stehen ruhiger. Vier Stufen, kein Rauschen dazwischen. */
+/* Der Weg: Freunde — Kreise — Support. Nach rechts wird es persönlicher, und
+   das sieht man: die Kugeln rücken näher zusammen, werden voller und stehen
+   ruhiger. Drei Stufen, kein Rauschen dazwischen. */
 .tiefe-satz { font-size: .82rem; color: var(--ink-muted); margin: 0 0 1rem; }
 .tiefe-1 .orb-mark { --od-scale: .82; opacity: .82; }
 .tiefe-2 .orb-mark { --od-scale: 1; opacity: .92; }

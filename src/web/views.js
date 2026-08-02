@@ -718,7 +718,7 @@ function chatMessage(post, replies, viewer, orbId) {
   const supportButton = viewer
     ? `<form method="post" action="/posts/${post.id}/support">
          <button class="support tiny" type="submit" aria-pressed="${v.supported ? 'true' : 'false'}">
-           ${supportArc}<span>${v.supported ? 'Du stehst dahinter' : 'Support'}</span>
+           ${supportArc}<span>${v.supported ? 'Du stehst dahinter' : 'Support geben'}</span>
          </button>
        </form>`
     : '';
@@ -749,12 +749,6 @@ function chatMessage(post, replies, viewer, orbId) {
         <span><strong>${escapeHtml(name)}</strong><span class="p-meta mono">${escapeHtml(handleOf(post))}</span></span>
       </a>
       ${support}
-      <div class="orb-actions">
-        ${supportButton}
-        <a class="button secondary small" href="/posts/${post.id}">${
-          v.replyCount === 0 ? 'Antworten' : `${v.replyCount} ${v.replyCount === 1 ? 'Antwort' : 'Antworten'}`
-        }</a>
-      </div>
     </div>
   </details>
   <div class="bubble">
@@ -764,6 +758,12 @@ function chatMessage(post, replies, viewer, orbId) {
     </p>
     ${body}
     ${antworten ? `<div class="replies">${antworten}</div>` : ''}
+    <div class="bubble-fuss">
+      ${supportButton}
+      <a class="button secondary small" href="/posts/${post.id}">${
+        v.replyCount === 0 ? 'Antworten' : `${v.replyCount} ${v.replyCount === 1 ? 'Antwort' : 'Antworten'}`
+      }</a>
+    </div>
   </div>
 </div>`;
 }
@@ -784,54 +784,46 @@ function orbRow(href, orbId, titel, meta, notiz = '') {
 }
 
 /**
- * Der Weg: vier Rubriken, die der Person gehören. Die Reihenfolge ist die
- * These — man findet Menschen, redet mit ihnen, merkt dabei, wofür man
- * einsteht, und aus manchem davon wird ein geschützter Ort.
- *
- * Gespräch und Themen haben dieselbe Form und unterscheiden sich nur in der
- * Handlung: Kommentar dort, Support hier.
+ * Der Weg: drei Rubriken, die der Person gehören. Die Reihenfolge ist die
+ * These — man folgt Menschen, steht für etwas ein, und aus manchem davon wird
+ * ein geschützter Ort.
  */
 const WEG = [
-  ['leute', 'Leute', 1, 'Wem du folgst — und was diese Menschen schreiben.'],
-  ['gespraech', 'Gespräch', 2, 'Was du kommentiert hast — und was jemand bei dir kommentiert hat.'],
-  ['themen', 'Themen', 3, 'Wofür du eingestanden bist — und wofür jemand bei dir eingestanden ist.'],
-  ['rueckhalt', 'Rückhalt', 4, 'Die geschützten Räume, die daraus geworden sind. Nur ihr zwei.'],
+  ['freunde', 'Freunde', 1, 'Wem du folgst — und was diese Menschen schreiben.'],
+  ['kreise', 'Kreise', 2, 'Womit du zu tun hast: wofür du eingestanden bist, und wofür jemand bei dir.'],
+  ['support', 'Support', 3, 'Die geschützten Chats, die daraus geworden sind. Nur ihr zwei.'],
 ];
-const WEG_LABEL = Object.fromEntries(WEG.map(([id, label]) => [id, label]));
-const WEG_TIEFE = Object.fromEntries(WEG.map(([id, , stufe]) => [id, stufe]));
-const WEG_SATZ = Object.fromEntries(WEG.map(([id, , , satz]) => [id, satz]));
 
 /**
  * Die Startseite ist der Weg — und der Weg gehört der Person, nicht einem Raum.
  *
- *   Leute     wem ich folge; darunter, was diese Menschen geschrieben haben
- *   Gespräch  worauf ich reagiert und worauf ich geantwortet habe
- *   Themen    wo sich das häuft: die Räume, in die ich zurückgehe
- *   Rückhalt  die geschützten Räume, die daraus geworden sind
+ *   Freunde  wem ich folge; darunter, was diese Menschen geschrieben haben
+ *   Kreise   alles, womit ich zu tun habe: Support von mir, Support bei mir
+ *   Support  die geschützten Chats, die daraus geworden sind
  *
  * Dieselbe Bildsprache wie überall: eine Kugel je Sache, Text daneben, und nach
  * rechts wird es dichter.
  */
 export function homePage({
-  viewer, prefs, leute = [], feed = [], spur = [], themen = [], raeume = [], moeglich = [],
+  viewer, prefs, leute = [], feed = [], themen = [], raeume = [], moeglich = [],
   sortierung = null, nonce = '',
 }) {
   /**
-   * Alle vier Bahnen liegen nebeneinander in einer Fläche, die einrastet: man
+   * Alle drei Bahnen liegen nebeneinander in einer Fläche, die einrastet: man
    * wischt seitlich, und die Rubrik wechselt. Kein Skript — `scroll-snap`
    * macht das Wischen, `#anker` macht dasselbe für Tastatur und Screenreader,
    * und ohne beides bleibt es eine Seite, auf der alles vorhanden ist.
    */
   /**
-   * Die Leiste gehört zur Bahn, nicht zur Seite: Zeichen, die vier Wörter, zwei
-   * Knöpfe. Weil jede Bahn ihre eigene mitbringt, steht in ihr immer das
+   * Die Leiste gehört zur Bahn, nicht zur Seite: Zeichen, die drei Wörter, ein
+   * Knopf. Weil jede Bahn ihre eigene mitbringt, steht in ihr immer das
    * richtige Wort kräftig — beim Wischen wandert die Leiste mit, und weil
-   * Zeichen und Knöpfe in allen vier gleich aussehen, wirkt es wie eine einzige
+   * Zeichen und Knöpfe in allen drei gleich aussehen, wirkt es wie eine einzige
    * Leiste, in der sich nur die Betonung verschiebt. Genau das ist der Trick,
    * mit dem die Betonung dem Finger folgt, ohne dass ein Skript zusieht.
    *
    * Für Tastatur und Screenreader gibt es Zeichen und Knöpfe genau einmal; in
-   * den übrigen drei Bahnen sind sie Dekoration und entsprechend ausgezeichnet.
+   * den übrigen beiden Bahnen sind sie Dekoration und entsprechend ausgezeichnet.
    */
   const leiste = (aktiv, erste) => {
     const still = erste ? '' : ' aria-hidden="true" tabindex="-1"';
@@ -875,9 +867,9 @@ ${feed.length
     : ''}`;
 
   /**
-   * Gespräch und Themen sind dieselbe Liste in zwei Achsen: dort Kommentare,
-   * hier Support — und beide zeigen beide Richtungen. Die Zeile darunter sagt
-   * jedes Mal, welche der beiden Richtungen dieser Eintrag ist.
+   * Kreise ist die Support-Achse, und sie zeigt beide Richtungen: wofür ich
+   * eingestanden bin, und wofür jemand bei mir. Die Zeile darunter sagt jedes
+   * Mal, welche der beiden Richtungen dieser Eintrag ist.
    */
   const spurListe = (eintraege, praefix, hin, her, leer) => (eintraege.length
     ? `<div class="orb-list">${eintraege
@@ -920,12 +912,10 @@ ${feed.length
        hinter etwas vom anderen steht — dann steht die Tür hier.</p>`;
 
   const bahnen = {
-    leute: leuteAnsicht,
-    gespraech: spurListe(spur, 'gsporb', 'Du hast kommentiert', 'hat bei dir kommentiert',
-      'Noch keine Gespräche. Sie entstehen, sobald du irgendwo antwortest — oder jemand bei dir.'),
-    themen: spurListe(themen, 'themaorb', 'Du stehst dahinter', 'steht hinter deinem Beitrag',
-      'Noch keine Themen. Sie entstehen, sobald du Support gibst — oder jemand dir.'),
-    rueckhalt: rueckhaltAnsicht,
+    freunde: leuteAnsicht,
+    kreise: spurListe(themen, 'themaorb', 'Du stehst dahinter', 'steht hinter deinem Beitrag',
+      'Noch keine Kreise. Sie entstehen, sobald du Support gibst — oder jemand dir.'),
+    support: rueckhaltAnsicht,
   };
 
   // Alle Kugeln aller Bahnen — jede Bahn hat ihr eigenes Präfix, damit sich
@@ -933,7 +923,6 @@ ${feed.length
   const kugeln = [
     ...leute.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, `l${p.id}`, `leuteorb-${i}`, i)),
     ...feed.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `feedorb-${i}`, i)),
-    ...spur.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `gsporb-${i}`, i)),
     ...themen.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `themaorb-${i}`, i)),
     ...moeglich.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `t${m.id}`, `tuerorb-${i}`, i)),
     ...raeume.map((r, i) => personOrbCss(String(r.gegenueber ?? r.slug), String(r.id), `raumorb-${i}`, i)),

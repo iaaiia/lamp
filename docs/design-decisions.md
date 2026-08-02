@@ -286,6 +286,30 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D38 — Drei Rubriken statt vier: Freunde — Kreise — Support
+
+**Chosen:** der Weg hat drei Bahnen statt vier. **Freunde** (wem ich folge, und was diese
+Menschen unter eigenem Namen schreiben), **Kreise** (alles, womit ich zu tun habe: Beiträge,
+hinter die ich mich gestellt habe, und meine, hinter die sich jemand gestellt hat) und
+**Support** (die geschützten Chats aus D31 und die Türen dorthin). Die Rubrik „Gespräch“ und
+die Abfrage `meinGespraech` entfallen ersatzlos.
+
+**Why:** Gespräch, Themen und Rückhalt beschrieben aus Sicht der Nutzenden dasselbe — „das,
+womit ich zu tun habe“. Drei Wörter, die man auseinanderhalten muss, sind zwei zu viel, wenn
+zwei davon dieselbe Liste in zwei Achsen sind. Damit fällt auch die Begründung aus D32 weg:
+die Kommentar-Achse trennt nicht sinnvoll vom Einstehen, sie verdoppelt es nur. Was bleibt,
+ist die Handlung, die auf lamb wirklich etwas kostet: **Support geben**. Genau die eine
+Achse trägt jetzt die mittlere Bahn — und weil sie die tragende ist, steht ihr Knopf sichtbar
+an jedem Beitrag statt hinter der Kugel. Ein Knopf, den man erst aufklappen muss, wird nicht
+gedrückt.
+
+**Supersedes:** D32 (vier Rubriken, zwei Achsen) und die Vier-Wörter-Zählung in D30 und D33.
+
+**Enforced by:** `WEG` in `src/web/views.js`, `src/domain/weg.js` (`meineLeute`,
+`meineThemen`, `meineRaeume`, `moeglicheRaeume`), `.bubble-fuss` in `src/web/style.js`;
+`tests/ui.test.js`, Block „Der eigene Weg“, prüft die drei Bahnen, beide Richtungen der
+Support-Achse und dass der Support-Knopf am Beitrag der Freunde steht.
+
 ## D37 — Eine Leiste, überall dieselbe
 
 **Chosen:** die Leiste oben ist auf jeder Seite gleich hoch, gleich gerundet und gleich
@@ -425,6 +449,9 @@ und weiterhin, dass kein Skript ausgeliefert wird.
 
 ## D32 — Der Weg gehört der Person, nicht dem Raum — und Gespräch/Themen sind zwei Achsen
 
+> **Überholt von D38.** Die Aufteilung in zwei Achsen ist zurückgenommen; es bleibt die
+> Support-Achse. Dass der Weg der Person gehört und nicht dem Raum, gilt weiter.
+
 **Chosen:** die vier Rubriken **Leute — Gespräch — Themen — Rückhalt** liegen auf der
 Startseite und gehören der angemeldeten Person. Ein Klick tauscht nur den Inhalt; Kopfleiste,
 Zeile und Schreibfeld bleiben stehen.
@@ -487,6 +514,9 @@ und dass Rückhalt aus anderen Kreisen nicht zählt. `tests/ui.test.js` prüft d
 HTTP.
 
 ## D30 — Die vier Ansichten sind ein Weg, kein Menü
+
+> **Teilweise überholt von D38:** es sind drei Ansichten. Dass sie ein Weg sind und kein
+> Menü, gilt unverändert.
 
 **Chosen:** ein Kreis hat vier Ansichten, und sie stehen in dieser Reihenfolge:
 **Leute — Gespräch — Themen — Rückhalt**. Das ist der Weg durch die Plattform: man

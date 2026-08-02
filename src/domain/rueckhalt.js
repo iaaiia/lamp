@@ -1,7 +1,7 @@
 /**
  * Rückhalt — der geschützte Raum am Ende des Wegs.
  *
- * Der Weg durch einen Kreis ist Leute → Gespräch → Themen → Rückhalt (D30).
+ * Der Weg durch einen Kreis ist Freunde → Kreise → Support (D30, D38).
  * Die letzte Stufe war bisher nur eine Ansicht: sie zeigte, wo Rückhalt gegeben
  * wurde. Ein Safe Space ist sie damit nicht — dafür braucht es einen Ort, den
  * nur die betreffenden Menschen betreten können.

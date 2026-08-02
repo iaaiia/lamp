@@ -59,6 +59,13 @@ export const STYLESHEET = `
   --shadow: 0 1px 2px rgba(20,23,29,.05), 0 8px 24px -12px rgba(20,23,29,.18);
   --focus: 0 0 0 3px var(--blue-tint);
   --measure: 62ch;
+
+  /* Der Abstand zu den Rändern des Geräts. env() ist auf dem iPhone nur mit
+     viewport-fit=cover überhaupt gefüllt (siehe <meta> im Layout); der
+     Mindestwert sorgt dafür, dass nichts am Rand klebt, wo es keine Aussparung
+     gibt. */
+  --oben: max(1.15rem, calc(env(safe-area-inset-top) + .4rem));
+  --unten: max(1.15rem, calc(env(safe-area-inset-bottom) + .5rem));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -210,7 +217,7 @@ small, .small { font-size: .875rem; }
 
 .appbar {
   position: fixed;
-  top: max(.5rem, env(safe-area-inset-top));
+  top: var(--oben);
   left: 50%;
   transform: translateX(-50%);
   width: min(48rem, calc(100% - 1.5rem));
@@ -224,11 +231,11 @@ small, .small { font-size: .875rem; }
 }
 /* Platz für die schwebende Leiste — sie verdrängt nichts, also muss der
    Inhalt selbst anfangen, wo sie aufhört. */
-body main { padding-top: 4.6rem; }
+body main { padding-top: calc(var(--oben) + 4.1rem); }
 /* Auf dem Weg trägt jede Bahn ihre eigene Leiste: die Seite braucht oben
    keinen Platz mehr freizuhalten, und gescrollt wird in den Bahnen. */
 body:has(.weg) { overflow: hidden; }
-body:has(.weg) main { padding-top: max(.5rem, env(safe-area-inset-top)); padding-bottom: 0; }
+body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
 .appbar .slot { display: flex; align-items: center; }
 .appbar .slot.right { justify-content: flex-end; }
 .appbar-title {
@@ -272,7 +279,7 @@ body:has(.weg) main { padding-top: max(.5rem, env(safe-area-inset-top)); padding
   scroll-behavior: smooth;
   scrollbar-width: none;
   margin: 0 -1.25rem;
-  height: calc(100dvh - 6rem);
+  height: calc(100dvh - var(--oben) - var(--unten) - 4.4rem);
 }
 .weg::-webkit-scrollbar { display: none; }
 .bahn {
@@ -381,7 +388,7 @@ body:has(.weg) main { padding-top: max(.5rem, env(safe-area-inset-top)); padding
   display: flex;
   align-items: flex-end;
   gap: .6rem;
-  bottom: max(.6rem, env(safe-area-inset-bottom));
+  bottom: var(--unten);
   width: min(48rem, calc(100% - 1.5rem));
   padding: .5rem .6rem;
   border-radius: 28px;
@@ -390,8 +397,8 @@ body:has(.weg) main { padding-top: max(.5rem, env(safe-area-inset-top)); padding
 .writebar .icon-btn { background: color-mix(in oklab, var(--surface) 70%, transparent); border-color: transparent; }
 
 /* Damit der Inhalt nicht hinter der Leiste endet. */
-body.has-writebar main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
-body.has-writebar footer.site { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+body.has-writebar main { padding-bottom: calc(var(--unten) + 5rem); }
+body.has-writebar footer.site { padding-bottom: calc(var(--unten) + 5rem); }
 
 .write-field {
   display: block;

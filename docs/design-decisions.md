@@ -315,6 +315,12 @@ sind vier kurze Abfragen auf die eigenen Daten — bezahlbar, und der Preis der 
 `?ansicht=` in der Adresse hatte, kommt jetzt über `#leute`, `#gespraech`, `#themen`,
 `#rueckhalt` an dieselbe Stelle.
 
+**Ränder des Geräts:** oben und unten hält alles Abstand über zwei Maße, `--oben` und
+`--unten`, aus `env(safe-area-inset-*)` mit einem Mindestwert. Das war zuerst wirkungslos:
+`env()` ist auf dem iPhone nur gefüllt, wenn im `<meta name="viewport">` auch
+`viewport-fit=cover` steht — sonst rechnet man mit lauter Nullen und die Leisten kleben an
+der Aussparung. Die Angabe steht jetzt drin, und ein Test hält beides zusammen fest.
+
 **Eine Falle, die dabei zugeschnappt ist:** `overflow-x: auto` macht aus `overflow-y: visible`
 automatisch `auto`. Der Bahnkopf klebte deshalb an der falschen Kante und legte sich über
 den Inhalt. Jetzt scrollt jede Bahn selbst — dann klebt ihr Kopf dort, wo er hingehört.

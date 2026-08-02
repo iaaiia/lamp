@@ -72,6 +72,13 @@ describe('web surface', () => {
     assert.match(html, /Schieb ihn hin und her/);
   });
 
+  it('tells the phone to fill the screen, so the safe areas are real', async () => {
+    for (const path of ['/', '/stream']) {
+      const html = await (await fetchPath(path, { headers: { cookie } })).text();
+      assert.match(html, /viewport-fit=cover/, `${path} lacks viewport-fit`);
+    }
+  });
+
   it('renders the follow stream with a feed explanation and an explicit end marker', async () => {
     const html = await (await fetchPath('/stream', { headers: { cookie } })).text();
     assert.match(html, /Neueste zuerst/);

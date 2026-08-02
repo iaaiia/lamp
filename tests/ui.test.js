@@ -354,6 +354,14 @@ describe('Überschriften', () => {
 });
 
 describe('Grundlayout', () => {
+  it('rechnet mit den Rändern des Geräts — und die Angabe dafür ist gesetzt', () => {
+    // env(safe-area-inset-*) ist auf dem iPhone nur mit viewport-fit=cover
+    // überhaupt gefüllt. Ohne die Angabe im <meta> wäre die ganze Rechnerei
+    // still wirkungslos, und die Leisten klebten an der Aussparung.
+    assert.match(STYLESHEET, /--oben: max\([^;]*env\(safe-area-inset-top\)/);
+    assert.match(STYLESHEET, /--unten: max\([^;]*env\(safe-area-inset-bottom\)/);
+  });
+
   it('gibt dem Inhalt Innenabstand und eine Lesebreite', () => {
     // Beim Umbau auf die App-Leiste war diese Regel einmal verlorengegangen und
     // der Text klebte am Bildschirmrand. Ein Stylesheet ohne sie ist kaputt.

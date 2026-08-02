@@ -192,11 +192,25 @@ describe('Seiten', () => {
     assert.match(list, /Stiller Kreis/);
   });
 
-  it('stellt die Frage nach dem Kreis vor das Textfeld', async () => {
-    const html = await load('/compose');
-    assert.match(html, /Wo willst du das sagen\?/);
-    assert.match(html, /Lebhafter Kreis/);
-    assert.doesNotMatch(html, /<textarea/, 'auf dieser Seite wird noch nicht geschrieben');
+  it('lässt die Leiste weg, wo man nicht antworten darf', async () => {
+    // Jonas' Beitrag steht auf „nur Leute, denen ich folge", und er folgt Mira
+    // nicht. Dann gibt es kein Feld — und den Grund im Klartext.
+    const html = await load('/posts/1');
+    assert.doesNotMatch(html, /<summary>Antworten an/);
+    assert.match(html, /class="notice" id="reply"/);
+  });
+
+  it('schreibt dorthin, wo man steht — und sagt es im Feld', async () => {
+    // Vorher stand vor jedem Textfeld die Frage „Wo willst du das sagen?".
+    // Jetzt beantwortet sie der Ort: im Kreis der Kreis, unter einem Beitrag
+    // die Antwort, sonst öffentlich. Gesagt wird es trotzdem — im Feld selbst.
+    const kreis = await load('/c/lebhafter-kreis');
+    assert.match(kreis, /<summary>Etwas sagen … in Lebhafter Kreis<\/summary>/);
+    assert.match(kreis, /action="\/c\/lebhafter-kreis\/posts"/);
+
+    const weg = await load('/');
+    assert.match(weg, /<summary>Etwas sagen … für alle<\/summary>/);
+    assert.match(weg, /action="\/posts"/);
   });
 
   it('führt die ganze Navigation in der Kopfleiste — und sonst nirgends', async () => {
@@ -212,7 +226,7 @@ describe('Seiten', () => {
   it('stellt überall dieselbe Schreibleiste unten hin', async () => {
     const html = await load('/');
     assert.match(html, /class="writebar"/, 'die Leiste liegt unten');
-    assert.match(html, /class="write-field" href="\/compose">Etwas sagen …<\/a>/);
+    assert.match(html, /<summary>Etwas sagen … für alle<\/summary>/);
   });
 
   it('setzt das Schreibfeld unten wie in einem Messenger — eingeklappt', async () => {
@@ -222,11 +236,11 @@ describe('Seiten', () => {
 
     assert.ok(schreibfeld !== -1, 'es gibt eine Schreibleiste');
     assert.ok(nachricht < schreibfeld, 'sie steht unter dem Gespräch, nicht darüber');
-    assert.match(html, /<summary>Etwas sagen …<\/summary>/, 'und ist eingeklappt');
+    assert.match(html, /<summary>Etwas sagen … in Lebhafter Kreis<\/summary>/, 'und ist eingeklappt');
   });
 
   it('liefert weiterhin kein Client-JavaScript aus', async () => {
-    for (const path of ['/', '/compose', '/discover', '/c/lebhafter-kreis']) {
+    for (const path of ['/', '/stream', '/discover', '/c/lebhafter-kreis']) {
       assert.doesNotMatch(await load(path), /<script/i, `${path} enthält ein Skript`);
     }
   });
@@ -374,7 +388,7 @@ describe('Überschriften', () => {
   after(() => server?.close());
 
   it('gibt jeder Seite genau eine Überschrift erster Ordnung', async () => {
-    const seiten = ['/', '/stream', '/discover', '/compose', '/settings', '/moderation', '/@mira3', '/c/ein-kreis', '/circles/new'];
+    const seiten = ['/', '/stream', '/discover', '/settings', '/moderation', '/@mira3', '/c/ein-kreis', '/circles/new'];
     for (const pfad of seiten) {
       const html = await (await fetch(`${base}${pfad}`, { headers: { cookie } })).text();
       const anzahl = (html.match(/<h1/g) ?? []).length;
@@ -622,6 +636,14 @@ describe('Chatfenster', () => {
       html.indexOf('Erste Nachricht') < html.indexOf('Zweite Nachricht'),
       'die ältere steht oben',
     );
+  });
+
+  it('antwortet unter einem Beitrag, statt einen neuen anzufangen', async () => {
+    // Wer einen Beitrag offen hat, schreibt darunter — die Leiste ist die
+    // Antwort, und sie sagt, an wen sie geht.
+    const html = await load('/posts/1');
+    assert.match(html, /<summary>Antworten an Mira …<\/summary>/);
+    assert.match(html, /action="\/posts\/1\/reply"/);
   });
 
   it('gibt jeder Nachricht die Kugel ihrer Sprecherin', async () => {

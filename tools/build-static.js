@@ -150,7 +150,6 @@ const FLAT = new Map([
   ['/', 'index.html'],
   ['/stream', 'stream.html'],
   ['/discover', 'discover.html'],
-  ['/compose', 'compose.html'],
   ['/settings', 'settings.html'],
   ['/moderation', 'moderation.html'],
   ['/@mira', 'profil-mira.html'],

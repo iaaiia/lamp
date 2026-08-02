@@ -42,7 +42,7 @@ describe('web surface', () => {
     // Die Anwendung bleibt skriptfrei. Genau eine Seite darf ein Skript laden —
     // die abgemeldete Startseite, wo Kugeln geschoben werden. Dieser Test hält
     // die Grenze fest, damit die Ausnahme nicht leise wächst.
-    for (const path of ['/', '/stream', '/compose', '/discover', '/settings']) {
+    for (const path of ['/', '/stream', '/posts/1', '/discover', '/settings']) {
       const response = await fetchPath(path, { headers: { cookie } });
       assert.doesNotMatch(await response.text(), /<script/i, `${path} enthält ein Skript`);
       assert.match(

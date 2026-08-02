@@ -459,8 +459,19 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
   padding: .45rem .45rem .45rem .5rem;
   box-shadow: 0 14px 40px -18px rgba(22, 40, 63, .28);
 }
-/* Beim Schreiben wächst das Feld: dann ist die Pille eine Karte. */
-.writebar:has([open]) { border-radius: 28px; align-items: stretch; }
+/* Beim Schreiben wächst das Feld: dann ist die Pille eine Karte. Das Formular
+   darin trägt keine eigene Hülle — sonst wären es zwei Karten ineinander. */
+.writebar:has([open]) { border-radius: 28px; align-items: stretch; padding: .3rem .5rem .6rem; }
+.writebar .chat-compose > form.card {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  padding: .2rem .4rem 0;
+  margin: 0;
+}
+.writebar .chat-compose > form.card > h2 { display: none; }
+.writebar .chat-compose > form.card textarea { min-height: 5.5rem; }
+.writebar .chat-compose[open] > summary { color: var(--ink); font-weight: 640; }
 .writebar > details, .writebar > .write-field { flex: 1; }
 .writebar .icon-btn {
   flex: none;

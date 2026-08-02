@@ -100,7 +100,6 @@ import {
   circlePage,
   homePage,
   skyPage,
-  composePage,
   discoverPage,
   errorPage,
   formPage,
@@ -239,7 +238,6 @@ router.get('/stream', (ctx, res) => {
     viewer: ctx.viewer,
     prefs,
     feed: result.feed,
-    feeds: listFeeds(),
     posts: result.posts.map((p) => decorate(p, ctx.viewer)),
     nextCursor: result.nextCursor,
     error: ctx.url.searchParams.get('error'),
@@ -499,21 +497,6 @@ router.get('/discover', (ctx, res) => {
     prefs: preferencesOf(ctx.viewer),
     query,
     results,
-    nonce,
-  }), nonce);
-});
-
-/**
- * "Wo willst du das sagen?" steht bewusst vor dem Textfeld: Wer schreibt, soll
- * wissen, wer mitliest, bevor die ersten Worte da sind.
- */
-router.get('/compose', (ctx, res) => {
-  if (!requireViewer(ctx, res)) return;
-  const nonce = randomToken(16);
-  sendHtml(res, 200, composePage({
-    viewer: ctx.viewer,
-    prefs: preferencesOf(ctx.viewer),
-    circles: circlesFor(ctx.viewer.id),
     nonce,
   }), nonce);
 });

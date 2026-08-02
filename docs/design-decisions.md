@@ -286,6 +286,35 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D35 — Geschrieben wird dort, wo man steht
+
+**Chosen:** die Schreibleiste fragt nicht mehr, wohin ein Beitrag soll — sie schreibt an den
+Ort, an dem man gerade ist:
+
+- in einem Kreis → in diesen Kreis („Etwas sagen … in Leipzig 15 bis 24“)
+- auf einem Beitrag → als Antwort darunter („Antworten an Mira …“)
+- sonst → öffentlich unter eigenem Namen („Etwas sagen … für alle“)
+
+Die Seite `/compose` mit der Frage „Wo willst du das sagen?“ und der Kreiswahl entfällt
+damit, ebenso der Weg dorthin vom Profil.
+
+**Was aus D16 bleibt und was fällt:** die Zusicherung war „wer schreibt, weiß, wer mitliest,
+bevor die ersten Worte da sind“ — die bleibt, aber sie wird jetzt **gesagt statt erfragt**:
+das Ziel steht im Feld, in jedem Zustand, bevor man tippt. Die *Frage* fällt, die *Auskunft*
+nicht. Für Konten unter 18 heißt das Etikett „an deine Leute“ statt „für alle“, weil der
+Schutzboden (D9) öffentliche Beiträge ohnehin auf Follower begrenzt — ein Etikett, das etwas
+anderes verspricht als der Server tut, wäre schlimmer als die alte Frage.
+
+**Und:** das Sortiermenü samt Knopf ist vom Strom verschwunden. Die Erklärung der aktiven
+Sortierung bleibt dort stehen — D2 verlangt, dass jede Sortierung sich am Ort erklärt —, die
+Wahl selbst steht in den Einstellungen, wo sie schon immer auch stand. Zwei Orte für dieselbe
+Einstellung waren einer zu viel.
+
+**Enforced by:** `layout({ schreiben })` in `src/web/views.js` (ein Formular, wechselndes
+Ziel), `timelinePage`, `threadPage`, `circlePage`, `homePage`; `tests/ui.test.js` prüft je
+Ort das richtige Ziel und das richtige Etikett — und dass die Leiste dort fehlt, wo man nicht
+antworten darf.
+
 ## D34 — Kühler Grund, frische Farben, violette Zeichen
 
 **Chosen:** die Palette folgt der Referenz (dem Sonnensystem-Plakat): ein sehr helles

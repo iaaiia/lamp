@@ -66,6 +66,7 @@ function timeTag(iso) {
 
 export function layout({
   title, viewer, body, prefs, current = null, head = '', bar = null, stage = false, writebar = null,
+  schreiben = null,
 }) {
   const p = prefs ?? preferencesOf(viewer);
   const classes = [
@@ -103,17 +104,25 @@ export function layout({
    </header>`;
 
   /**
-   * Unten liegt genau eine feste Leiste: das Schreibfeld. Wer nichts eigenes
-   * mitgibt, bekommt den Weg zur Kreiswahl — schreiben ist überall die eine
-   * Handlung, und sie steht immer an derselben Stelle.
+   * Unten liegt genau eine feste Leiste: das Schreibfeld. Es fragt nicht mehr,
+   * wohin — es schreibt dorthin, wo man gerade steht: in den Kreis, in dem man
+   * ist, unter den Beitrag, den man geöffnet hat, sonst öffentlich unter
+   * eigenem Namen. Wohin es geht, steht im Feld; gefragt wird nicht mehr.
+   *
+   * Die Zusicherung aus D16 bleibt damit erhalten — wer schreibt, weiß, wer
+   * mitliest —, nur wird sie jetzt gesagt statt erfragt.
    */
   const writeBar = !viewer
     ? ''
-    : writebar ??
-      `<div class="writebar">
-         <a class="write-field" href="/compose">Etwas sagen …</a>
-         <a class="icon-btn" href="/discover" aria-label="Kreise suchen">${iconSearch()}</a>
-       </div>`;
+    : writebar ?? (schreiben
+      ? `<div class="writebar">
+           <details class="chat-compose"${schreiben.offen ? ' open' : ''}>
+             <summary>${escapeHtml(schreiben.label)}</summary>
+             ${composer({ prefs: p, error: schreiben.error, action: schreiben.action, replyTo: schreiben.replyTo })}
+           </details>
+           <a class="icon-btn" href="/discover" aria-label="Kreise suchen">${iconSearch()}</a>
+         </div>`
+      : '');
 
   return `<!doctype html>
 <html lang="de">
@@ -243,11 +252,7 @@ export function composer({ prefs, replyTo = null, error = null, action = null })
 </form>`;
 }
 
-export function timelinePage({ viewer, prefs, feed, feeds, posts, nextCursor, error }) {
-  const picker = feeds
-    .map((f) => `<option value="${escapeHtml(f.id)}"${f.id === feed.id ? ' selected' : ''}>${escapeHtml(f.name)}</option>`)
-    .join('');
-
+export function timelinePage({ viewer, prefs, feed, posts, nextCursor, error }) {
   const list = posts.length
     ? posts.map((p) => postArticle(p, p.view)).join('')
     : `<p class="card">Hier ist noch nichts. Folge jemandem, oder schreib den ersten Beitrag.</p>`;
@@ -263,18 +268,20 @@ export function timelinePage({ viewer, prefs, feed, feeds, posts, nextCursor, er
     prefs,
     current: 'stream',
     bar: { title: 'Strom' },
+    // Der Strom ist der eigene Name: hier schreibt man öffentlich.
+    schreiben: {
+      action: '/posts',
+      label: `Etwas sagen … ${viewer?.is_minor ? 'an deine Leute' : 'für alle'}`,
+      error,
+      offen: Boolean(error),
+    },
     body: `
 <p class="muted">Was Menschen, denen du folgst, öffentlich unter eigenem Namen schreiben.
 Beiträge aus Kreisen stehen in ihrem Kreis.</p>
 <div class="feed-explainer">
-  <p><strong>${escapeHtml(feed.name)}.</strong> ${escapeHtml(feed.explanation)}</p>
-  <form method="get" action="/">
-    <label for="feed" class="small">Wie dieser Kreis sortiert wird</label>
-    <select id="feed" name="feed">${picker}</select>
-    <p class="tight"><button class="secondary" type="submit">Sortierung übernehmen</button></p>
-  </form>
+  <p><strong>${escapeHtml(feed.name)}.</strong> ${escapeHtml(feed.explanation)}
+  <a class="small" href="/settings#sortierung">Sortierung ändern</a></p>
 </div>
-${composer({ prefs, error })}
 <h2>Beiträge</h2>
 ${list}
 ${pager}`,
@@ -286,16 +293,24 @@ export function threadPage({ viewer, prefs, post, replies, replyState, error }) 
     title: 'Beitrag',
     viewer,
     prefs,
-    bar: { title: 'Beitrag', back: '/' },
+    bar: { title: 'Beitrag' },
+    // Wer einen Beitrag offen hat, schreibt darunter — die Leiste antwortet.
+    schreiben: viewer && replyState.allowed
+      ? {
+        action: `/posts/${post.id}/reply`,
+        replyTo: post.id,
+        label: `Antworten an ${post.display_name || post.username} …`,
+        error,
+        offen: Boolean(error),
+      }
+      : null,
     body: `
 ${postArticle(post, post.view)}
 <h2>Antworten</h2>
 ${replies.length ? replies.map((r) => postArticle(r, r.view)).join('') : '<p class="card">Noch keine Antworten.</p>'}
 ${
   viewer
-    ? replyState.allowed
-      ? composer({ prefs, replyTo: post.id, error })
-      : `<p class="notice" id="reply">${escapeHtml(replyState.reason)}</p>`
+    ? replyState.allowed ? '' : `<p class="notice" id="reply">${escapeHtml(replyState.reason)}</p>`
     : '<p class="notice"><a href="/login">Melde dich an</a>, um mitzureden.</p>'
 }`,
   });
@@ -314,7 +329,7 @@ export function profilePage({ viewer, prefs, account, accountPrefs, posts, nextC
   }
 
   const primary = isSelf
-    ? `<a class="button grow" href="/compose">${iconWrite({ size: 20 })}Etwas schreiben</a>`
+    ? ''
     : `<form method="post" action="/@${escapeHtml(account.username)}/${following ? 'unfollow' : 'follow'}" class="grow">
          <button type="submit" class="${following ? 'secondary' : ''}">${
            following ? 'Folgst du' : 'In meinen Kreis holen'
@@ -393,7 +408,7 @@ ${viewer.is_minor ? `<p class="notice">Dieses Konto ist als unter 18 angemeldet.
 lassen sich deshalb nicht abschalten: Antworten bleiben auf Leute beschränkt, denen du folgst,
 Direktnachrichten sind aus, und das Konto taucht nicht in Vorschlägen auf.</p>` : ''}
 <form method="post" action="/settings">
-  <fieldset>
+  <fieldset id="sortierung">
     <legend>Dein Kreis</legend>
     <label for="feed">Wie dein Start sortiert wird</label>
     <select id="feed" name="feed">${feedOptions}</select>
@@ -728,28 +743,6 @@ ${list}
   });
 }
 
-export function composePage({ viewer, prefs, circles, nonce }) {
-  const grid = tileGrid(circles);
-
-  return layout({
-    title: 'Neuer Beitrag',
-    viewer,
-    prefs,
-    bar: { title: 'Wo willst du das sagen?', back: '/' },
-    head: `<style nonce="${escapeHtml(nonce)}">${grid.css}</style>`,
-    body: `
-<p class="muted lede">Bei lamb schreibt man immer in einen bestimmten Kreis. Deshalb steht
-diese Frage vor dem Textfeld und nicht danach — du weißt, wer mitliest, bevor du anfängst.</p>
-${circles.length ? grid.html : '<p class="card">Du bist noch in keinem Kreis.</p>'}
-<h2>Oder öffentlich unter deinem Namen</h2>
-<div class="card">
-  <p>Ein Beitrag auf deinem Profil ist für alle sichtbar, die dir folgen — auch auf anderen
-  Servern.</p>
-  <p><a class="button secondary" href="/stream">Auf dem Profil schreiben</a></p>
-</div>`,
-  });
-}
-
 /**
  * Eine Nachricht im Gespräch ist eine Kugel mit Text daneben — und die Kugel
  * ist das interaktive Stück: sie öffnet, wer da spricht, wer dahintersteht und
@@ -995,6 +988,12 @@ ${feed.length
     prefs,
     current: 'weg',
     bar: { eigene: true },
+    // Auf dem Weg gibt es keinen Raum, in den man schreiben könnte — also
+    // schreibt man unter eigenem Namen, für alle.
+    schreiben: {
+      action: '/posts',
+      label: `Etwas sagen … ${viewer?.is_minor ? 'an deine Leute' : 'für alle'}`,
+    },
     stage: true,
     head: `<style nonce="${escapeHtml(nonce)}">${kugeln.join('')}</style>`,
     body: `
@@ -1049,15 +1048,6 @@ ${posts.length
     ? posts.map((p, i) => chatMessage(p, p.replies ?? [], viewer, `msgorb-${i}`)).join('')
     : '<p class="chat-start">Noch nichts gesagt. Fang an.</p>'}`;
 
-  // Die feste Leiste unten ist hier das Schreibfeld dieses Kreises.
-  const composerBar = isMember
-    ? `<div class="writebar">
-         <details class="chat-compose"${error || writeOpen ? ' open' : ''}>
-           <summary>Etwas sagen …</summary>
-           ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}
-         </details>
-       </div>`
-    : null;
 
   const gastHinweis = !viewer
     ? `<p class="stage-hint">Mitlesen geht ohne Konto. Zum Mitreden und Support geben brauchst du eins —
@@ -1070,7 +1060,14 @@ ${posts.length
     prefs,
     bar: { title: circle.name },
     stage: true,
-    writebar: composerBar,
+    schreiben: isMember
+      ? {
+        action: `/c/${encodeURIComponent(circle.slug)}/posts`,
+        label: `Etwas sagen … in ${circle.name}`,
+        error,
+        offen: Boolean(error || writeOpen),
+      }
+      : null,
     // Nur Kugeln, die etwas tragen: eine je Nachricht. Deko-Kugeln gibt es
     // nicht mehr — sie standen vor den Inhalten und sagten nichts.
     head: `<style nonce="${escapeHtml(nonce)}">${posts

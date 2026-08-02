@@ -151,18 +151,31 @@ const FLAT = new Map([
   ['/discover', 'discover.html'],
   ['/settings', 'settings.html'],
   ['/moderation', 'moderation.html'],
-  ['/@mira', 'profil-mira.html'],
 ]);
 
+const profilFile = (name) => `profil-${name}.html`;
+
 const circleFile = (slug) => `kreis-${slug}.html`;
+const postFile = (id) => `beitrag-${id}.html`;
 
 /**
  * Alle Links auf die abgelegten Dateien umbiegen und Formulare entschärfen.
  * Flache Dateinamen, damit nichts von der Verzeichnistiefe abhängt — die Seite
  * liegt bei GitHub Pages unter einem Unterpfad.
  */
-function rewrite(html, slugs) {
+function rewrite(html, slugs, postIds, namen) {
   let out = html;
+
+  // Jeder Beitrag hat seine eigene Datei — sonst landet ein Klick auf einen
+  // Beitrag beim Auffangmuster weiter unten und springt zur Startseite.
+  for (const name of namen) {
+    out = out.replaceAll(`href="/@${name}"`, `href="${profilFile(name)}"`);
+    out = out.replaceAll(`href="/@${name}?`, `href="${profilFile(name)}?`);
+  }
+  for (const id of postIds) {
+    out = out.replaceAll(`href="/posts/${id}"`, `href="${postFile(id)}"`);
+    out = out.replaceAll(`href="/posts/${id}#`, `href="${postFile(id)}#`);
+  }
 
   for (const [route, file] of FLAT) {
     if (route === '/') continue;
@@ -180,8 +193,18 @@ function rewrite(html, slugs) {
   out = out.replace(/href="\/[^"]*"/g, 'href="index.html"');
 
   // Formulare würden hier ins Leere senden. Sie bleiben sichtbar — sie gehören
-  // zum Bild — aber sie tun nichts, statt in eine Fehlerseite zu laufen.
-  out = out.replace(/<form([^>]*)method="post"([^>]*)>/gi, '<form$1method="get" action="#demo" data-demo="inert"$2>');
+  // zum Bild —, sind aber kein Formular mehr: ein abgeschaltetes Formular, das
+  // beim Klick doch absendet, lädt die Seite neu und springt an den Anfang.
+  // Genau das ist hier einmal passiert. Also wird die Hülle zu einem <div> und
+  // der Knopf zu einem abgeschalteten Knopf, der nirgendwohin führt.
+  out = out.replace(
+    /<form\b[^>]*(?:method="post"|action="\/[^"]*")[^>]*>([\s\S]*?)<\/form>/gi,
+    (_treffer, innen) =>
+      `<div class="demo-inert" data-demo="inert">${innen
+        .replace(/<button/g, '<button type="button" disabled title="Im Rundgang ohne Server. Support geben, Schreiben, Suchen und Anmelden brauchen den laufenden Server."')
+        .replace(/<input/g, '<input disabled')
+      }</div>`,
+  );
   out = out.replace(/action="\/[^"]*"/g, 'action="#demo"');
 
   return out;
@@ -198,13 +221,20 @@ const DEMO_CSS = `
   background: #F0EAE0;
   border-bottom: 1px solid rgba(22, 26, 30, .1);
   color: var(--ink);
-  padding: .7rem 1.25rem;
+  /* Die Leiste schwebt fest über dem Inhalt — der Hinweis muss unter ihr
+     anfangen, sonst liegt er hinter ihr. */
+  padding: calc(var(--oben) + 4.1rem) 1.25rem .7rem;
   font-size: .88rem;
   line-height: 1.5;
 }
+/* Der Platz, den die Seite sonst für die Leiste freihält, steckt jetzt im
+   Hinweis. Auf dem Weg bleibt alles, wie es ist: dort scrollen die Bahnen. */
+body:not(:has(.weg)) main { padding-top: 1rem; }
+body:has(.weg) .demo-banner { padding-top: .7rem; }
 .demo-banner strong { font-weight: 700; }
 .demo-banner a { margin-left: .3rem; }
-[data-demo="inert"] button { opacity: .55; cursor: not-allowed; }
+[data-demo="inert"] button { opacity: .5; cursor: not-allowed; }
+.demo-inert { display: contents; }
 `;
 
 async function main() {
@@ -225,6 +255,8 @@ async function main() {
   const { all } = await import('../src/db.js');
   const circles = all('SELECT slug FROM circles ORDER BY id');
   const slugs = circles.map((row) => row.slug);
+  const postIds = all('SELECT id FROM posts WHERE deleted_at IS NULL ORDER BY id').map((row) => row.id);
+  const namen = all('SELECT username FROM accounts WHERE domain IS NULL ORDER BY id').map((row) => row.username);
 
   await rm(OUT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
@@ -232,6 +264,8 @@ async function main() {
   const pages = [
     ...[...FLAT.entries()].map(([route, file]) => ({ route, file })),
     ...slugs.map((slug) => ({ route: `/c/${slug}`, file: circleFile(slug) })),
+    ...postIds.map((id) => ({ route: `/posts/${id}`, file: postFile(id) })),
+    ...namen.map((name) => ({ route: `/@${name}`, file: profilFile(name) })),
   ];
 
   for (const { route, file } of pages) {
@@ -239,7 +273,7 @@ async function main() {
     if (!response.ok) throw new Error(`${route} antwortete ${response.status}`);
     let html = await response.text();
 
-    html = rewrite(html, slugs);
+    html = rewrite(html, slugs, postIds, namen);
     html = html.replace('<main id="main" tabindex="-1">', `${BANNER}\n<main id="main" tabindex="-1">`);
     // Der Rundgang liegt unter einem Unterpfad; absolute Verweise auf den
     // Ursprungsserver gehören hier nicht hin.

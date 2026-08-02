@@ -49,12 +49,13 @@ inklusive ehrlicher Lückenliste — in `docs/call-traceability.md`.
 ## Rundgang ansehen
 
 **[iaaiia.github.io/lamp](https://iaaiia.github.io/lamp/)** — ein Rundgang durch echte,
-mit Demodaten gefüllte Seiten: der Himmel lässt sich schieben, Wolken öffnen sich, alle
-Seiten sind verlinkt.
+mit Demodaten gefüllte Seiten: der Himmel lässt sich schieben, Wolken öffnen sich, jeder
+Beitrag und jedes Profil hat seine eigene Seite, und alles ist verlinkt.
 
-Was dort **nicht** geht: anmelden, schreiben, Support geben, föderieren. GitHub Pages
+Was dort **nicht** geht: anmelden, schreiben, suchen, Support geben, föderieren. GitHub Pages
 liefert Dateien aus und führt kein Node aus — es gibt dort keine Datenbank und keine
-Sitzungen. Der Rundgang wird mit `npm run build:pages` nach `site/` erzeugt — aus demselben Code,
+Sitzungen. Die Knöpfe dafür sind sichtbar, aber abgeschaltet: sie gehören zum Bild, tun aber
+nichts, statt beim Klick die Seite neu zu laden. Der Rundgang wird mit `npm run build:pages` nach `site/` erzeugt — aus demselben Code,
 den auch der Server benutzt.
 
 **Veröffentlichen:** Die Pages-Quelle steht auf **GitHub Actions**; `.github/workflows/pages.yml`
@@ -67,7 +68,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 147 Tests
+npm test        # 151 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -98,7 +99,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   147 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   151 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)

@@ -1568,20 +1568,24 @@ body.low-stimulus .orb-body {
   min-height: 2.9rem;
   padding: .8rem 1.4rem .8rem 1.15rem;
   border-radius: 999px;
-  border: 1.5px solid var(--ember);
-  background: var(--ember-tint);
-  color: var(--ember-deep);
+  /* Schwarz wie der Suchknopf auf dem Plakat und die Knöpfe in der Leiste:
+     die eine Handlung sieht überall gleich aus. Gedrückt füllt sie sich,
+     ungedrückt bleibt sie eine Kontur. */
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
-  transition: background .18s ease, transform .18s ease;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
 }
-.support:hover { background: color-mix(in oklab, var(--ember) 22%, var(--surface)); }
+.support:hover { background: rgba(22, 40, 63, .07); }
 .support:active { transform: scale(.97); }
-.support:focus-visible { box-shadow: 0 0 0 3px var(--ember-tint); }
+.support:focus-visible { box-shadow: 0 0 0 3px rgba(22, 40, 63, .18); }
 .support[aria-pressed="true"] {
-  background: var(--ember);
-  border-color: var(--ember);
-  color: var(--ember-ink);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #FFFFFF;
 }
+.support[aria-pressed="true"]:hover { background: #0C1724; }
 .support svg { width: 17px; height: 17px; flex: none; }
 .support-note { font-size: .84rem; color: var(--ink-muted); }
 

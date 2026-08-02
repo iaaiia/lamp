@@ -286,6 +286,37 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D42 — Support trägt dieselbe Farbe wie jede andere Handlung: Schwarz
+
+**Chosen:** der Support-Knopf ist schwarz — ungedrückt eine Kontur in `--ink`, gedrückt
+gefüllt mit `--ink` und weißer Schrift. Kein Ember mehr.
+
+**Why:** Ember war die Auszeichnungsfarbe für „hier passiert etwas Besonderes". Seit D39 ist
+Support nicht mehr das Besondere neben dem Antworten, sondern **die** Handlung — und die sieht
+im Rest der Oberfläche schwarz aus: der Suchknopf auf dem Plakat, die Knöpfe in der Leiste,
+das Feld unten. Eine eigene Farbe für die häufigste Geste macht sie zum Ausrufezeichen; sie
+soll aber selbstverständlich sein.
+
+**Enforced by:** `.support` in `src/web/style.js`; `tests/ui.test.js`, Block „Farbwelt".
+
+## D41 — Der Rundgang auf Pages ist lesbar, oder er ist nichts
+
+**Chosen:** der statische Rundgang (`tools/build-static.js`) legt eine Datei je Beitrag und
+je Profil ab, nicht nur die Start-, Kreis- und Einstellungsseiten. Formulare, die im echten
+Betrieb senden würden, sind dort **kein Formular mehr**: die Hülle wird ein `<div>`, die
+Knöpfe werden abgeschaltete Knöpfe, die Felder gesperrt.
+
+**Why:** zwei Fehler, beide auf Pages sichtbar und beide dieselbe Ursache — der Rundgang
+versprach etwas, was die Datei nicht halten konnte. Ein Klick auf einen Beitrag lief in das
+Auffangmuster des Umschreibers und landete auf `index.html`, also gefühlt „springt an den
+Anfang". Und der abgeschaltete Support-Knopf war weiterhin ein `<form method="get">`: ein
+Klick sendete ab, lud dieselbe Seite neu und sprang ebenfalls an den Anfang. Ein Knopf, der
+nichts tun soll, darf nicht absenden — sonst tut er das Schlimmste, was er tun kann.
+
+**Enforced by:** `tests/ui.test.js`, Block „Rundgang für Pages": er baut den Rundgang wirklich
+und prüft, dass jeder Beitrag seine Seite hat, dass kein `href` auf eine fehlende Datei zeigt
+und dass in keiner Datei ein sendendes Formular übrig ist.
+
 ## D40 — Ein Beitrag ist eine Nachricht, keine Karte
 
 **Chosen:** Beitragsseite und Profil zeigen einen Beitrag in derselben Form wie die

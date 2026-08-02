@@ -605,6 +605,18 @@ describe('Der gesuchte Kreis', () => {
 });
 
 describe('Farbwelt', () => {
+  it('gibt dem Support-Knopf dasselbe Schwarz wie dem Suchknopf', () => {
+    // Die eine Handlung sieht überall gleich aus — und zwar wie die Knöpfe in
+    // der Leiste, nicht in einer eigenen Farbe.
+    const regel = STYLESHEET.match(/\.support \{[^}]*\}/s)[0];
+    assert.match(regel, /border: 1\.5px solid var\(--ink\)/);
+    assert.match(regel, /color: var\(--ink\)/);
+    assert.doesNotMatch(regel, /ember/, 'kein Ember mehr am Support-Knopf');
+
+    const gedrueckt = STYLESHEET.match(/\.support\[aria-pressed="true"\] \{[^}]*\}/s)[0];
+    assert.match(gedrueckt, /background: var\(--ink\)/);
+  });
+
   it('hält Ember aus den Kugeln heraus — auch in der erweiterten Palette', async () => {
     const { readFile } = await import('node:fs/promises');
     // Warme Kugeln gibt es jetzt (Gold, Türkis), aber Ember bleibt der Farbton
@@ -847,5 +859,73 @@ describe('Der eigene Weg', () => {
 
   it('braucht für den ganzen Weg kein Skript', async () => {
     assert.doesNotMatch(await load('/'), /<script/i, 'auch das Wischen nicht');
+  });
+});
+
+/**
+ * Der Rundgang auf GitHub Pages ist kein Server: keine Datenbank, keine
+ * Sitzungen, kein POST. Was dort trotzdem gehen muss, ist das Lesen — und
+ * zwar ohne dass ein Klick ins Leere führt oder die Seite an den Anfang
+ * springt. Beides ist genau einmal passiert; deshalb steht es hier.
+ */
+describe('Rundgang für Pages', () => {
+  let dateien;
+  let verzeichnis;
+
+  before(async () => {
+    const { mkdtemp, readdir, readFile, rm } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { execFile } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const pfad = await import('node:path');
+
+    verzeichnis = await mkdtemp(pfad.join(tmpdir(), 'lamb-site-'));
+    await rm(verzeichnis, { recursive: true, force: true });
+    await promisify(execFile)(
+      process.execPath,
+      ['--experimental-sqlite', 'tools/build-static.js', verzeichnis],
+      { cwd: process.cwd() },
+    );
+
+    const namen = await readdir(verzeichnis);
+    dateien = new Map(
+      await Promise.all(namen.map(async (name) =>
+        [name, await readFile(pfad.join(verzeichnis, name), 'utf8')])),
+    );
+  });
+
+  after(async () => {
+    const { rm } = await import('node:fs/promises');
+    if (verzeichnis) await rm(verzeichnis, { recursive: true, force: true });
+  });
+
+  it('legt jeden Beitrag als eigene Seite ab', () => {
+    const seiten = [...dateien.keys()].filter((name) => name.startsWith('beitrag-'));
+    assert.ok(seiten.length > 5, `nur ${seiten.length} Beitragsseiten`);
+
+    // Und die Startseite verweist auch dorthin, statt auf sich selbst.
+    const start = dateien.get('index.html');
+    const ziele = [...start.matchAll(/href="(beitrag-\d+\.html)"/g)].map((m) => m[1]);
+    assert.ok(ziele.length > 0, 'die Startseite verlinkt keinen Beitrag');
+    for (const ziel of ziele) assert.ok(dateien.has(ziel), `${ziel} fehlt`);
+  });
+
+  it('lässt keinen Knopf ins Leere senden', () => {
+    for (const [name, html] of dateien) {
+      if (!name.endsWith('.html')) continue;
+      assert.doesNotMatch(html, /method="post"/i, `${name}: ein Formular sendet noch`);
+      // Ein Formular, das beim Klick doch absendet, lädt neu und springt an den
+      // Anfang — deshalb ist die Hülle hier gar kein Formular mehr.
+      assert.doesNotMatch(html, /<form[^>]*action="#demo"/i, `${name}: Formular statt Hülle`);
+    }
+  });
+
+  it('lässt keinen Verweis auf eine Seite zeigen, die es nicht gibt', () => {
+    for (const [name, html] of dateien) {
+      if (!name.endsWith('.html')) continue;
+      for (const [, ziel] of html.matchAll(/href="([^"#:]+\.html)[^"]*"/g)) {
+        assert.ok(dateien.has(ziel), `${name} verweist auf ${ziel}, das fehlt`);
+      }
+    }
   });
 });

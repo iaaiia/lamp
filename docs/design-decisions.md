@@ -294,8 +294,10 @@ Lavendelgrau als Grund (`--fog: #EDEFF5`), tiefes Marineblau statt Schwarz als S
 für Support, Uranusviolett `#7A5BD0`. Die Kugeln bleiben körnig und blass; nur ihre Farben
 sind neu.
 
-Zeichen und Knöpfe in der Kopfleiste sind violett gefüllt mit weißem Piktogramm. Das Zeichen
-trägt zusätzlich einen **versetzten** Ring — nach links oben verschoben, wie die Ringe der
+Das Zeichen in der Kopfleiste ist violett gefüllt, die beiden Knöpfe daneben dunkel — wie der
+Suchen-Knopf auf dem Plakat. Die Marke ist die Farbe, die Handlung ist das Gewicht; beides
+violett wäre eine Leiste voller Marke gewesen. Das Zeichen trägt zusätzlich einen
+**versetzten** Ring — nach links oben verschoben, wie die Ringe der
 Planeten auf dem Plakat. Mittig wäre es ein Heiligenschein; versetzt wird aus einem Punkt
 ein Zeichen.
 
@@ -304,9 +306,15 @@ ein Zeichen.
 Grün trägt — das stand so im Briefing und wiegt schwerer als die Vollständigkeit einer
 Vorlage.
 
+**Eine Form für dieselbe Sache:** die Schreibleiste unten ist dieselbe Pille wie das Suchfeld
+auf dem Plakat — weiß, `border-radius: 999px`, derselbe weiche Schatten, daneben der dunkle
+runde Knopf. Vorher war sie eine Glasscheibe mit einem halbtransparenten Feld darin: zwei
+Schalen ineinander für ein Eingabefeld.
+
 **Enforced by:** die Tokens in `src/web/style.js`, die Paletten in `orb.js`, `sky.js`,
 `stage.js`; `tests/ui.test.js`, Block „Farben“, prüft den kühlen Grund, das Violett samt
-versetztem Ring — und dass weder Ember noch Grün in eine Kugel geraten.
+versetztem Ring, das Dunkel der Knöpfe, dass Schreibleiste und Suchfeld dieselbe Pille sind
+— und dass weder Ember noch Grün in eine Kugel geraten.
 
 ## D33 — Gewischt, nicht geladen — und alles schwebt
 

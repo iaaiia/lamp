@@ -26,7 +26,7 @@ Eigenschaften darunter:
 | **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause) und zwei Knöpfe: Nachrichten, Einstellungen. Unten genau eine feste Leiste, und darin steht das Schreibfeld — in einem Kreis das des Kreises, sonst der Weg zur Kreiswahl. Die fünfteilige Tab-Leiste ist weg. |
 | **Auskunft ohne Klick** | Jede Wolke nennt Art, Größe und Zustand von sich aus; bei Zeiger oder Tastaturfokus klappt Zweck und letzter Beitrag auf. Aus der Wolke führt ein Weg direkt ins Schreibfeld — nicht über zwei Seiten. |
 | **Zeichen, die etwas aussagen** | Jeder Kreis trägt ein aus seiner Adresse erzeugtes Presence-Ring-Zeichen: Punkte wachsen mit der Mitgliederzahl, private Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, wie groß und wie offen ein Kreis ist, bevor man liest. |
-| **Kühler Grund, frische Farben** | Heller Lavendelgrund, Marineblau statt Schwarz, und die Akzente aus der Referenz: Jupiterblau, Uranusviolett, Sonnenorange. Zeichen und Knöpfe oben sind violett mit weißem Piktogramm, das Zeichen mit versetztem Ring wie ein Planet. Orange bleibt dem Support vorbehalten, Grün kommt in der Marke nicht vor. |
+| **Kühler Grund, frische Farben** | Heller Lavendelgrund, Marineblau statt Schwarz, und die Akzente aus der Referenz: Jupiterblau, Uranusviolett, Sonnenorange. Das Zeichen oben ist violett mit versetztem Ring wie ein Planet, die beiden Knöpfe daneben dunkel wie der Suchen-Knopf auf dem Plakat. Das Schreibfeld unten ist dieselbe weiße Pille wie das Suchfeld. Orange bleibt dem Support vorbehalten, Grün kommt in der Marke nicht vor. |
 | **„Wo willst du das sagen?"** | Das „+" führt nicht zu einem Textfeld, sondern zur Frage nach dem Kreis. Wer schreibt, weiß, wer mitliest, bevor die ersten Worte da sind. |
 | **Support statt Like** | Die Kernreaktion sagt „ich stehe dahinter“, nicht „finde ich gut“ — und wird als Menschen angezeigt: „Mira, Jonas und 2 weitere stehen dahinter“. Eine nackte Zahl gibt es nirgends, eine Rangliste erst recht nicht. |
 | **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
@@ -66,7 +66,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 142 Tests
+npm test        # 143 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -97,7 +97,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   142 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   143 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)

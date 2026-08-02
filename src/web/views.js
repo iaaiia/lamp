@@ -110,7 +110,7 @@ export function layout({
   const writeBar = !viewer
     ? ''
     : writebar ??
-      `<div class="writebar glas">
+      `<div class="writebar">
          <a class="write-field" href="/compose">Etwas sagen …</a>
          <a class="icon-btn" href="/discover" aria-label="Kreise suchen">${iconSearch()}</a>
        </div>`;
@@ -1051,7 +1051,7 @@ ${posts.length
 
   // Die feste Leiste unten ist hier das Schreibfeld dieses Kreises.
   const composerBar = isMember
-    ? `<div class="writebar glas">
+    ? `<div class="writebar">
          <details class="chat-compose"${error || writeOpen ? ' open' : ''}>
            <summary>Etwas sagen …</summary>
            ${composer({ prefs, error, action: `/c/${encodeURIComponent(circle.slug)}/posts` })}

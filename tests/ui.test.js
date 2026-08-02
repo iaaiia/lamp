@@ -77,10 +77,23 @@ describe('Farben', () => {
     assert.doesNotMatch(STYLESHEET, /#F7F4EE|#F5F2EC/, 'das warme Papier ist weg');
   });
 
-  it('gibt Zeichen und Knöpfen oben Violett und einen versetzten Ring', () => {
+  it('gibt dem Zeichen Violett und einen versetzten Ring, den Knöpfen das Dunkel', () => {
+    // Die Marke ist die Farbe, die Handlung ist das Gewicht — deshalb ist der
+    // Punkt links violett und die beiden Knöpfe daneben sind dunkel, wie der
+    // Suchen-Knopf auf dem Plakat.
     assert.match(STYLESHEET, /--violet:\s*#7A5BD0/);
-    assert.match(STYLESHEET, /\.mark,\s*\n\.icon-btn\.rund \{[^}]*background: var\(--violet\)/s);
+    assert.match(STYLESHEET, /\.mark \{ background: var\(--violet\)/);
+    assert.match(STYLESHEET, /\.icon-btn\.rund \{ background: var\(--ink\)/);
     assert.match(STYLESHEET, /\.mark::after \{[^}]*inset: -6px 0 0 -6px/s, 'der Ring sitzt versetzt');
+  });
+
+  it('gibt dem Schreibfeld unten dieselbe Pille wie der Suche auf dem Plakat', () => {
+    const suche = STYLESHEET.match(/\.stage-search \{[^}]*\}/s)[0];
+    const leiste = STYLESHEET.match(/\.writebar \{[^}]*\}/s)[0];
+    for (const eigenschaft of ['background: #FFFFFF', 'border-radius: 999px']) {
+      assert.ok(suche.includes(eigenschaft), `Plakat: ${eigenschaft}`);
+      assert.ok(leiste.includes(eigenschaft), `Schreibleiste: ${eigenschaft}`);
+    }
   });
 });
 
@@ -198,14 +211,14 @@ describe('Seiten', () => {
 
   it('stellt überall dieselbe Schreibleiste unten hin', async () => {
     const html = await load('/');
-    assert.match(html, /class="writebar glas"/, 'die Leiste schwebt als Glas');
+    assert.match(html, /class="writebar"/, 'die Leiste liegt unten');
     assert.match(html, /class="write-field" href="\/compose">Etwas sagen …<\/a>/);
   });
 
   it('setzt das Schreibfeld unten wie in einem Messenger — eingeklappt', async () => {
     const html = await load('/c/lebhafter-kreis');
     const nachricht = html.indexOf('Hier ist gerade etwas los');
-    const schreibfeld = html.indexOf('class="writebar glas"');
+    const schreibfeld = html.indexOf('class="writebar"');
 
     assert.ok(schreibfeld !== -1, 'es gibt eine Schreibleiste');
     assert.ok(nachricht < schreibfeld, 'sie steht unter dem Gespräch, nicht darüber');

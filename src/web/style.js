@@ -302,11 +302,11 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
   pointer-events: none;
 }
 .appbar .slot.right .icon-btn {
-  background: var(--violet);
+  background: var(--ink);
   border-color: transparent;
   color: #FFFFFF;
 }
-.appbar .slot.right .icon-btn:hover { background: var(--violet-deep); }
+.appbar .slot.right .icon-btn:hover { background: #0C1724; }
 
 /* ------------------------------------------------------------------ Der Weg */
 /* Vier Bahnen nebeneinander in einer Fläche, die einrastet. Gewischt wird mit
@@ -365,11 +365,14 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 50%;
-  background: var(--violet);
-  color: #FFFFFF;
   border: 0;
   text-decoration: none;
 }
+/* Das Zeichen ist violett, die beiden Handlungen daneben dunkel — wie der
+   Suchen-Knopf auf dem Plakat. So bleibt die Marke die Farbe und die Handlung
+   das Gewicht. */
+.mark { background: var(--violet); color: #FFFFFF; }
+.icon-btn.rund { background: var(--ink); color: #FFFFFF; }
 /* Der versetzte Ring: in der Referenz tragen die Planeten eine Schale, die
    nicht mittig sitzt. Genau das macht aus einem Punkt ein Zeichen. */
 .mark::after {
@@ -386,9 +389,9 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
 .mark svg circle:first-child { stroke: #FFFFFF; }
 .mark svg circle:last-child { fill: #FFFFFF; }
 .icon-btn.rund svg { width: 18px; height: 18px; color: #FFFFFF; }
-.mark:hover,
-.icon-btn.rund:hover { background: var(--violet-deep); }
+.mark:hover { background: var(--violet-deep); }
 .mark:hover::after { border-color: var(--violet-deep); }
+.icon-btn.rund:hover { background: #0C1724; }
 
 /* Die vier Wörter. Kräftig ist das, in dessen Bahn man gerade steht — jede
    Bahn bringt ihre eigene Leiste mit, deshalb stimmt es beim Wischen von
@@ -443,16 +446,31 @@ body:has(.weg) main { padding-top: var(--oben); padding-bottom: 0; }
   left: 50%;
   transform: translateX(-50%);
   z-index: 11;
-  display: flex;
-  align-items: flex-end;
-  gap: .6rem;
   bottom: var(--unten);
   width: min(48rem, calc(100% - 1.5rem));
-  padding: .5rem .6rem;
-  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  /* Dieselbe Pille wie das Suchfeld auf dem Plakat: weiß, rund, derselbe weiche
+     Schatten — und kein Glas darum, sonst wären es zwei Schalen ineinander. */
+  background: #FFFFFF;
+  border: 0;
+  border-radius: 999px;
+  padding: .45rem .45rem .45rem .5rem;
+  box-shadow: 0 14px 40px -18px rgba(22, 40, 63, .28);
 }
+/* Beim Schreiben wächst das Feld: dann ist die Pille eine Karte. */
+.writebar:has([open]) { border-radius: 28px; align-items: stretch; }
 .writebar > details, .writebar > .write-field { flex: 1; }
-.writebar .icon-btn { background: color-mix(in oklab, var(--surface) 70%, transparent); border-color: transparent; }
+.writebar .icon-btn {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  background: var(--ink);
+  border-color: transparent;
+  color: #FFFFFF;
+}
+.writebar .icon-btn:hover { background: #0C1724; }
 
 /* Damit der Inhalt nicht hinter der Leiste endet. */
 body.has-writebar main { padding-bottom: calc(var(--unten) + 5rem); }
@@ -460,16 +478,16 @@ body.has-writebar footer.site { padding-bottom: calc(var(--unten) + 5rem); }
 
 .write-field {
   display: block;
-  padding: .8rem 1.15rem;
-  background: color-mix(in oklab, var(--surface) 55%, transparent);
-  border: 1px solid transparent;
+  padding: .85rem .9rem;
+  background: transparent;
+  border: 0;
   border-radius: 999px;
-  color: var(--ink-muted);
-  font-weight: 620;
+  color: #6B7180;
+  font-size: 1.02rem;
+  font-weight: 500;
   text-decoration: none;
-  box-shadow: 0 8px 26px -18px rgba(22, 26, 30, .5);
 }
-.write-field:hover { border-color: var(--blue); color: var(--ink); }
+.write-field:hover { color: var(--ink); }
 
 /* Runde Icon-Schaltfläche — die zweite, leisere Handlung neben der Hauptsache. */
 .icon-btn {
@@ -704,17 +722,17 @@ body.landing {
 /* Die eine Handlung: dunkel gefüllt, wie in der Referenz. */
 .stage-search button {
   border: 0;
-  background: var(--violet);
+  background: var(--ink);
   color: #FBFAF7;
   min-height: 3rem;
   padding: .75rem 1.5rem;
   font-size: .98rem;
 }
-.stage-search button:hover { background: var(--violet-deep); border-color: transparent; }
+.stage-search button:hover { background: #0C1724; border-color: transparent; }
 
 .stage-links { display: flex; gap: .7rem; margin: .2rem 0 0; font-size: .9rem; }
 .stage-links a { color: #2C3A38; text-decoration-color: rgba(44, 58, 56, .4); }
-.stage-links a:hover { color: var(--violet-deep); }
+.stage-links a:hover { color: var(--ink); }
 .stage-links span { color: rgba(44, 58, 56, .35); }
 
 .stage-note {
@@ -966,17 +984,18 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .chat-compose > summary {
   cursor: pointer;
   list-style: none;
-  padding: .8rem 1.15rem;
-  background: color-mix(in oklab, var(--surface) 55%, transparent);
-  border: 1px solid transparent;
+  padding: .85rem .9rem;
+  background: transparent;
+  border: 0;
   border-radius: 999px;
-  color: var(--ink-muted);
-  font-weight: 620;
+  color: #6B7180;
+  font-size: 1.02rem;
+  font-weight: 500;
 }
 .chat-compose > summary::-webkit-details-marker { display: none; }
-.chat-compose > summary:hover { border-color: var(--blue); color: var(--ink); }
+.chat-compose > summary:hover { color: var(--ink); }
 .chat-compose > summary:focus-visible { box-shadow: var(--focus); }
-.chat-compose[open] > summary { margin-bottom: .6rem; border-radius: var(--radius-m); }
+.chat-compose[open] > summary { margin-bottom: .4rem; }
 
 /* ------------------------------------------------- Leute, Themen, Rückhalt */
 /* Dieselbe Zeile wie im Gespräch: Kugel links, Text rechts. In jeder Ansicht

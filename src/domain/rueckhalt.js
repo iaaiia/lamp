@@ -6,10 +6,12 @@
  * wurde. Ein Safe Space ist sie damit nicht — dafür braucht es einen Ort, den
  * nur die betreffenden Menschen betreten können.
  *
- * Wie er entsteht: **gegenseitig**. Wenn zwei Menschen im selben Kreis jeweils
- * hinter einem Beitrag der anderen stehen, können sie einen Rückhalt-Raum
- * öffnen. Niemand kann ihn einseitig aufmachen, niemand kann hineingebeten
- * werden, der nicht selbst schon Rückhalt gegeben hat.
+ * Wie er entsteht: **gegenseitig und von selbst**. Sobald zwei Menschen im
+ * selben Kreis jeweils hinter einem Beitrag der anderen stehen, ist der Raum
+ * da — niemand muss ihn öffnen. Es gibt keinen Knopf dafür, weil es nichts zu
+ * entscheiden gibt: beide haben die Entscheidung schon getroffen, sichtbar, im
+ * Kreis. Einseitig entsteht er nie, und hineingebeten werden kann niemand, der
+ * nicht selbst schon Rückhalt gegeben hat.
  *
  * Warum das kein Schlupfloch neben dem Schutzboden für Minderjährige (D9) ist:
  * `dmFrom` schützt davor, dass Fremde privat anschreiben können. Hier gibt es
@@ -28,6 +30,7 @@
 import { all, get, now, run } from '../db.js';
 import { DomainError } from './accounts.js';
 import { findById } from './circles.js';
+import { moeglicheRaeume } from './weg.js';
 
 /**
  * Menschen aus diesem Kreis, mit denen der Rückhalt gegenseitig ist: ich stehe
@@ -121,3 +124,23 @@ export const raeumeFor = (accountId) =>
      ORDER BY c.created_at DESC`,
     accountId,
   );
+
+/**
+ * Alle fälligen Räume anlegen — aufgerufen, wenn jemand Support gibt.
+ *
+ * Der zweite Support ist die ganze Zeremonie. Wer ihn gibt, hat den Raum damit
+ * geöffnet, ohne ihn zu öffnen; beim nächsten Blick auf „Support“ steht er da.
+ * Die Liste kommt aus `moeglicheRaeume`, deshalb entstehen auch Räume, die
+ * durch die Handlung der anderen Seite fällig geworden sind.
+ */
+export function oeffneFaellige(viewer) {
+  const neue = [];
+  for (const faellig of moeglicheRaeume(viewer.id)) {
+    const kreis = findById(faellig.circle_id);
+    // Den Raum, den es schon gibt, noch einmal anzulegen wäre kein Fehler —
+    // `openRaum` gibt ihn zurück. Er soll aber nicht als neu gemeldet werden.
+    if (!kreis || findRaum(kreis, viewer.id, faellig.id)) continue;
+    neue.push(openRaum(kreis, viewer, faellig.id));
+  }
+  return neue;
+}

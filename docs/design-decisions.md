@@ -286,6 +286,40 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D39 — Support ist die einzige Handlung; der geschützte Chat entsteht von selbst
+
+**Chosen:** unter einem Beitrag steht genau ein Knopf: **Support geben**. Es gibt keinen
+Antworten-Knopf mehr — weder auf dem Weg, noch im Kreis, noch auf der Beitragsseite. Support
+tut zweierlei: er zeigt, dass jemand dahintersteht, und er führt zum Beitrag, wo das
+Schreibfeld offen steht. Geschrieben werden **kann** dort etwas, **muss** aber nicht. Wo es
+schon Antworten gibt, steht deren Zahl als leiser Verweis; wo keine sind, steht nichts.
+
+Und: der Rückhalt-Raum wird nicht mehr geöffnet, sondern **ist da**. Sobald zwei Menschen im
+selben Kreis jeweils hinter einem Beitrag der anderen stehen, legt `oeffneFaellige` den
+privaten Chat an — beim Support-Klick, ohne Tür, ohne Bestätigung. Die Route
+`POST /c/:slug/rueckhalt` und die Türen-Liste auf dem Weg entfallen.
+
+**Why:** zwei Knöpfe nebeneinander sind eine Frage („zustimmen oder reden?"), und eine Frage
+bremst genau die Geste, die auf lamb zählt. Ein Antworten-Knopf fordert außerdem zum Reden
+auf — das ist der Mechanismus, aus dem anderswo Kommentarspalten werden. Support ist das
+Gegenteil: er kostet nichts zu lesen und sagt trotzdem etwas. Wer darüber hinaus etwas sagen
+will, findet das Feld dort, wo er nach dem Support ohnehin steht.
+
+Dieselbe Logik beim Raum: an einer Tür, hinter der beide schon stehen, ist nichts mehr zu
+entscheiden. Der Knopf „Raum öffnen" verlangte eine dritte Handlung für etwas, das die ersten
+beiden bereits bedeuteten — und machte aus einer gegenseitigen Zuwendung wieder eine
+einseitige Anfrage. Die Schutzeigenschaft aus D31 bleibt unangetastet: der Raum entsteht
+weiterhin nur aus zwei sichtbaren Handlungen im selben Kreis, nie einseitig, nie auf Wunsch.
+
+**Enforced by:** `oeffneFaellige()` in `src/domain/rueckhalt.js`, aufgerufen in
+`POST /posts/:id/support`; `.bubble-fuss` in `src/web/views.js` trägt nur den Support-Knopf;
+`tests/circles.test.js` („entsteht von selbst, sobald der zweite Support fällt"),
+`tests/ui.test.js` (kein Antworten-Knopf am Beitrag, Chat ohne Tür).
+
+**Nebenbei gefunden:** `moeglicheRaeume` verglich einen Slug, den es aus gebundenen Zahlen
+zusammensetzte — `node:sqlite` bindet JS-Zahlen als REAL, also stand dort `1.0` statt `1` und
+der Vergleich traf nie zu. Jetzt mit `CAST(… AS INTEGER)`.
+
 ## D38 — Drei Rubriken statt vier: Freunde — Kreise — Support
 
 **Chosen:** der Weg hat drei Bahnen statt vier. **Freunde** (wem ich folge, und was diese
@@ -484,6 +518,9 @@ Kommentare nicht in den Themen auftauchen, und dass Kreisbeiträge nicht in den 
 geraten.
 
 ## D31 — Rückhalt ist ein Ort, kein Gefühl: der geschützte Raum
+
+> **Ergänzt durch D39:** der Raum wird nicht mehr geöffnet, er entsteht beim zweiten
+> Support von selbst. Die Bedingung — gegenseitig, im selben Kreis — ist unverändert.
 
 **Chosen:** wenn zwei Menschen im selben Kreis jeweils hinter einem Beitrag der anderen
 stehen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in

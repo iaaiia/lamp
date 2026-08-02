@@ -702,6 +702,8 @@ describe('Der eigene Weg', () => {
   let base;
   let cookie;
   let gegenueber;
+  let seinBeitrag;
+  let vorherSupport;
 
   before(async () => {
     freshDatabase();
@@ -726,16 +728,29 @@ describe('Der eigene Weg', () => {
     const meinKommentiertes = createPost(mira, { content: 'Mein Beitrag mit Antwort', circleId: kreis.id, replyPolicy: 'everyone' });
     createPost(jonas, { content: 'Seine Antwort', inReplyTo: meinKommentiertes.id });
 
-    const seinGestuetztes = createPost(jonas, { content: 'Stehe ich dahinter', circleId: kreis.id, replyPolicy: 'everyone' });
-    react(mira.id, seinGestuetztes.id);
-
+    // Jonas steht schon hinter etwas von Mira. Die zweite Hälfte gibt Mira
+    // gleich selbst — über den Knopf, damit der Test den echten Weg nimmt.
     const meinGestuetztes = createPost(mira, { content: 'Mein Beitrag mit Support', circleId: kreis.id, replyPolicy: 'everyone' });
     react(jonas.id, meinGestuetztes.id);
-    // Damit ist der Rückhalt zwischen beiden gegenseitig — die Tür steht offen.
+
+    seinBeitrag = createPost(jonas, { content: 'Stehe ich dahinter', circleId: kreis.id, replyPolicy: 'everyone' });
 
     server = createServer(createApp());
     await new Promise((resolve) => server.listen(0, resolve));
     base = `http://127.0.0.1:${server.address().port}`;
+
+    // Vor Miras Support gibt es noch keinen geschützten Chat — und keine Tür,
+    // die man aufdrücken könnte.
+    vorherSupport = await (await fetch(`${base}/`, { headers: { cookie } })).text();
+
+    // Miras Support ist die zweite Hälfte. Sie gibt ihn über den Knopf, damit
+    // der Test den echten Weg nimmt: mehr passiert nicht, und das ist der Punkt.
+    await fetch(`${base}/posts/${seinBeitrag.id}/support`, {
+      method: 'POST',
+      headers: { cookie, 'content-type': 'application/x-www-form-urlencoded' },
+      body: '',
+      redirect: 'manual',
+    });
   });
 
   after(() => server?.close());
@@ -785,6 +800,11 @@ describe('Der eigene Weg', () => {
     // Support gibt man dort, wo der Beitrag steht — nicht erst zwei Klicks weiter.
     assert.match(html, /action="\/posts\/\d+\/support"/, 'Support geben fehlt am Beitrag');
     assert.match(html, /Support geben/);
+
+    // Und daneben steht nichts: kein Antworten-Knopf, der zum Reden auffordert.
+    // Gesagt wird etwas beim Beitrag, wenn man will — nicht auf Aufforderung.
+    const fuss = html.slice(html.indexOf('class="bubble-fuss"'));
+    assert.doesNotMatch(fuss.slice(0, fuss.indexOf('</div>')), />Antworten</);
   });
 
   it('zeigt unter Kreise die Support-Achse — in beide Richtungen', async () => {
@@ -795,21 +815,15 @@ describe('Der eigene Weg', () => {
     assert.match(html, /steht hinter deinem Beitrag/);
   });
 
-  it('zeigt unter Support erst die Tür, dann den Raum', async () => {
-    // Die Tür steht dort, wo auch die Räume stehen — nicht mehr im Kreis.
-    const tuer = await bahn('support');
-    assert.match(tuer, /Ihr steht beide hintereinander/);
-    assert.match(tuer, /action="\/c\/wegkreis\/rueckhalt"/);
-
-    await fetch(`${base}/c/wegkreis/rueckhalt`, {
-      method: 'POST',
-      headers: { cookie, 'content-type': 'application/x-www-form-urlencoded' },
-      body: `account_id=${gegenueber.id}`,
-      redirect: 'manual',
-    });
+  it('macht aus dem zweiten Support von selbst einen geschützten Chat', async () => {
+    // Vorher stand Jonas hinter etwas von Mira, sie aber noch nicht hinter
+    // etwas von ihm — also gab es nichts, und auch keine Tür zum Aufdrücken.
+    assert.match(vorherSupport, /Noch kein geschützter Chat/);
+    assert.doesNotMatch(vorherSupport, /Raum öffnen/, 'einen Knopf dafür gibt es nicht');
 
     const html = await bahn('support');
-    assert.match(html, /Jonas/, 'der Raum steht unter dem Namen der anderen Person');
+    assert.match(html, /Jonas/, 'der Chat steht unter dem Namen der anderen Person');
+    assert.doesNotMatch(html, /Noch kein geschützter Chat/);
   });
 
   it('braucht für den ganzen Weg kein Skript', async () => {

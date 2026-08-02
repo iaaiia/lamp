@@ -88,9 +88,12 @@ export const meineRaeume = (accountId) =>
   );
 
 /**
- * Wo ein Rückhalt-Raum entstehen könnte: Menschen, mit denen der Rückhalt in
+ * Wo ein Rückhalt-Raum fällig ist: Menschen, mit denen der Rückhalt in
  * irgendeinem Kreis gegenseitig ist und mit denen es den Raum noch nicht gibt.
- * Die Tür stand vorher im Kreis; sie gehört dorthin, wo auch die Räume stehen.
+ *
+ * Das ist keine Liste zum Anschauen mehr, sondern eine Arbeitsliste: `oeffneFaellige`
+ * (src/domain/rueckhalt.js) legt genau diese Räume an, sobald der zweite Support
+ * fällt. Niemand muss eine Tür aufdrücken, hinter der beide schon stehen.
  */
 export const moeglicheRaeume = (accountId) =>
   all(
@@ -105,10 +108,13 @@ export const moeglicheRaeume = (accountId) =>
        AND EXISTS (SELECT 1 FROM reactions r JOIN posts p ON p.id = r.post_id
                     WHERE r.account_id = a.id AND p.account_id = :me
                       AND p.circle_id = c.id AND p.deleted_at IS NULL)
+       -- CAST, weil eine gebundene JS-Zahl als REAL ankommt: ohne ihn wird aus
+       -- der 1 beim Verketten eine "1.0", und der Vergleich trifft nie zu.
        AND NOT EXISTS (
          SELECT 1 FROM circles raum
           WHERE raum.slug = 'rueckhalt-' || c.slug || '-' ||
-                MIN(:me, a.id) || '-' || MAX(:me, a.id))
+                CAST(MIN(:me, a.id) AS INTEGER) || '-' ||
+                CAST(MAX(:me, a.id) AS INTEGER))
      GROUP BY a.id, c.id
      ORDER BY c.name, a.display_name`,
     { me: accountId },

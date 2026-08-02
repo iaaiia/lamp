@@ -20,9 +20,9 @@ Eigenschaften darunter:
 | **Ein Himmel statt eines Stroms** | `/kreise` ist eine Fläche, die größer ist als der Bildschirm. Kreise liegen darin als Wolken; man schiebt sie hin und her und entdeckt dabei welche, die man nicht gesucht hat. Eigene liegen links, unbekannte rechts jenseits des Randes. Positionen sind fest — ein Kreis liegt morgen dort, wo er heute lag. |
 | **Der Weg gehört dir** | Die Startseite sind drei Rubriken: **Freunde → Kreise → Support**. Freunde = wem du folgst und was diese Menschen schreiben — das ist zugleich der Folge-Strom, mit der Sortierung aus den Einstellungen. Kreise = alles, womit du zu tun hast: wofür du eingestanden bist, und wofür jemand bei dir. Support = die geschützten Chats, die daraus geworden sind. Eine Achse, und zwar die, die etwas kostet: Support geben. |
 | **Gewischt, nicht geladen** | Die vier Rubriken liegen als Bahnen nebeneinander; seitliches Wischen rastet auf die nächste ein. Die Leiste oben gehört zur Bahn: Zeichen, die vier Wörter, zwei Knöpfe — und das Wort der eigenen Bahn ist das kräftige. Beim Wischen wandert sie mit, also folgt die Betonung dem Finger, ohne dass ein Skript zusieht. Alles Bedienbare liegt als Milchglas über dem Inhalt, der darunter durchzieht. |
-| **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, können sie einen **Rückhalt-Raum** öffnen: einen privaten Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
+| **Rückhalt ist ein Ort** | Stehen zwei Menschen im selben Kreis jeweils hinter etwas vom anderen, ist der **geschützte Chat** da — von selbst, ohne Tür und ohne Bestätigung: ein privater Kreis für genau zwei, in dem beide moderieren. Nie einseitig, nie durch Einladung — nur aus zwei Handlungen, die vorher im Kreis sichtbar waren. Er verlässt diesen Server nie und existiert für alle anderen nicht. |
 | **Der Kreis ist ein Chatfenster** | Ein Kreis ist nur noch das Gespräch: jede Nachricht eine Kugel mit Text daneben, versetzt und in wechselnder Größe. Die Streuung kommt aus dem Beitrag — sieht zufällig aus, ist jedes Mal dieselbe; die Farbe gehört dem Menschen. |
-| **Die Kugel ist das Bedienelement** | Antippen öffnet, wer da spricht und wie der Rückhalt steht; Support geben und Antworten stehen sichtbar am Beitrag, weil ein Knopf hinter einer Klappe nicht gedrückt wird. Keine Knopfreihe unter jedem Text — und trotzdem kein Skript: Aufklappen ist ein `<details>`. Kugeln zur Zierde gibt es nicht: jede steht für einen Menschen, ein Thema, eine Nachricht oder einen Rückhalt. |
+| **Die Kugel ist das Bedienelement** | Antippen öffnet, wer da spricht und wie der Rückhalt steht; Support geben steht sichtbar am Beitrag, weil ein Knopf hinter einer Klappe nicht gedrückt wird — und es ist der einzige Knopf dort. Keine Knopfreihe unter jedem Text — und trotzdem kein Skript: Aufklappen ist ein `<details>`. Kugeln zur Zierde gibt es nicht: jede steht für einen Menschen, ein Thema, eine Nachricht oder einen Rückhalt. |
 | **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause), in der Mitte wo man ist, rechts ein Knopf: Einstellungen. Die Leiste ist auf jeder Seite gleich groß. Unten genau eine feste Leiste, und darin steht das Schreibfeld. Die fünfteilige Tab-Leiste ist weg. |
 | **Auskunft ohne Klick** | Jede Wolke nennt Art, Größe und Zustand von sich aus; bei Zeiger oder Tastaturfokus klappt Zweck und letzter Beitrag auf. Aus der Wolke führt ein Weg direkt ins Schreibfeld des Kreises. |
 | **Zeichen, die etwas aussagen** | Jeder Kreis trägt ein aus seiner Adresse erzeugtes Presence-Ring-Zeichen: Punkte wachsen mit der Mitgliederzahl, private Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, wie groß und wie offen ein Kreis ist, bevor man liest. |
@@ -30,7 +30,7 @@ Eigenschaften darunter:
 | **Geschrieben wird, wo man steht** | Die Schreibleiste fragt nicht mehr nach dem Ort — sie nimmt ihn: im Kreis in den Kreis, unter einem Beitrag als Antwort, sonst öffentlich unter eigenem Namen. Wohin es geht, steht im Feld, bevor du tippst; bei Konten unter 18 steht dort „an deine Leute", weil der Schutzboden das so vorgibt. |
 | **Support statt Like** | Die Kernreaktion sagt „ich stehe dahinter“, nicht „finde ich gut“ — und wird als Menschen angezeigt: „Mira, Jonas und 2 weitere stehen dahinter“. Eine nackte Zahl gibt es nirgends, eine Rangliste erst recht nicht. |
 | **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
-| **Support führt weiter** | Wer einen Beitrag mit Inhaltshinweis unterstützt, bekommt danach angeboten zu antworten. Rückhalt soll in Zuwendung münden, nicht im Klick enden. |
+| **Support führt weiter** | Support ist die einzige Handlung unter einem Beitrag — es gibt keinen Antworten-Knopf. Er wirkt wie ein Like und führt zum Beitrag, wo das Feld offen steht: sagen kann man dort etwas, muss aber nicht. Rückhalt soll in Zuwendung münden, nicht im Klick enden. |
 | **Neueste zuerst** | Der Standard ist streng chronologisch. Andere Sortierungen sind Plugins, müssen gewählt werden und sich auf dem Bildschirm erklären. Keine nutzt Reaktionsdaten. |
 | **Kein Nachladen beim Scrollen** | Blättern ist ein Link. Das Ende steht in Worten da. Die Anwendung liefert null Client-JavaScript aus, und die CSP verbietet es (`script-src 'none'`). Einzige Ausnahme ist die abgemeldete Startseite, wo Kugeln geschoben werden — sie lädt nichts, misst nichts, merkt sich nichts, und ohne Skript funktioniert sie vollständig. |
 | **Antworten nur mit Einverständnis** | Die Autor:in entscheidet, wer antworten darf; die Regel greift beim Schreiben — lokal wie föderiert. 30 Sekunden Abkühlung bremsen Nachtreten. |
@@ -66,7 +66,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 145 Tests
+npm test        # 146 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -97,7 +97,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   145 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   146 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)
@@ -117,7 +117,6 @@ proposal/                der Antrag, zu dem der Prototyp gehört
 | `/@name/outbox`, `/followers`, `/following` | AS2-Collections |
 | `/.well-known/webfinger`, `/nodeinfo/2.1` | Discovery; NodeInfo veröffentlicht die Wellbeing-Haltung |
 | `/posts/:id/support` | Support geben oder zurücknehmen |
-| `/c/:slug/rueckhalt` | den geschützten Raum öffnen — nur bei gegenseitigem Rückhalt |
 | `/settings`, `/settings/export` | Einstellungen, Pause, Datenexport |
 | `/moderation` | Menschliche Moderationsliste mit Trefferquote je Sprache |
 

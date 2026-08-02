@@ -10,6 +10,7 @@ import {
   createLocalAccount,
   createSession,
   destroySession,
+  findById as findAccountById,
   exportAccount,
   findLocalByUsername,
   isPaused,
@@ -62,9 +63,9 @@ import {
   members,
   pendingRequests,
 } from './domain/circles.js';
-import { openRaum } from './domain/rueckhalt.js';
+import { oeffneFaellige } from './domain/rueckhalt.js';
 import {
-  meineLeute, meineRaeume, meineThemen, moeglicheRaeume,
+  meineLeute, meineRaeume, meineThemen,
 } from './domain/weg.js';
 import {
   actorDocument,
@@ -210,7 +211,6 @@ router.get('/', (ctx, res) => {
     sortierung: strom.feed,
     themen: meineThemen(ctx.viewer.id),
     raeume: meineRaeume(ctx.viewer.id),
-    moeglich: moeglicheRaeume(ctx.viewer.id),
     nonce,
   }), nonce);
 });
@@ -374,7 +374,14 @@ router.post('/posts/:id/support', (ctx, res) => {
   const post = findPostById(Number(ctx.params.id));
   if (!post || !isVisibleTo(post, ctx.viewer)) return notFound(ctx, res);
   if (hasReacted(ctx.viewer.id, post.id)) unreact(ctx.viewer.id, post.id);
-  else react(ctx.viewer.id, post.id);
+  else {
+    react(ctx.viewer.id, post.id);
+    // Der zweite Support ist die ganze Zeremonie: steht ihr beide hintereinander,
+    // ist der geschützte Chat ab jetzt da (D39).
+    oeffneFaellige(ctx.viewer);
+  }
+  // Und danach steht man beim Beitrag, mit offenem Feld darunter: schreiben
+  // kann man etwas, muss man aber nicht.
   redirect(res, `/posts/${post.id}`);
 });
 
@@ -543,25 +550,6 @@ router.get('/c/:slug', (ctx, res) => {
     // Aus dem Himmel führt ein Weg direkt ins Schreibfeld, statt über zwei Seiten.
     writeOpen: ctx.url.searchParams.get('write') === '1',
   }), nonce);
-});
-
-/**
- * Den Rückhalt-Raum öffnen. Die Prüfung, ob der Rückhalt gegenseitig ist, liegt
- * in der Domäne — hier steht sie nicht noch einmal, damit es nicht zwei Wahrheiten
- * gibt.
- */
-router.post('/c/:slug/rueckhalt', (ctx, res) => {
-  if (!requireViewer(ctx, res)) return;
-  const circle = findBySlug(ctx.params.slug);
-  if (!circle || !isReadable(circle, ctx.viewer)) return notFound(ctx, res);
-  if (!isMember(circle.id, ctx.viewer.id)) return notFound(ctx, res);
-  try {
-    const raum = openRaum(circle, ctx.viewer, Number(ctx.form.account_id));
-    redirect(res, `/c/${encodeURIComponent(raum.slug)}`);
-  } catch (error) {
-    if (!(error instanceof DomainError)) throw error;
-    redirect(res, `/c/${encodeURIComponent(circle.slug)}?ansicht=support&error=${encodeURIComponent(error.message)}`);
-  }
 });
 
 router.post('/c/:slug/posts', (ctx, res) => {
@@ -771,11 +759,17 @@ export function createApp() {
       body,
       form: isForm ? parseForm(body) : {},
       params: {},
-      /** Author columns the post views expect. */
+      /**
+       * Author columns the post views expect.
+       *
+       * `findPostById` liefert nur die Beitragszeile, ohne die Spalten des
+       * Kontos — deshalb wird hier über `account_id` nachgeschlagen und nicht
+       * über einen Namen, den die Zeile gar nicht mitbringt.
+       */
       authorOf(post) {
         const author = ctx.viewer && ctx.viewer.id === post.account_id
           ? ctx.viewer
-          : findLocalByUsername(post.username ?? '') ?? {};
+          : findAccountById(post.account_id) ?? {};
         return {
           username: post.username ?? author.username,
           domain: post.domain ?? author.domain ?? null,

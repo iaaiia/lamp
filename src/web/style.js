@@ -930,9 +930,13 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .bubble-support { font-size: .78rem; color: var(--ink-muted); }
 
 /* Support geben steht am Beitrag, nicht hinter einer Klappe: wer zustimmen
-   will, soll den Knopf sehen, ohne erst die Kugel zu öffnen. */
-.bubble-fuss { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; margin-top: .55rem; }
-.bubble-fuss .button.small { padding: .35rem .8rem; min-height: 0; font-size: .8rem; }
+   will, soll den Knopf sehen, ohne erst die Kugel zu öffnen. Es ist der einzige
+   Knopf dort — geantwortet wird beim Beitrag, nicht auf Aufforderung (D39). */
+.bubble-fuss { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; margin-top: .55rem; }
+.fuss-link { font-size: .78rem; color: var(--ink-muted); text-decoration: none; }
+.fuss-link:hover { color: var(--blue); text-decoration: underline; }
+a.bubble-time { text-decoration: none; }
+a.bubble-time:hover { color: var(--blue); }
 
 /* Der Support-Knopf in der Blase ist klein, aber bleibt Ember. */
 .support.tiny {
@@ -995,13 +999,8 @@ body.on-stage .cluster { position: relative; z-index: 1; }
 .orb-row-text .p-meta { display: block; font-size: .74rem; color: var(--ink-muted); margin-top: .15rem; }
 .orb-row-note { display: block; font-size: .8rem; color: var(--ember-deep); margin-top: .3rem; }
 
-/* Der geschützte Raum steht über dem, was öffentlich getragen wurde. Die Tür
-   ist eine Zeile: Kugel, Name, Knopf — und auf schmalen Geräten rutscht der
-   Knopf darunter, statt den Namen in eine Spalte zu quetschen. */
-.raum-row { align-items: center; gap: .8rem; flex-wrap: wrap; }
-.raum-row .orb-row-mark .orb-mark { --od-scale: .62; }
-.raum-row .orb-row-text { flex: 1 1 8rem; }
-.raum-row form { margin: 0; flex: none; }
+/* Der geschützte Chat steht über dem, was öffentlich getragen wurde. Eine Tür
+   zum Aufdrücken gibt es nicht mehr — er ist einfach da (D39). */
 .raum-hinweis {
   font-size: .82rem;
   color: var(--ink-muted);

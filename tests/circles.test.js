@@ -31,7 +31,7 @@ import {
 import { createPost, isVisibleTo, react } from '../src/domain/posts.js';
 import { accountTimeline, timeline } from '../src/domain/feeds.js';
 import { requestFollow } from '../src/domain/safety.js';
-import { mutualSupporters, openRaum } from '../src/domain/rueckhalt.js';
+import { mutualSupporters, oeffneFaellige, openRaum } from '../src/domain/rueckhalt.js';
 
 beforeEach(freshDatabase);
 
@@ -247,6 +247,24 @@ describe('Rückhalt-Raum', () => {
     const raum = openRaum(kreis, mira, jonas.id);
     assert.equal(raum.kind, 'private');
     assert.equal(memberCount(raum.id), 2);
+  });
+
+  it('entsteht von selbst, sobald der zweite Support fällt', () => {
+    const { mira, jonas, kreis, vonMira, vonJonas } = aufbau();
+
+    // Nach dem ersten Support gibt es nichts anzulegen.
+    react(jonas.id, vonMira.id);
+    assert.deepEqual(oeffneFaellige(jonas), []);
+
+    // Der zweite Support ist die ganze Zeremonie — niemand drückt eine Tür auf.
+    react(mira.id, vonJonas.id);
+    const [raum] = oeffneFaellige(mira);
+    assert.equal(raum.kind, 'private');
+    assert.equal(memberCount(raum.id), 2);
+
+    // Und ein zweiter Aufruf legt nichts Neues an.
+    assert.deepEqual(oeffneFaellige(jonas), []);
+    assert.equal(mutualSupporters(kreis.id, mira.id).length, 1);
   });
 
   it('führt zweimal Öffnen in denselben Raum, nicht in zwei', () => {

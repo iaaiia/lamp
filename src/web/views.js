@@ -188,11 +188,15 @@ function postArticleInner(post, { viewer, showMetrics, supportSentence, supporte
        </div>`
     : '';
 
-  // Eine Aktion, nicht zwei, die am selben Ort landen.
+  // Kein Antworten-Knopf (D39): Support ist die eine Handlung, und geschrieben
+  // wird beim Beitrag, wenn man mag. Was hier steht, ist entweder die Zahl der
+  // vorhandenen Antworten oder der Hinweis, dass hier nicht geantwortet wird.
   const replyControl = !viewer || canReply
-    ? `<a href="/posts/${post.id}" class="small">${
-        replyCount === 0 ? 'Mitreden' : `${replyCount} ${replyCount === 1 ? 'Antwort' : 'Antworten'}`
-      }</a>`
+    ? replyCount > 0
+      ? `<a href="/posts/${post.id}" class="small">${replyCount} ${
+          replyCount === 1 ? 'Antwort' : 'Antworten'
+        }</a>`
+      : ''
     : `<span class="meta small">${escapeHtml(replyReason ?? 'Antworten sind hier eingeschränkt.')}</span>`;
 
   return `
@@ -700,10 +704,15 @@ ${list}
 
 /**
  * Eine Nachricht im Gespräch ist eine Kugel mit Text daneben — und die Kugel
- * ist das interaktive Stück: sie öffnet, wer da spricht, wer dahintersteht und
- * wie man antwortet. Die Kugeln liegen nicht in einer Flucht, sondern versetzt
- * und unterschiedlich groß; die Versetzung kommt aus dem Beitrag selbst, ist
- * also zufällig anzusehen und trotzdem jedes Mal dieselbe.
+ * ist das interaktive Stück: sie öffnet, wer da spricht und wer dahintersteht.
+ * Die Kugeln liegen nicht in einer Flucht, sondern versetzt und unterschiedlich
+ * groß; die Versetzung kommt aus dem Beitrag selbst, ist also zufällig
+ * anzusehen und trotzdem jedes Mal dieselbe.
+ *
+ * Unter dem Text steht genau eine Handlung: Support. Ein Antworten-Knopf steht
+ * dort nicht — Support führt zum Beitrag, und dort ist das Feld offen. Wer
+ * etwas sagen will, sagt es; wer nur zustimmen wollte, hat schon zugestimmt
+ * (D39).
  *
  * Aufklappen ist ein <details> — kein Skript, wie überall sonst auch.
  */
@@ -754,15 +763,17 @@ function chatMessage(post, replies, viewer, orbId) {
   <div class="bubble">
     <p class="bubble-head">
       <a href="/@${escapeHtml(post.username)}">${escapeHtml(name)}</a>
-      <span class="bubble-time">${timeTag(post.created_at)}</span>
+      <a class="bubble-time" href="/posts/${post.id}">${timeTag(post.created_at)}</a>
     </p>
     ${body}
     ${antworten ? `<div class="replies">${antworten}</div>` : ''}
     <div class="bubble-fuss">
       ${supportButton}
-      <a class="button secondary small" href="/posts/${post.id}">${
-        v.replyCount === 0 ? 'Antworten' : `${v.replyCount} ${v.replyCount === 1 ? 'Antwort' : 'Antworten'}`
-      }</a>
+      ${v.replyCount > 0
+        ? `<a class="fuss-link" href="/posts/${post.id}">${v.replyCount} ${
+            v.replyCount === 1 ? 'Antwort' : 'Antworten'
+          }</a>`
+        : ''}
     </div>
   </div>
 </div>`;
@@ -805,7 +816,7 @@ const WEG = [
  * rechts wird es dichter.
  */
 export function homePage({
-  viewer, prefs, leute = [], feed = [], themen = [], raeume = [], moeglich = [],
+  viewer, prefs, leute = [], feed = [], themen = [], raeume = [],
   sortierung = null, nonce = '',
 }) {
   /**
@@ -884,32 +895,17 @@ ${feed.length
         .join('')}</div>`
     : `<p class="chat-start">${leer}</p>`);
 
-  const tueren = moeglich.length
-    ? `<div class="orb-list rueckhalt">${moeglich
-        .map((person, i) => `<div class="orb-row raum-row">
-    <span class="orb-row-mark">${orbHtml(`tuerorb-${i}`)}</span>
-    <span class="orb-row-text">
-      <strong>${escapeHtml(person.display_name || person.username)}</strong>
-      <span class="p-meta mono">Ihr steht beide hintereinander · ${escapeHtml(person.circle_name)}</span>
-    </span>
-    <form method="post" action="/c/${escapeHtml(person.circle_slug)}/rueckhalt">
-      <input type="hidden" name="account_id" value="${person.id}">
-      <button class="support tiny" type="submit">${supportArc}<span>Raum öffnen</span></button>
-    </form>
-  </div>`).join('')}</div>`
-    : '';
-
-  const rueckhaltAnsicht = raeume.length || moeglich.length
-    ? `${tueren}${raeume.length ? `<div class="orb-list">${raeume
+  const rueckhaltAnsicht = raeume.length
+    ? `<div class="orb-list">${raeume
         .map((raum, i) => orbRow(
           `/c/${escapeHtml(raum.slug)}`,
           `raumorb-${i}`,
           escapeHtml(raum.gegenueber_name || raum.gegenueber || 'Rückhalt'),
           raum.zuletzt ? `${escapeHtml(raum.letztes.slice(0, 60))}${raum.letztes.length > 60 ? '…' : ''} · ${timeTag(raum.zuletzt)}` : 'Noch nichts gesagt',
         ))
-        .join('')}</div>` : ''}`
-    : `<p class="chat-start">Noch kein Rückhalt-Raum. Er entsteht, sobald ihr beide in einem Kreis
-       hinter etwas vom anderen steht — dann steht die Tür hier.</p>`;
+        .join('')}</div>`
+    : `<p class="chat-start">Noch kein geschützter Chat. Er entsteht von selbst, sobald ihr beide
+       in einem Kreis hinter etwas vom anderen steht — dann steht er hier.</p>`;
 
   const bahnen = {
     freunde: leuteAnsicht,
@@ -924,7 +920,6 @@ ${feed.length
     ...leute.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, `l${p.id}`, `leuteorb-${i}`, i)),
     ...feed.map((p, i) => personOrbCss(`${p.username}${p.domain ?? ''}`, String(p.id), `feedorb-${i}`, i)),
     ...themen.map((e, i) => personOrbCss(`${e.username}${e.domain ?? ''}`, `${e.art}${e.id}`, `themaorb-${i}`, i)),
-    ...moeglich.map((m, i) => personOrbCss(`${m.username}${m.domain ?? ''}`, `t${m.id}`, `tuerorb-${i}`, i)),
     ...raeume.map((r, i) => personOrbCss(String(r.gegenueber ?? r.slug), String(r.id), `raumorb-${i}`, i)),
   ];
 

@@ -170,8 +170,8 @@ router.get('/favicon.svg', (ctx, res) => {
   res.writeHead(200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' });
   res.end(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-      '<circle cx="12" cy="12" r="10" fill="none" stroke="#2B4C9B" stroke-width="2"/>' +
-      '<circle cx="12" cy="12" r="3.6" fill="#DC6B45"/></svg>',
+      '<circle cx="12" cy="12" r="10" fill="none" stroke="#14717E" stroke-width="2"/>' +
+      '<circle cx="12" cy="12" r="3.6" fill="#F47B20"/></svg>',
   );
 });
 

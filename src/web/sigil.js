@@ -29,13 +29,14 @@ function hash(text) {
 }
 
 /** Enge, überparteiliche Palette: Blau bis Violett über Schiefer. Kein Grün. */
+// Dunkel und hell aus denselben Bändern wie überall sonst.
 const PALETTE = [
-  ['#2B4C9B', '#4E74C8'],
-  ['#5B57C4', '#8A86E4'],
-  ['#37567A', '#5F82AB'],
-  ['#4A4E96', '#7377C4'],
-  ['#2E6280', '#4E90AE'],
-  ['#5A4E86', '#8778B4'],
+  ['#0E5560', '#3FBFB6'],
+  ['#3A2E6B', '#8878C3'],
+  ['#0A4444', '#0F8C8C'],
+  ['#463A80', '#A99AD6'],
+  ['#3E5A15', '#97C93D'],
+  ['#75330A', '#F9A61A'],
 ];
 
 /**

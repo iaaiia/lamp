@@ -19,32 +19,40 @@ export const STYLESHEET = `
 :root {
   color-scheme: light dark;
 
-  /* Kühler Grund nach der Referenz (dem Sonnensystem-Plakat): ein sehr helles
-     Lavendelgrau, auf dem die Farben frisch stehen statt gedämpft. Die Schrift
-     ist kein Schwarz, sondern das tiefe Marineblau des Plakats — dadurch wirkt
-     die ganze Fläche kühl, ohne kalt zu werden. */
-  --fog:        #EDEFF5;
-  --surface:    #FFFFFF;
-  --surface-2:  #F7F8FC;
-  --ink:        #16283F;
-  --ink-muted:  #5C6B80;
-  --line:       #DDE1EA;
-  --line-soft:  #E9ECF2;
+  /* Warmes Papier nach der Referenz (dem EXPLORE-Plakat): ein cremefarbener
+     Grund, auf dem satte Bänder liegen dürfen, ohne dass es laut wird. Die
+     Schrift ist kein Schwarz, sondern das dunkle Petrol des Plakats — dieselbe
+     Familie wie der Schriftzug, nur tiefer. */
+  --fog:        #F1ECE0;
+  --surface:    #FDFBF6;
+  --surface-2:  #F6F1E6;
+  --ink:        #17313A;
+  --ink-muted:  #5E6E74;
+  --line:       #E0D8C7;
+  --line-soft:  #EBE4D6;
 
-  /* Frischer als vorher, und aus der Referenz genommen: das Blau der
-     Jupiterbahn, das Orange der Sonne, das Violett des Uranus. */
-  --blue:       #2E7FC4;
-  --blue-deep:  #1F5E96;
-  --blue-tint:  #E4F0FA;
+  /* Die Bänder des Plakats, von außen nach innen. Petrol führt: es ist die
+     Farbe des Schriftzugs und damit die Stimme der Oberfläche. */
+  --blue:       #14717E;
+  --blue-deep:  #0E5560;
+  --blue-tint:  #DDECEC;
   --blue-ink:   #FFFFFF;
-  --ember:      #F0862F;
-  --ember-deep: #C4620F;
-  --ember-tint: #FDEEDF;
+  --ember:      #F47B20;
+  --ember-deep: #C25710;
+  --ember-tint: #FCEBDC;
   --ember-ink:  #FFFFFF;
-  --violet:     #7A5BD0;
-  --violet-deep: #5F42AE;
-  --forum:      #7A5BD0;
-  --forum-tint: #EDE8FA;
+  --violet:     #8878C3;
+  --violet-deep: #6A58A8;
+  --forum:      #8878C3;
+  --forum-tint: #EAE6F5;
+
+  /* Die übrigen Bänder — sie tragen die Kugeln und den Bogen. */
+  --teal:       #0F8C8C;
+  --turquoise:  #3FBFB6;
+  --leaf:       #97C93D;
+  --sun:        #F9CE00;
+  --amber:      #F9A61A;
+  --nacht:      #262625;
 
   --warn:       #B5760F;
   --crit:       #C0453A;
@@ -57,6 +65,10 @@ export const STYLESHEET = `
      Erzeugt mit feTurbulence, damit die Flächen nach Farbe auf Papier aussehen
      statt nach gerendertem Glas. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.95'/%3E%3C/svg%3E");
+
+  /* Kästchen und Schalter tragen die Farbe der Oberfläche, nicht das Blau des
+     Betriebssystems. */
+  accent-color: #14717E;
 
   --display: ui-sans-serif, "Inter Tight", "Segoe UI", Roboto, sans-serif;
   --body: system-ui, -apple-system, "Inter", "Segoe UI", Roboto, sans-serif;
@@ -76,23 +88,25 @@ export const STYLESHEET = `
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fog:        #101319;
-    --surface:    #171B23;
-    --surface-2:  #1D222B;
-    --ink:        #E8EAEE;
-    --ink-muted:  #9AA1AF;
-    --line:       #2A303B;
-    --line-soft:  #222831;
-    --blue:       #7EA0E8;
-    --blue-deep:  #A8C0F2;
-    --blue-tint:  #1B2740;
-    --blue-ink:   #0E1420;
-    --ember:      #F08A5E;
-    --ember-deep: #F7B294;
-    --ember-tint: #33201A;
-    --ember-ink:  #22140F;
-    --forum:      #9A95F0;
-    --forum-tint: #22203D;
+    /* Der dunkle Himmel oben auf dem Plakat, und darin dieselben Bänder —
+       nur so hell, wie sie auf Schwarz sein müssen. */
+    --fog:        #1B1B1A;
+    --surface:    #242423;
+    --surface-2:  #2C2C2A;
+    --ink:        #EDE8DC;
+    --ink-muted:  #A6A398;
+    --line:       #3A3A37;
+    --line-soft:  #302F2C;
+    --blue:       #48B3B3;
+    --blue-deep:  #7CD2CE;
+    --blue-tint:  #123232;
+    --blue-ink:   #0B1C1C;
+    --ember:      #F79A4C;
+    --ember-deep: #FBC08A;
+    --ember-tint: #3A2410;
+    --ember-ink:  #241407;
+    --forum:      #A899DC;
+    --forum-tint: #272242;
     --warn:       #D99A45;
     --crit:       #E0776C;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
@@ -499,9 +513,14 @@ main { padding-bottom: 4rem; }
 }
 .card.flat { box-shadow: none; }
 
-/* Feine Bogenlinien im Hintergrund — das leise Ornament der Referenz. Sie
-   liegen ganz hinten, kreuzen die Fläche und geben dem Papier Bewegung, ohne
-   irgendetwas zu behaupten. Als Daten-URI, also ohne Anfrage. */
+/* Der Bogen des Plakats: satte Bänder, die von unten aufsteigen, dazu die
+   gepunktete Bahn darüber. Er liegt ganz hinten und fest — der Inhalt zieht
+   darüber hinweg wie die Planeten über den Bahnen. Als Daten-URI, also ohne
+   eine einzige Anfrage.
+
+   Die Bänder stehen unten, wo selten Text liegt, und werden nach oben hin
+   durchsichtig. So bleibt das Bild des Plakats erhalten, ohne dass irgendwo
+   dunkle Schrift auf sattem Grün landet. */
 body.landing::before,
 body.on-stage::before {
   content: "";
@@ -509,12 +528,37 @@ body.on-stage::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1400' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-width='1.1'%3E%3Cpath d='M-60 210 C 220 90 560 150 880 40' stroke='%23E3C4A6' opacity='0.75'/%3E%3Cpath d='M-40 470 C 300 620 620 380 880 520' stroke='%23AFC9E2' opacity='0.7'/%3E%3Cpath d='M-60 980 C 260 860 540 1120 880 1000' stroke='%23E0B9B4' opacity='0.55'/%3E%3Cpath d='M-40 1290 C 300 1200 600 1340 880 1230' stroke='%23B7CFC6' opacity='0.5'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 100% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 460' preserveAspectRatio='xMidYEnd slice'%3E%3Cg fill='none'%3E%3Ccircle cx='400' cy='1200' r='1046' stroke='%238878C3' stroke-width='42'/%3E%3Ccircle cx='400' cy='1200' r='1004' stroke='%230F8C8C' stroke-width='42'/%3E%3Ccircle cx='400' cy='1200' r='962' stroke='%233FBFB6' stroke-width='42'/%3E%3Ccircle cx='400' cy='1200' r='920' stroke='%2397C93D' stroke-width='42'/%3E%3Ccircle cx='400' cy='1200' r='886' stroke='%23F9CE00' stroke-width='26'/%3E%3Ccircle cx='400' cy='1200' r='860' stroke='%23F9A61A' stroke-width='26'/%3E%3Ccircle cx='400' cy='1200' r='834' stroke='%23F47B20' stroke-width='26'/%3E%3Ccircle cx='400' cy='1200' r='808' stroke='%23EF5F24' stroke-width='26'/%3E%3Ccircle cx='400' cy='1200' r='1092' stroke='%2317313A' stroke-width='4' stroke-linecap='round' stroke-dasharray='0.5 26' opacity='0.55'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: bottom center;
+  background-size: 100% 34vh;
   background-repeat: no-repeat;
+  /* Nach oben ausblenden: unten das Plakat, oben das Papier. Der Verlauf ist
+     hart genug, dass Text, der über den Bogen scrollt, ihn nur noch als
+     Hauch trifft. */
+  opacity: .9;
+  -webkit-mask-image: linear-gradient(to top, #000 0 7%, rgba(0,0,0,.42) 20%, transparent 33%);
+  mask-image: linear-gradient(to top, #000 0 7%, rgba(0,0,0,.42) 20%, transparent 33%);
 }
 @media (prefers-color-scheme: dark) {
-  body.landing::before, body.on-stage::before { opacity: .35; }
+  body.landing::before, body.on-stage::before { opacity: .5; }
+}
+
+/* Der dunkle Himmel der Vorlage — nur auf dem Plakat, wo oben kein Text steht.
+   Er wölbt sich nach unten, wie die Bänder sich nach oben wölben, und trägt
+   dieselbe gepunktete Bahn. Zusammen mit dem Bogen unten ist das Plakat
+   gerahmt: Nacht oben, Farbe unten, die Kugeln dazwischen. */
+body.landing .stage::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26vh;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 260' preserveAspectRatio='none'%3E%3Ccircle cx='400' cy='-1140' r='1300' fill='%23262625'/%3E%3Ccircle cx='400' cy='-1140' r='1232' fill='none' stroke='%23F1ECE0' stroke-width='7' stroke-linecap='round' stroke-dasharray='0.5 30' opacity='0.85'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
 /* ------------------------------------------------------------------- Plakat */
@@ -525,13 +569,14 @@ body.on-stage::before {
 body.landing {
   margin: 0;
   min-height: 100svh;
-  /* Warmes Papier mit einem kaum sichtbaren Verlauf — der Grund der Referenz.
-     Die Farbe kommt von den Kugeln, nicht vom Hintergrund. */
+  /* Cremefarbenes Papier mit einem kaum sichtbaren Verlauf — der Grund der
+     Vorlage. Die Farbe kommt von den Bändern und den Kugeln, nicht vom
+     Hintergrund. */
   background:
-    radial-gradient(120% 80% at 78% 4%, #F6F7FB 0%, transparent 60%),
-    radial-gradient(100% 70% at 8% 96%, #E6EAF4 0%, transparent 62%),
-    #EDEFF5;
-  color: #16283F;
+    radial-gradient(120% 80% at 78% 4%, #FAF7EF 0%, transparent 60%),
+    radial-gradient(100% 70% at 8% 96%, #E9E1CF 0%, transparent 62%),
+    #F1ECE0;
+  color: #17313A;
   overflow-x: hidden;
 
   /* Eine Serifenschrift für die eine große Zeile — wie im Vorbild. Keine
@@ -728,15 +773,15 @@ body.landing {
 
 body.on-stage {
   background:
-    radial-gradient(120% 60% at 80% 0%, #F6F7FB 0%, transparent 62%),
-    radial-gradient(90% 50% at 4% 100%, #E6EAF4 0%, transparent 60%),
-    #EDEFF5;
+    radial-gradient(120% 60% at 80% 0%, #FAF7EF 0%, transparent 62%),
+    radial-gradient(90% 50% at 4% 100%, #E9E1CF 0%, transparent 60%),
+    #F1ECE0;
   background-attachment: fixed;
-  color: #16283F;
+  color: #17313A;
 }
 body.on-stage .appbar {
-  background: color-mix(in oklab, #EDEFF5 82%, transparent);
-  border-bottom-color: rgba(22, 40, 63, .1);
+  background: color-mix(in oklab, #F1ECE0 82%, transparent);
+  border-bottom-color: rgba(23, 49, 58, .12);
 }
 body.on-stage main { position: relative; z-index: 1; }
 body.on-stage footer.site { background: transparent; border-top-color: rgba(22, 26, 30, .1); }

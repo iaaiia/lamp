@@ -61,27 +61,52 @@ describe('Kreiszeichen', () => {
 });
 
 describe('Farben', () => {
-  it('hält Ember bei den Kugeln draußen und Grün aus der Marke', () => {
-    // Zwei Regeln aus dem Briefing, die eine Vorlage nicht aushebelt: Orange
-    // gehört dem Support, und die Marke trägt kein dominantes Grün.
-    for (const seed of ['a', 'bb', 'ccc', 'dddd', 'eeeee', 'ffffff', 'ggggggg', 'hhh']) {
-      const regel = personOrbCss(seed, '1', 'x');
-      assert.doesNotMatch(regel, /F0862F|DC6B45|F08A5E/i, 'Ember gehört dem Support');
-      assert.doesNotMatch(regel, /8CC152|4CAF50|3FBF3F/i, 'kein dominantes Grün');
+  it('nimmt die Kugelfarben aus den Bändern der Vorlage', () => {
+    // Die Skala des Plakats, ganz: von der violetten Außenbahn bis ins Orange.
+    // Kugel und Hintergrundbogen kommen aus derselben Reihe, sonst sähe das
+    // eine nach Vorlage aus und das andere nach Zufall.
+    const baender = ['8878C3', '0F8C8C', '3FBFB6', '97C93D', 'F9CE00', 'F9A61A', 'F47B20'];
+    const gesehen = new Set();
+    for (let i = 0; i < 60; i += 1) {
+      const regel = personOrbCss(`mensch-${i}`, '1', 'x');
+      const treffer = baender.find((farbe) => new RegExp(farbe, 'i').test(regel));
+      if (treffer) gesehen.add(treffer);
     }
+    assert.ok(gesehen.size >= 4, `nur ${gesehen.size} Bänder in den Kugeln`);
   });
 
-  it('steht auf kühlem Grund, nicht mehr auf warmem Papier', () => {
-    assert.match(STYLESHEET, /--fog:\s*#EDEFF5/);
-    assert.match(STYLESHEET, /--ink:\s*#16283F/);
-    assert.doesNotMatch(STYLESHEET, /#F7F4EE|#F5F2EC/, 'das warme Papier ist weg');
+  it('steht auf dem cremefarbenen Papier der Vorlage', () => {
+    assert.match(STYLESHEET, /--fog:\s*#F1ECE0/);
+    assert.match(STYLESHEET, /--ink:\s*#17313A/);
+    assert.doesNotMatch(STYLESHEET, /#EDEFF5/, 'das kühle Lavendelgrau ist weg');
+  });
+
+  it('lässt den Bogen der Vorlage hinter allem stehen', () => {
+    const bogen = STYLESHEET.match(/body\.on-stage::before \{[^}]*\}/s)[0];
+    // Alle Bänder liegen im Bogen — und er blendet nach oben aus, damit
+    // nirgends dunkle Schrift auf sattem Grün landet.
+    for (const farbe of ['8878C3', '0F8C8C', '3FBFB6', '97C93D', 'F9CE00', 'F47B20']) {
+      assert.match(bogen, new RegExp(farbe, 'i'), `Band ${farbe} fehlt im Bogen`);
+    }
+    assert.match(bogen, /mask-image: linear-gradient\(to top/);
+    assert.match(bogen, /position: fixed/);
+  });
+
+  it('rahmt das Plakat mit Nacht oben und Bogen unten', () => {
+    // Die Komposition der Vorlage: dunkler Himmel oben, Farbbänder unten, die
+    // Kugeln dazwischen. Der Himmel steht nur auf dem Plakat — dort liegt oben
+    // kein Text, überall sonst schon.
+    const himmel = STYLESHEET.match(/body\.landing \.stage::before \{[^}]*\}/s)[0];
+    assert.match(himmel, /%23262625/, 'die Nacht der Vorlage fehlt');
+    assert.match(himmel, /stroke-dasharray/, 'die gepunktete Bahn fehlt');
+    assert.match(himmel, /top: 0/);
   });
 
   it('gibt dem Zeichen Violett und einen versetzten Ring, den Knöpfen das Dunkel', () => {
     // Die Marke ist die Farbe, die Handlung ist das Gewicht — deshalb ist der
     // Punkt links violett und die beiden Knöpfe daneben sind dunkel, wie der
     // Suchen-Knopf auf dem Plakat.
-    assert.match(STYLESHEET, /--violet:\s*#7A5BD0/);
+    assert.match(STYLESHEET, /--violet:\s*#8878C3/);
     assert.match(STYLESHEET, /\.mark \{ background: var\(--violet\)/);
     assert.match(STYLESHEET, /\.icon-btn\.rund \{ background: var\(--ink\)/);
     assert.match(STYLESHEET, /\.mark::after \{[^}]*inset: -6px 0 0 -6px/s, 'der Ring sitzt versetzt');
@@ -617,13 +642,13 @@ describe('Farbwelt', () => {
     assert.match(gedrueckt, /background: var\(--ink\)/);
   });
 
-  it('hält Ember aus den Kugeln heraus — auch in der erweiterten Palette', async () => {
+  it('führt die alten Erdtöne nirgends mehr mit', async () => {
     const { readFile } = await import('node:fs/promises');
-    // Warme Kugeln gibt es jetzt (Gold, Türkis), aber Ember bleibt der Farbton
-    // des Supports und darf nirgends als Dekoration auftauchen.
-    for (const datei of ['src/web/landing.js', 'src/web/stage.js', 'src/web/orb.js', 'src/web/sky.js']) {
+    // Die Vorlage hat eine eigene, klare Skala. Die Farben der Vorgängerwelt
+    // (das gebrannte Rot, das kühle Lavendelgrau) haben darin nichts verloren.
+    for (const datei of ['src/web/landing.js', 'src/web/stage.js', 'src/web/orb.js', 'src/web/sky.js', 'src/web/style.js']) {
       const quelle = await readFile(datei, 'utf8');
-      assert.doesNotMatch(quelle, /DC6B45|F08A5E/i, `${datei} benutzt Ember`);
+      assert.doesNotMatch(quelle, /DC6B45|F08A5E|EDEFF5/i, `${datei} führt eine alte Farbe`);
     }
   });
 });

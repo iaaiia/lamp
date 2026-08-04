@@ -286,6 +286,44 @@ Seite.
 
 **Enforced by:** `--serif` auf `body.landing`, `.stage-title`.
 
+## D43 — Die Farbwelt kommt vom EXPLORE-Plakat: cremefarbenes Papier, Bänder, Nacht
+
+**Chosen:** die ganze Oberfläche folgt einer neuen Vorlage — einem Retro-Plakat mit
+cremefarbenem Papier, einem dunklen Himmel oben und einem Bogen aus satten Bändern unten.
+Konkret:
+
+- `--fog` ist cremefarbenes Papier (`#F1ECE0`), `--ink` das dunkle Petrol des Schriftzugs
+  (`#17313A`), `--blue` das Petrol selbst (`#14717E`). Das kühle Lavendelgrau ist weg.
+- Der Hintergrund der Bühne trägt den **Bogen**: violett, petrol, türkis, grün, gelb,
+  bernstein, orange — unten satt, nach oben ausgeblendet.
+- Das Plakat (die abgemeldete Startseite) bekommt zusätzlich die **Nacht** oben, mit der
+  gepunkteten Bahn. Nur dort: auf allen anderen Seiten steht oben Text.
+- Alle vier Farbtabellen — Kugeln, Himmel, Bühne, Kreiszeichen — ziehen jetzt aus derselben
+  Bänderreihe. Vorher hatte praktisch jede Datei ihre eigene Palette.
+
+**Why:** die Vorlage macht eine Aussage, die zu lamb passt: Farbe ohne Härte, Ordnung ohne
+Raster, und alles auf Papier statt auf Glas. Wichtiger als der Geschmack ist aber die
+Einheit — eine Kugel im Himmel, eine Kugel am Beitrag und der Grund dahinter kamen bisher aus
+drei verschiedenen Listen. Jetzt sind es dieselben sieben Farben, und man sieht, dass es
+dieselben sind.
+
+**Was zurückgenommen wird:** die alte Regel „kein Grün, kein Ember in den Kugeln". Ember war
+gesperrt, weil es dem Support-Knopf gehörte — seit D42 ist der Knopf schwarz, also ist die
+warme Seite frei. Und Grün fehlte der Skala vorher; in dieser Vorlage ist es ein Band wie
+jedes andere.
+
+**Lesbarkeit:** der Bogen ist stark maskiert (voll erst im untersten Zehntel, ab einem Drittel
+Höhe unsichtbar). Text, der darüber scrollt, trifft ihn nur als Hauch — dunkles Petrol auf
+blassem Gelb bleibt lesbar. Das ist der Preis dafür, das Plakat in eine Anwendung zu holen,
+und er wird hier bezahlt und nicht ignoriert.
+
+**Enforced by:** `:root` und `body.on-stage::before` in `src/web/style.js`, die `PALETTE` in
+`src/web/orb.js`, `sky.js`, `stage.js`, `sigil.js`, `landing.js`; `tests/ui.test.js`, Blöcke
+„Farben" und „Farbwelt": Papier, Bänder im Bogen, Bänder in den Kugeln, die Nacht auf dem
+Plakat, und dass keine Farbe der Vorgängerwelt übrig ist.
+
+**Supersedes:** D34 (kühler Grund, frische Farben).
+
 ## D42 — Support trägt dieselbe Farbe wie jede andere Handlung: Schwarz
 
 **Chosen:** der Support-Knopf ist schwarz — ungedrückt eine Kontur in `--ink`, gedrückt
@@ -460,6 +498,9 @@ Ort das richtige Ziel und das richtige Etikett — und dass die Leiste dort fehl
 antworten darf.
 
 ## D34 — Kühler Grund, frische Farben, violette Zeichen
+
+> **Überholt von D43.** Der Grund ist jetzt cremefarbenes Papier, die Skala kommt aus den
+> Bändern der neuen Vorlage. Dass das Zeichen violett ist, gilt weiter.
 
 **Chosen:** die Palette folgt der Referenz (dem Sonnensystem-Plakat): ein sehr helles
 Lavendelgrau als Grund (`--fog: #EDEFF5`), tiefes Marineblau statt Schwarz als Schriftfarbe

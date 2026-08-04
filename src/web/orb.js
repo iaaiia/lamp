@@ -12,7 +12,8 @@
  *   Geschlossener Ring — der Kreis ist privat
  *   Farbe              — fest aus dem Slug, damit ein Kreis wiedererkennbar ist
  *
- * Ember kommt nie vor: die Farbe gehört dem Support.
+ * Die Farben sind die Bänder des Plakats — dieselbe Skala wie der Bogen im
+ * Hintergrund, damit Kugel und Grund aus einer Welt kommen.
  */
 
 /** Dieselbe Streuung wie in sky.js und sigil.js. */
@@ -34,15 +35,23 @@ function hash(text) {
  * Grün trägt — das war eine Vorgabe aus dem Briefing und wiegt schwerer als
  * die Vollständigkeit einer Vorlage.
  */
+/**
+ * Die Bänder des Plakats, in ihrer Reihenfolge — von der kühlen Außenbahn zur
+ * warmen innen. Zwei Werte je Kugel: die helle Fläche und der dunkle Kern.
+ *
+ * Ember (das Orange des Support-Knopfs) war früher ausgeschlossen, weil es dem
+ * Knopf gehörte. Seit der Knopf schwarz ist (D42), ist die warme Seite des
+ * Bogens wieder frei — und ohne sie fehlte dem Plakat die halbe Skala.
+ */
 const PALETTE = [
-  ['#7A5BD0', '#33206B'],  // Uranus-Violett
-  ['#2E7FC4', '#123E66'],  // Jupiter-Blau
-  ['#4FBEE4', '#12495C'],  // Cyan
-  ['#4FC2A5', '#0F4437'],  // Mint
-  ['#9A8BE0', '#3B2E80'],  // Flieder
-  ['#EE6FA8', '#6B1B41'],  // Neptun-Rosa
-  ['#F2C64B', '#6B4E0B'],  // Venus-Gelb
-  ['#6A6FD4', '#252A6E'],  // Indigo
+  ['#8878C3', '#3A2E6B'],  // Violett, die Außenbahn
+  ['#0F8C8C', '#0A4444'],  // Petrol
+  ['#3FBFB6', '#12544F'],  // Türkis
+  ['#97C93D', '#3E5A15'],  // Blattgrün
+  ['#F9CE00', '#6B5600'],  // Sonnengelb
+  ['#F9A61A', '#7A4A05'],  // Bernstein
+  ['#F47B20', '#75330A'],  // Orange
+  ['#A99AD6', '#463A80'],  // Flieder, damit Violett zweimal vorkommt
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));

@@ -16,15 +16,17 @@
 
 import config from '../config.js';
 
+// Dieselben Bänder wie der Bogen und die Kugeln im Rest der App — das Plakat
+// draußen und die Oberfläche drinnen sollen aus einer Welt kommen.
 const PALETTE = [
-  ['#7BA3F0', '#1E2F5C'],
-  ['#9B97F2', '#2E2B6B'],
-  ['#6D9BC4', '#1D3348'],
-  ['#8A8FD8', '#272A63'],
-  ['#5FA6C6', '#173B4C'],
-  ['#9A8AC8', '#332959'],
-  ['#E8B45F', '#6B4A16'],
-  ['#6FC0BE', '#194848'],
+  ['#8878C3', '#3A2E6B'],
+  ['#0F8C8C', '#0A4444'],
+  ['#3FBFB6', '#12544F'],
+  ['#97C93D', '#3E5A15'],
+  ['#F9CE00', '#6B5600'],
+  ['#F9A61A', '#7A4A05'],
+  ['#F47B20', '#75330A'],
+  ['#A99AD6', '#463A80'],
 ];
 
 /**

@@ -27,7 +27,7 @@ Eigenschaften darunter:
 | **Eine Navigation, nicht zwei** | Oben das Zeichen (nach Hause), in der Mitte wo man ist, rechts ein Knopf: Einstellungen. Die Leiste ist auf jeder Seite gleich groß. Unten genau eine feste Leiste, und darin steht das Schreibfeld. Die fünfteilige Tab-Leiste ist weg. |
 | **Auskunft ohne Klick** | Jede Wolke nennt Art, Größe und Zustand von sich aus; bei Zeiger oder Tastaturfokus klappt Zweck und letzter Beitrag auf. Aus der Wolke führt ein Weg direkt ins Schreibfeld des Kreises. |
 | **Zeichen, die etwas aussagen** | Jeder Kreis trägt ein aus seiner Adresse erzeugtes Presence-Ring-Zeichen: Punkte wachsen mit der Mitgliederzahl, private Kreise tragen eine geschlossene zweite Schale. Man sieht der Kachel an, wie groß und wie offen ein Kreis ist, bevor man liest. |
-| **Kühler Grund, frische Farben** | Heller Lavendelgrund, Marineblau statt Schwarz, und die Akzente aus der Referenz: Jupiterblau, Uranusviolett, Sonnenorange. Das Zeichen oben ist violett mit versetztem Ring wie ein Planet, die beiden Knöpfe daneben dunkel wie der Suchen-Knopf auf dem Plakat. Das Schreibfeld unten ist dieselbe weiße Pille wie das Suchfeld. Orange bleibt dem Support vorbehalten, Grün kommt in der Marke nicht vor. |
+| **Papier, Bänder, Nacht** | Cremefarbenes Papier statt Bildschirmgrau, dunkles Petrol statt Schwarz, und ein Bogen aus sieben Bändern — violett, petrol, türkis, grün, gelb, bernstein, orange —, der unten aufsteigt und nach oben ausblendet. Die abgemeldete Startseite trägt zusätzlich den dunklen Himmel mit der gepunkteten Bahn. Kugeln, Himmel, Kreiszeichen und Grund ziehen alle aus derselben Bänderreihe. Das Zeichen oben ist violett mit versetztem Ring wie ein Planet, die Knöpfe daneben und der Support-Knopf sind dunkel wie der Suchen-Knopf auf dem Plakat. |
 | **Geschrieben wird, wo man steht** | Die Schreibleiste fragt nicht mehr nach dem Ort — sie nimmt ihn: im Kreis in den Kreis, unter einem Beitrag als Antwort, sonst öffentlich unter eigenem Namen. Wohin es geht, steht im Feld, bevor du tippst; bei Konten unter 18 steht dort „an deine Leute", weil der Schutzboden das so vorgibt. |
 | **Support statt Like** | Die Kernreaktion sagt „ich stehe dahinter“, nicht „finde ich gut“ — und wird als Menschen angezeigt: „Mira, Jonas und 2 weitere stehen dahinter“. Eine nackte Zahl gibt es nirgends, eine Rangliste erst recht nicht. |
 | **Rückhalt bleibt im Kreis** | Wer unterstützt hat, sieht nur die Autor:in — bis sie es freigibt. Auch über das Protokoll, nicht nur im Interface. |
@@ -68,7 +68,7 @@ Braucht Node.js ≥ 22.5 (nutzt das eingebaute SQLite). **Keine Abhängigkeiten,
 
 ```bash
 npm run dev     # legt zwei Demo-Konten an, läuft auf http://localhost:3000
-npm test        # 151 Tests
+npm test        # 153 Tests
 ```
 
 Demo-Konten: `mira` und `jonas` (Konto unter 18), Passwort `lamb-demo-password`.
@@ -99,7 +99,7 @@ src/
   domain/                Kreise, Konten, Beiträge, Sicherheit, Sortierungen, Moderation
   federation/            AS2-Dokumente, Inbox-Verarbeitung, signierte Zustellung
   web/                   servergerendertes HTML, Designsystem, Kreiszeichen, Himmel
-tests/                   151 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
+tests/                   153 Tests: Kreise, Himmel, Wellbeing, Sicherheit, Föderation, HTTP
 design/                  lamb.html (gerendertes System), lamb-tokens.css
 docs/                    Designentscheidungen, Ausschreibungs-Traceability, docs/lamb/
 site/                    erzeugter Rundgang für Pages (nicht eingecheckt)

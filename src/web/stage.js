@@ -21,15 +21,16 @@ function hash(text) {
   return h;
 }
 
+// Die Bänder der Vorlage, in ihrer Reihenfolge.
 const PALETTE = [
-  ['#7A5BD0', '#33206B'],
-  ['#9A8BE0', '#3B2E80'],
-  ['#2E7FC4', '#123E66'],
-  ['#6A6FD4', '#252A6E'],
-  ['#4FBEE4', '#12495C'],
-  ['#EE6FA8', '#6B1B41'],
-  ['#F2C64B', '#6B4E0B'],
-  ['#4FC2A5', '#0F4437'],
+  ['#8878C3', '#3A2E6B'],
+  ['#A99AD6', '#463A80'],
+  ['#0F8C8C', '#0A4444'],
+  ['#3FBFB6', '#12544F'],
+  ['#97C93D', '#3E5A15'],
+  ['#F9CE00', '#6B5600'],
+  ['#F9A61A', '#7A4A05'],
+  ['#F47B20', '#75330A'],
 ];
 
 /**
